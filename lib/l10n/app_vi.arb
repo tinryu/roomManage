@@ -1,0 +1,17 @@
+{
+  "home": "Trang chủ",
+  "users": "Người dùng",
+  "resources": "Kho",
+  "services": "Dịch vụ",
+  "finance": "Tài chính",
+  "financeSumary": "Tổng số liệu",
+  "rooms": "Phòng",
+  "roomsManagement": "Quảng lý phòng",
+  "hello": "Xin chào",
+  "welcome": "Chào mừng, {userName}!",
+  "activeUsers": "Số người truy cập",
+  "totalRevenue": "Tổng doanh thu",
+  "userManagement": "Quản lý người dùng",
+  "manageUserProfile": "Quản lý thông tin người dùng",
+  "trackResources": "Theo dõi kho"
+}

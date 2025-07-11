@@ -1,0 +1,17 @@
+{
+  "home": "Home",
+  "users": "Users",
+  "resources": "Resources",
+  "services": "Services",
+  "finance": "Finance",
+  "financeSumary": "Sumary finances",
+  "rooms": "Rooms",
+  "roomsManagement": "Management rooms",
+  "hello": "Hello",
+  "welcome": "Good morning, {userName}!",
+  "activeUsers": "Active Users",
+  "totalRevenue": "Total revenue",
+  "userManagement": "User Management",
+  "manageUserProfile": "Manage user profiles",
+  "trackResources": "Track resources"
+}
