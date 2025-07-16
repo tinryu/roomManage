@@ -67,7 +67,6 @@ class _RoomListScreenState extends State<RoomListScreen> {
             final rooms = snapshot.data!;
 
             List<Object> results = rooms.map((room) => room as Object).toList();
-            debugPrint('Rooms: $results');
             return isGrid ? _buildGridView(results) : _buildListView(results);
           }
         },
