@@ -19,7 +19,6 @@ class UsersScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Users'), backgroundColor: Colors.blue),
       body: FutureBuilder<List<Map<String, dynamic>>>(
         future: _fetchClients(),
         builder: (context, snapshot) {
@@ -37,7 +36,7 @@ class UsersScreen extends StatelessWidget {
               itemBuilder: (context, index) {
                 return Card(
                   margin: const EdgeInsets.symmetric(
-                    horizontal: 16.0,
+                    horizontal: 8.0,
                     vertical: 8.0,
                   ),
                   child: Padding(

@@ -15,12 +15,12 @@ class RoomDetailScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Image.asset(
-            //   detailroom.imageUrl,
-            //   width: double.infinity,
-            //   height: 200,
-            //   fit: BoxFit.cover,
-            // ),
+            Image.asset(
+              detailroom.imageUrl,
+              width: double.infinity,
+              height: 200,
+              fit: BoxFit.cover,
+            ),
             const SizedBox(height: 16),
             Text(
               detailroom.name,
@@ -28,8 +28,8 @@ class RoomDetailScreen extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(detailroom.destription, style: const TextStyle(fontSize: 12)),
-            // const SizedBox(height: 16),
-            // Text(detailroom.content, style: const TextStyle(fontSize: 16)),
+            const SizedBox(height: 16),
+            Text(detailroom.content, style: const TextStyle(fontSize: 16)),
           ],
         ),
       ),

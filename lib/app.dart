@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:app_project/l10n/app_localizations.dart';
-import '../screens/home/home_screen.dart';
+import 'screens/main_screen.dart';
 
 class MyApp extends StatefulWidget {
   const MyApp({super.key});
@@ -31,8 +31,29 @@ class _MyAppState extends State<MyApp> {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      theme: ThemeData(primarySwatch: Colors.yellow),
-      home: HomeScreen(onLocaleChange: _changeLanguage),
+      home: MainScreen(onLocaleChange: _changeLanguage),
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+        scaffoldBackgroundColor: Colors.white,
+        appBarTheme: AppBarTheme(
+          backgroundColor: Colors.yellow[500],
+          foregroundColor: Colors.black,
+          elevation: 0,
+        ),
+        floatingActionButtonTheme: FloatingActionButtonThemeData(
+          backgroundColor: Colors.yellow[500],
+          foregroundColor: Colors.grey[500],
+          hoverColor: Colors.yellowAccent,
+          focusColor: Colors.yellow[700],
+        ),
+        bottomNavigationBarTheme: BottomNavigationBarThemeData(
+          backgroundColor: Colors.yellow[500],
+          selectedItemColor: Colors.black,
+          unselectedItemColor: Colors.grey[500],
+          selectedIconTheme: IconThemeData(size: 30),
+          unselectedIconTheme: IconThemeData(size: 24),
+        ),
+      ),
       debugShowCheckedModeBanner: false,
     );
   }

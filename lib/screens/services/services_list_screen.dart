@@ -6,10 +6,6 @@ class ServicesScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Services'),
-        backgroundColor: Colors.blue,
-      ),
       body: const Center(
         child: Text('Services Screen', style: TextStyle(fontSize: 24)),
       ),

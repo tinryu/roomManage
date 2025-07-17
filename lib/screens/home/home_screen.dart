@@ -1,11 +1,3 @@
-import 'package:app_project/screens/finance/finance_list_screen.dart'
-    show FinanceScreen;
-import 'package:app_project/screens/resources/resources_list_screen.dart'
-    show ResourcesScreen;
-import 'package:app_project/screens/rooms/room_list_screen.dart'
-    show RoomListScreen;
-import 'package:app_project/screens/user/user_list_screen.dart'
-    show UsersScreen;
 import 'package:flutter/material.dart';
 import 'package:app_project/l10n/app_localizations.dart';
 
@@ -23,9 +15,8 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final String userName = "Alex";
-  int _selectedIndex = 0;
   Locale? _currentLocale;
-  
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -34,10 +25,11 @@ class _HomeScreenState extends State<HomeScreen> {
     if (_currentLocale != newLocale) {
       _currentLocale = newLocale;
       debugPrint('📢 Locale changed: ${_currentLocale?.languageCode}');
-      
+
       // Optionally trigger state update or analytics here
     }
   }
+
   @override
   void initState() {
     super.initState();
@@ -47,71 +39,16 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final local = AppLocalizations.of(context)!;
     return Scaffold(
-      appBar: AppBar(
-        leading: Icon(Icons.dashboard, color: Colors.blue),
-        title: Text(local.home, style: TextStyle(color: Colors.black)),
-        backgroundColor: Colors.white,
-        elevation: 0,
-        actions: [
-          Padding(padding: EdgeInsetsGeometry.only(right: 0), child: ElevatedButton(
-            onPressed: () => widget.onLocaleChange(Locale('vi')),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: _currentLocale?.languageCode != 'vi' ? Colors.transparent : Colors.black12,
-              foregroundColor: Colors.black,
-              shadowColor: Colors.transparent,
-              overlayColor: Colors.blue,
-              minimumSize: Size(30, 30),
-              padding: EdgeInsets.zero,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.all(Radius.elliptical(10, 10)), // ⬅ removes rounding
-              ),
-            ),
-            child: Text('VN', style: TextStyle(fontSize: 10, color: Colors.black))
-          ),),
-          Padding(padding: EdgeInsetsGeometry.only(left: 0), child: ElevatedButton(
-            onPressed: () => widget.onLocaleChange(Locale('en')),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: _currentLocale?.languageCode != 'en' ? Colors.transparent : Colors.black12,
-              foregroundColor: Colors.black,
-              overlayColor: Colors.blue,
-              shadowColor: Colors.transparent,
-              minimumSize: Size(30, 30),
-              padding: EdgeInsets.zero,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.all(Radius.elliptical(10, 10)), // ⬅ removes rounding
-              ),
-            ),
-            child: Text('EN', style: TextStyle(fontSize: 12, color: Colors.black))
-          ),),
-          PopupMenuButton<String>(
-            tooltip: 'Notifications',
-            icon: Icon(Icons.notifications),
-            onSelected: (value) {
-              // Handle tap
-            },
-            // handle list notification from server, get moodel notifi
-            itemBuilder: (context) => [
-              PopupMenuItem(value: '1', child: Text('New message from admin')),
-              PopupMenuItem(value: '2', child: Text('Room 203 needs cleaning')),
-              PopupMenuItem(value: '3', child: Text('Finance report ready')),
-            ],
-          ),
-        ],
-      ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(8),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Greeting
             Text(
-              local.hello,
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w400),
-            ),
-            Text(
               local.welcome(userName),
               style: TextStyle(
-                fontSize: 22,
+                fontSize: 16,
                 fontWeight: FontWeight.bold,
                 color: Colors.blue,
               ),
@@ -140,42 +77,6 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             SizedBox(height: 24),
 
-            // Quick Actions
-            Text(
-              "Quick Actions",
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 12),
-            GridView.count(
-              crossAxisCount: 2,
-              shrinkWrap: true,
-              physics: NeverScrollableScrollPhysics(),
-              mainAxisSpacing: 12,
-              crossAxisSpacing: 12,
-              childAspectRatio: 1.5,
-              children: [
-                _buildQuickAction(
-                  Icons.account_circle,
-                  local.userManagement,
-                  local.manageUserProfile,
-                ),
-                _buildQuickAction(
-                  Icons.shelves,
-                  local.resources,
-                  local.trackResources,
-                  color: Colors.green,
-                ),
-                _buildQuickAction(Icons.home, local.rooms, local.roomsManagement),
-                _buildQuickAction(
-                  Icons.currency_exchange,
-                  local.finance,
-                  local.financeSumary
-                ),
-              ],
-            ),
-
-            SizedBox(height: 24),
-
             // Recent Activity
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -201,79 +102,66 @@ class _HomeScreenState extends State<HomeScreen> {
                 style: TextStyle(color: Colors.grey),
               ),
             ),
+
+            // Quick Actions
+            Text(
+              "Quick Actions",
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 12),
+            GridView.count(
+              crossAxisCount: 2,
+              shrinkWrap: true,
+              physics: NeverScrollableScrollPhysics(),
+              mainAxisSpacing: 12,
+              crossAxisSpacing: 12,
+              childAspectRatio: 1.5,
+              children: [
+                _buildQuickAction(
+                  Icons.account_circle,
+                  local.userManagement,
+                  local.manageUserProfile,
+                  color: Colors.red,
+                ),
+                _buildQuickAction(
+                  Icons.shelves,
+                  local.resources,
+                  local.trackResources,
+                  color: Colors.green,
+                ),
+                _buildQuickAction(
+                  Icons.home,
+                  local.rooms,
+                  local.roomsManagement,
+                  color: Colors.yellow,
+                ),
+                _buildQuickAction(
+                  Icons.currency_exchange,
+                  local.finance,
+                  local.financeSumary,
+                  color: Colors.blue,
+                ),
+              ],
+            ),
+
+            SizedBox(height: 24),
           ],
         ),
       ),
 
       floatingActionButton: FloatingActionButton(
-        onPressed: () {},
-        backgroundColor: Colors.blue,
-        child: Icon(Icons.add),
-      ),
-
-      bottomNavigationBar: BottomNavigationBar(
-        onTap: (int index) {
-          setState(() {
-            _selectedIndex = index;
-          });
-          // Add navigation logic here
-          switch (index) {
-            case 0:
-              // Already on HomeScreen, do nothing or maybe pop to root
-              break;
-            case 1:
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => UsersScreen()),
-              );
-              break;
-            case 2:
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => ResourcesScreen()),
-              );
-              break;
-            case 3:
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => RoomListScreen()),
-              );
-              break;
-            case 4:
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => FinanceScreen()),
-              );
-              break;
-          }
+        onPressed: () {
+          showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              alignment: Alignment.topCenter,
+              icon: Icon(Icons.star, size: 32),
+              title: Text("It's title dialog"),
+              content: Text("You are clicked on the button"),
+            ),
+          );
         },
-        type: BottomNavigationBarType.fixed,
-        showUnselectedLabels: true,
-        currentIndex: _selectedIndex,
-        selectedItemColor: Colors.blue,
-        unselectedItemColor: Colors.grey,
-        items: [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.dashboard),
-            label: local.home,
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.account_circle),
-            label: local.users,
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.shelves),
-            label: local.resources,
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: local.rooms,
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.currency_exchange),
-            label: local.finance,
-          ),
-        ],
+        child: Icon(Icons.add),
       ),
     );
   }
@@ -338,9 +226,9 @@ class _HomeScreenState extends State<HomeScreen> {
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Icon(icon, color: color ?? Colors.blue, size: 28),
+          Icon(icon, color: color ?? Colors.blue, size: 32),
           SizedBox(height: 8),
           Text(title, style: TextStyle(fontWeight: FontWeight.bold)),
           Text(

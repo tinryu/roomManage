@@ -19,10 +19,6 @@ class ResourcesScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Resources'),
-        backgroundColor: Colors.blue,
-      ),
       body: FutureBuilder<List<Map<String, dynamic>>>(
         future: _fetchResources(),
         builder: (context, snapshot) {
@@ -40,7 +36,7 @@ class ResourcesScreen extends StatelessWidget {
               itemBuilder: (context, index) {
                 return Card(
                   margin: const EdgeInsets.symmetric(
-                    horizontal: 16.0,
+                    horizontal: 8.0,
                     vertical: 8.0,
                   ),
                   child: Padding(

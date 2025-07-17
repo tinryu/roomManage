@@ -1,4 +1,3 @@
-import 'package:app_project/l10n/app_localizations.dart';
 import 'package:app_project/screens/rooms/room_details_screen.dart'
     show RoomDetailScreen;
 import 'package:flutter/material.dart';
@@ -36,24 +35,6 @@ class _RoomListScreenState extends State<RoomListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          AppLocalizations.of(context)!.rooms,
-          style: TextStyle(color: Colors.black),
-        ),
-        backgroundColor: Colors.white,
-        actions: [
-          IconButton(icon: Icon(Icons.filter_list), onPressed: () {}),
-          IconButton(
-            icon: Icon(isGrid ? Icons.view_list : Icons.grid_view),
-            onPressed: () {
-              setState(() {
-                isGrid = !isGrid;
-              });
-            },
-          ),
-        ],
-      ),
       body: FutureBuilder<List<Map<String, dynamic>>>(
         future: widget._fetchRooms(),
         builder: (context, snapshot) {
@@ -67,7 +48,19 @@ class _RoomListScreenState extends State<RoomListScreen> {
             final rooms = snapshot.data!;
 
             List<Object> results = rooms.map((room) => room as Object).toList();
-            return isGrid ? _buildGridView(results) : _buildListView(results);
+            return Column(
+              children: [
+                _buildAppBar(),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: isGrid
+                        ? _buildGridView(results)
+                        : _buildListView(results),
+                  ),
+                ),
+              ],
+            );
           }
         },
       ),
@@ -81,11 +74,18 @@ class _RoomListScreenState extends State<RoomListScreen> {
       itemBuilder: (context, index) {
         var item = rooml[index];
         return Card(
-          margin: const EdgeInsets.symmetric(vertical: 8),
+          margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
           child: ListTile(
-            // leading: Image.asset(room.imageUrl, width: 60, fit: BoxFit.cover),
-            title: Text(item['name']),
-            subtitle: Text(item['destription']),
+            leading: Image.asset(
+              item['imageUrl'],
+              width: 60,
+              fit: BoxFit.cover,
+            ),
+            title: Text(
+              item['name'],
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22),
+            ),
+            subtitle: Text(item['destription'], style: TextStyle(fontSize: 16)),
             trailing: Icon(Icons.arrow_forward_ios),
             onTap: () {
               Navigator.push(
@@ -128,24 +128,24 @@ class _RoomListScreenState extends State<RoomListScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Image.asset(
-                //   room.imageUrl,
-                //   height: 100,
-                //   width: double.infinity,
-                //   fit: BoxFit.cover,
-                // ),
+                Image.asset(
+                  itemG['imageUrl'],
+                  height: 100,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                ),
                 Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: Text(
                     itemG['name'],
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22),
                   ),
                 ),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 8.0),
                   child: Text(
                     itemG['destription'],
-                    style: TextStyle(fontSize: 12),
+                    style: TextStyle(fontSize: 16),
                   ),
                 ),
               ],
@@ -153,6 +153,38 @@ class _RoomListScreenState extends State<RoomListScreen> {
           ),
         );
       },
+    );
+  }
+
+  Widget _buildAppBar() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: [
+        IconButton(
+          icon: Icon(Icons.filter_list),
+          onPressed: () {
+            // Handle filter action
+            AlertDialog(
+              title: Text('Filter Options'),
+              content: Text('Implement filter options here.'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: Text('Close'),
+                ),
+              ],
+            );
+          },
+        ),
+        IconButton(
+          icon: Icon(isGrid ? Icons.view_list : Icons.grid_view),
+          onPressed: () {
+            setState(() {
+              isGrid = !isGrid;
+            });
+          },
+        ),
+      ],
     );
   }
 }
