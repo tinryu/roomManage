@@ -55,28 +55,6 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             SizedBox(height: 16),
 
-            // Stats
-            Row(
-              children: [
-                _buildStatCard(
-                  local.activeUsers,
-                  "0",
-                  "+12.5%",
-                  Icons.person,
-                  Colors.green,
-                ),
-                SizedBox(width: 16),
-                _buildStatCard(
-                  local.totalRevenue,
-                  "0",
-                  "+8.2%",
-                  Icons.attach_money,
-                  Colors.blue,
-                ),
-              ],
-            ),
-            SizedBox(height: 24),
-
             // Recent Activity
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -102,6 +80,28 @@ class _HomeScreenState extends State<HomeScreen> {
                 style: TextStyle(color: Colors.grey),
               ),
             ),
+            SizedBox(height: 24),
+            // Stats
+            Row(
+              children: [
+                _buildStatCard(
+                  local.activeUsers,
+                  "0",
+                  "+12.5%",
+                  Icons.person,
+                  Colors.green,
+                ),
+                SizedBox(width: 6),
+                _buildStatCard(
+                  local.totalRevenue,
+                  "0",
+                  "+8.2%",
+                  Icons.attach_money,
+                  Colors.blue,
+                ),
+              ],
+            ),
+            SizedBox(height: 24),
 
             // Quick Actions
             Text(
@@ -178,7 +178,8 @@ class _HomeScreenState extends State<HomeScreen> {
         padding: EdgeInsets.all(12),
         margin: EdgeInsets.only(bottom: 12),
         decoration: BoxDecoration(
-          color: Colors.white,
+          // ignore: deprecated_member_use
+          color: color.withOpacity(0.05),
           border: Border.all(color: Colors.grey.shade300),
           borderRadius: BorderRadius.circular(12),
         ),
@@ -193,7 +194,7 @@ class _HomeScreenState extends State<HomeScreen> {
             Row(
               children: [
                 Icon(icon, color: color, size: 18),
-                SizedBox(width: 6),
+                SizedBox(width: 2),
                 Text(
                   value,
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
@@ -227,13 +228,24 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
+        verticalDirection: VerticalDirection.down,
         children: [
-          Icon(icon, color: color ?? Colors.blue, size: 32),
-          SizedBox(height: 8),
-          Text(title, style: TextStyle(fontWeight: FontWeight.bold)),
+          Icon(
+            icon,
+            color: color ?? Colors.blue,
+            size: MediaQuery.of(context).size.width * 0.1,
+          ),
+          Text(
+            title,
+            style: TextStyle(fontWeight: FontWeight.bold),
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
+          ),
           Text(
             subtitle,
             style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
           ),
         ],
       ),

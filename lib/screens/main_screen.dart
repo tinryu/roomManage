@@ -5,6 +5,8 @@ import 'package:app_project/screens/user/user_list_screen.dart';
 import 'package:app_project/screens/resources/resources_list_screen.dart';
 import 'package:app_project/screens/rooms/room_list_screen.dart';
 import 'package:app_project/screens/finance/finance_list_screen.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:app_project/screens/user/login_screen.dart' show LoginScreen;
 
 class MainScreen extends StatefulWidget {
   final void Function(Locale locale) onLocaleChange;
@@ -24,7 +26,6 @@ class _MainScreenState extends State<MainScreen> {
     final newLocale = Localizations.localeOf(context);
     if (_currentLocale != newLocale) {
       _currentLocale = newLocale;
-      debugPrint('📢 Locale changed: ${_currentLocale?.languageCode}');
     }
   }
 
@@ -40,6 +41,16 @@ class _MainScreenState extends State<MainScreen> {
       RoomListScreen(),
       FinanceScreen(),
     ]);
+  }
+
+  Future<void> _signOut(BuildContext context) async {
+    await Supabase.instance.client.auth.signOut();
+    if (context.mounted) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const LoginScreen()),
+      );
+    }
   }
 
   @override
@@ -127,10 +138,14 @@ class _MainScreenState extends State<MainScreen> {
               PopupMenuItem(value: '3', child: Text('Finance report ready')),
             ],
           ),
+          ElevatedButton(
+            onPressed: () => _signOut(context),
+            child: const Text('Sign Out'),
+          ),
         ],
       ),
       body: Padding(
-        padding: EdgeInsets.all(8.0),
+        padding: EdgeInsets.all(5.0),
         child: _screens[_selectedIndex],
       ),
       bottomNavigationBar: BottomNavigationBar(

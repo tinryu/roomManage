@@ -74,7 +74,6 @@ class _RoomListScreenState extends State<RoomListScreen> {
       itemBuilder: (context, index) {
         var item = rooml[index];
         return Card(
-          margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
           child: ListTile(
             leading: Image.asset(
               item['imageUrl'],
@@ -83,9 +82,9 @@ class _RoomListScreenState extends State<RoomListScreen> {
             ),
             title: Text(
               item['name'],
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22),
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
             ),
-            subtitle: Text(item['destription'], style: TextStyle(fontSize: 16)),
+            subtitle: Text(item['destription'], style: TextStyle(fontSize: 12)),
             trailing: Icon(Icons.arrow_forward_ios),
             onTap: () {
               Navigator.push(
@@ -108,9 +107,8 @@ class _RoomListScreenState extends State<RoomListScreen> {
       itemCount: rooms.length,
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
-        childAspectRatio: 3 / 2,
-        crossAxisSpacing: 10,
-        mainAxisSpacing: 10,
+        crossAxisSpacing: 8.0,
+        mainAxisSpacing: 8.0,
       ),
       itemBuilder: (context, index) {
         var itemG = roomG[index];
@@ -128,24 +126,27 @@ class _RoomListScreenState extends State<RoomListScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Image.asset(
-                  itemG['imageUrl'],
-                  height: 100,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Text(
-                    itemG['name'],
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22),
+                AspectRatio(
+                  aspectRatio: 16 / 9,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.vertical(
+                      top: Radius.circular(12),
+                    ),
+                    child: Image.asset(itemG['imageUrl'], fit: BoxFit.cover),
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                  padding: EdgeInsets.only(left: 12.0, right: 12.0),
+                  child: Text(
+                    itemG['name'],
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(left: 12.0, right: 12.0),
                   child: Text(
                     itemG['destription'],
-                    style: TextStyle(fontSize: 16),
+                    style: TextStyle(fontSize: 12),
                   ),
                 ),
               ],

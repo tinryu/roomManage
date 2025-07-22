@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:app_project/l10n/app_localizations.dart';
 import 'screens/main_screen.dart';
+import 'package:app_project/screens/user/login_screen.dart' show LoginScreen;
 
 class MyApp extends StatefulWidget {
   const MyApp({super.key});
@@ -12,7 +14,7 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   Locale _locale = Locale('en');
-
+  final user = Supabase.instance.client.auth.currentUser;
   void _changeLanguage(Locale locale) {
     setState(() {
       _locale = locale;
@@ -31,7 +33,9 @@ class _MyAppState extends State<MyApp> {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      home: MainScreen(onLocaleChange: _changeLanguage),
+      home: user == null
+          ? LoginScreen()
+          : MainScreen(onLocaleChange: _changeLanguage),
       theme: ThemeData(
         primarySwatch: Colors.blue,
         scaffoldBackgroundColor: Colors.white,
@@ -42,9 +46,11 @@ class _MyAppState extends State<MyApp> {
         ),
         floatingActionButtonTheme: FloatingActionButtonThemeData(
           backgroundColor: Colors.yellow[500],
-          foregroundColor: Colors.grey[500],
+          foregroundColor: Colors.black,
           hoverColor: Colors.yellowAccent,
           focusColor: Colors.yellow[700],
+          iconSize: 20,
+          sizeConstraints: const BoxConstraints(minWidth: 45, minHeight: 45),
         ),
         bottomNavigationBarTheme: BottomNavigationBarThemeData(
           backgroundColor: Colors.yellow[500],
