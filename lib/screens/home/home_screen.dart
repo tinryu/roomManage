@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:app_project/l10n/app_localizations.dart';
+import 'package:app_project/screens/home/recent_activity_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   final void Function(Locale locale) onLocaleChange;
@@ -24,8 +25,6 @@ class _HomeScreenState extends State<HomeScreen> {
     final newLocale = Localizations.localeOf(context);
     if (_currentLocale != newLocale) {
       _currentLocale = newLocale;
-      debugPrint('📢 Locale changed: ${_currentLocale?.languageCode}');
-
       // Optionally trigger state update or analytics here
     }
   }
@@ -54,7 +53,6 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
             SizedBox(height: 16),
-
             // Recent Activity
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -67,19 +65,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
             SizedBox(height: 12),
-            Container(
-              height: 60,
-              width: double.infinity,
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey.shade300),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              alignment: Alignment.center,
-              child: Text(
-                "No recent activity",
-                style: TextStyle(color: Colors.grey),
-              ),
-            ),
+            RecentActivityScreen(),
             SizedBox(height: 24),
             // Stats
             Row(
@@ -91,7 +77,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   Icons.person,
                   Colors.green,
                 ),
-                SizedBox(width: 6),
+                SizedBox(width: 12),
                 _buildStatCard(
                   local.totalRevenue,
                   "0",
@@ -102,7 +88,6 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
             SizedBox(height: 24),
-
             // Quick Actions
             Text(
               "Quick Actions",
@@ -143,25 +128,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ],
             ),
-
             SizedBox(height: 24),
           ],
         ),
-      ),
-
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          showDialog(
-            context: context,
-            builder: (context) => AlertDialog(
-              alignment: Alignment.topCenter,
-              icon: Icon(Icons.star, size: 32),
-              title: Text("It's title dialog"),
-              content: Text("You are clicked on the button"),
-            ),
-          );
-        },
-        child: Icon(Icons.add),
       ),
     );
   }
@@ -219,7 +188,9 @@ class _HomeScreenState extends State<HomeScreen> {
     Color? color,
   }) {
     return Container(
-      padding: EdgeInsets.all(12),
+      height: 300,
+      width: double.infinity,
+      padding: EdgeInsets.all(8),
       decoration: BoxDecoration(
         // ignore: deprecated_member_use
         color: color?.withOpacity(0.05) ?? Colors.grey.shade100,
@@ -229,6 +200,7 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         verticalDirection: VerticalDirection.down,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
             icon,

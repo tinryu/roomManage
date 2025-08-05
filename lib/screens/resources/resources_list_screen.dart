@@ -78,13 +78,23 @@ class ResourcesScreen extends StatelessWidget {
                           children: [
                             ClipRRect(
                               borderRadius: BorderRadius.circular(8.0),
-                              child: Image.asset(
-                                resource[index]['image_url'] ??
-                                    'assets/images/room.png',
-                                height: 100,
-                                width: MediaQuery.of(context).size.width,
-                                fit: BoxFit.cover,
-                              ),
+                              child:
+                                  (resource[index]['image_url'] != null &&
+                                      resource[index]['image_url']
+                                          .toString()
+                                          .isNotEmpty)
+                                  ? Image.network(
+                                      resource[index]['image_url'],
+                                      height: 100,
+                                      width: MediaQuery.of(context).size.width,
+                                      fit: BoxFit.cover,
+                                    )
+                                  : Image.asset(
+                                      'assets/images/room.png', // Default image if no image URL
+                                      height: 100,
+                                      width: MediaQuery.of(context).size.width,
+                                      fit: BoxFit.cover,
+                                    ),
                             ),
                             SizedBox(height: 8.0),
                             Row(

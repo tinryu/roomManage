@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path/path.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:app_project/widgets/dropdown_room.dart' show RoomDropdown;
 
 class ResourcesAddScreen extends StatefulWidget {
   const ResourcesAddScreen({super.key});
@@ -15,17 +16,9 @@ class ResourcesAddScreen extends StatefulWidget {
 class _ResourcesAddScreenState extends State<ResourcesAddScreen> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _quantityController = TextEditingController();
 
-  final List<String> quantityOptions = ['1', '2', '3', '4', '5'];
-  final List<String> roomOptions = [
-    'Room 101',
-    'Room 102',
-    'Room 201',
-    'Room 202',
-  ];
-
-  String? _selectedQuantity;
-  String? _selectedRoom;
+  int? _selectedRoom;
   File? _image;
 
   Future<void> _pickImage() async {
@@ -71,7 +64,7 @@ class _ResourcesAddScreenState extends State<ResourcesAddScreen> {
     }
     final response = await Supabase.instance.client.from('resource').insert({
       'name': _nameController.text,
-      'quantity': _selectedQuantity,
+      'quantity': int.parse(_quantityController.text),
       'roomid': _selectedRoom,
       'image_url': imageUrl ?? '',
     });
@@ -83,7 +76,6 @@ class _ResourcesAddScreenState extends State<ResourcesAddScreen> {
       _formKey.currentState?.reset();
       setState(() {
         _image = null;
-        _selectedQuantity = null;
         _selectedRoom = null;
       });
     } else {
@@ -109,33 +101,28 @@ class _ResourcesAddScreenState extends State<ResourcesAddScreen> {
                 validator: (value) =>
                     value == null || value.isEmpty ? 'Enter name' : null,
               ),
-              DropdownButtonFormField<String>(
-                value: _selectedQuantity,
+              TextFormField(
+                controller: _quantityController,
                 decoration: InputDecoration(labelText: 'Quantity'),
-                items: quantityOptions.map((qty) {
-                  return DropdownMenuItem(value: qty, child: Text(qty));
-                }).toList(),
-                onChanged: (value) {
-                  setState(() {
-                    _selectedQuantity = value;
-                  });
+                keyboardType: TextInputType.number,
+                validator: (value) {
+                  if (value == null || value.isEmpty) return 'Enter quantity';
+                  if (int.tryParse(value) == null) {
+                    return 'Enter a valid number';
+                  }
+                  return null;
                 },
-                validator: (value) => value == null ? 'Select quantity' : null,
-              ),
-              DropdownButtonFormField<String>(
-                value: _selectedRoom,
-                decoration: InputDecoration(labelText: 'Room Number'),
-                items: roomOptions.map((room) {
-                  return DropdownMenuItem(value: room, child: Text(room));
-                }).toList(),
-                onChanged: (value) {
-                  setState(() {
-                    _selectedRoom = value;
-                  });
-                },
-                validator: (value) => value == null ? 'Select room' : null,
               ),
               SizedBox(height: 20),
+              RoomDropdown(
+                onRoomSelected: (room) {
+                  setState(() {
+                    _selectedRoom = room != null && room['id'] != null
+                        ? int.tryParse(room['id'].toString())
+                        : null;
+                  });
+                },
+              ),
               _image != null
                   ? Image.file(_image!, height: 150)
                   : Text('No image selected'),

@@ -7,7 +7,7 @@ class FinanceScreen extends StatelessWidget {
   // Function to fetch data from Supabase
   Future<List<Map<String, dynamic>>> _fetchFinance() async {
     final response = await Supabase.instance.client
-        .from('finance')
+        .from('payment')
         .select()
         .then((data) => data)
         .catchError((error) {
