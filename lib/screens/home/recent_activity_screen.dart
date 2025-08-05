@@ -8,8 +8,8 @@ class RecentActivityScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final activeState = ref.watch(activityProvider);
-
+    final activeState = ref.watch(activityProvider); // All alway init data
+    // final activityNotifier = ref.read(activityProvider); //call notifier if u want all another func
     return activeState.when(
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (error, _) => Center(child: Text('Lỗi: $error')),

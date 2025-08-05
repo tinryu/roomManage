@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:app_project/l10n/app_localizations.dart';
 import 'package:app_project/screens/home/recent_activity_screen.dart';
+import 'package:app_project/screens/recentactive/recentlist.dart'
+    show RecentList;
 
 class HomeScreen extends StatefulWidget {
   final void Function(Locale locale) onLocaleChange;
@@ -61,7 +63,17 @@ class _HomeScreenState extends State<HomeScreen> {
                   "Recent Activity",
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
-                Text("View All", style: TextStyle(color: Colors.blue)),
+                InkWell(
+                  child: Text("View All", style: TextStyle(color: Colors.blue)),
+                  onTap: () => {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const RecentList(),
+                      ),
+                    ),
+                  },
+                ),
               ],
             ),
             SizedBox(height: 12),

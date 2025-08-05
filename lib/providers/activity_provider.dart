@@ -6,30 +6,61 @@ class ActivityNotifier extends AsyncNotifier<List<Activity>> {
   final _client = Supabase.instance.client;
   final String _table = 'activities';
 
+  static const int _pageSize = 2;
+  int _offset = 0;
+  bool _hasMore = true;
+  bool _isLoadingMore = false;
+
   @override
   Future<List<Activity>> build() async {
-    return await getRecentActivities();
+    _offset = 0;
+    _hasMore = true;
+    return await _fetchPage(reset: true);
   }
 
-  Future<List<Activity>> fetchActivities() async {
-    final response = await _client
-        .from(_table)
-        .select()
-        .order('timestamp', ascending: false);
-    return (response as List)
-        .map((item) => Activity.fromMap(item as Map<String, dynamic>))
-        .toList();
+  Future<List<Activity>> _fetchPage({bool reset = false}) async {
+    if (_isLoadingMore) return state.value ?? [];
+
+    _isLoadingMore = true;
+
+    try {
+      final response = await _client
+          .from(_table)
+          .select()
+          .order('timestamp', ascending: false)
+          .range(_offset, _offset + _pageSize - 1);
+
+      final data = response as List;
+      final fetched = data.map((e) => Activity.fromMap(e)).toList();
+
+      if (reset) {
+        _offset = fetched.length;
+        state = AsyncData(fetched);
+      } else {
+        _offset += fetched.length;
+        final current = state.value ?? [];
+        state = AsyncData([...current, ...fetched]);
+      }
+
+      if (fetched.length < _pageSize) {
+        _hasMore = false;
+      }
+
+      return fetched;
+    } catch (e, st) {
+      if (reset) {
+        state = AsyncError(e, st);
+      }
+      return [];
+    } finally {
+      _isLoadingMore = false;
+    }
   }
 
-  Future<List<Activity>> getRecentActivities({int limit = 10}) async {
-    final response = await _client
-        .from(_table)
-        .select()
-        .order('timestamp', ascending: false)
-        .limit(limit);
-    return (response as List)
-        .map((item) => Activity.fromMap(item as Map<String, dynamic>))
-        .toList();
+  Future<void> fetchNextPage() async {
+    if (_hasMore) {
+      await _fetchPage();
+    }
   }
 
   Future<void> addActivity(Activity activity) async {
@@ -37,6 +68,9 @@ class ActivityNotifier extends AsyncNotifier<List<Activity>> {
     // Refresh state
     state = AsyncValue.data([...state.value ?? [], activity]);
   }
+
+  bool get hasMore => _hasMore;
+  bool get isLoadingMore => _isLoadingMore;
 }
 
 final activityProvider =
