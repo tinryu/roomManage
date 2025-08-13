@@ -53,13 +53,23 @@ class RoomListScreen extends ConsumerWidget {
                           ),
                     title: Text(
                       room.name,
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                      textScaler: TextScaler.linear(1),
                       style: const TextStyle(
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w600,
                         fontSize: 16,
                       ),
                     ),
                     subtitle: Row(
-                      children: [Text(room.isOccupied ? 'Đã thuê' : 'Trống')],
+                      children: [
+                        Text(
+                          room.isOccupied ? 'Đã thuê' : 'Trống',
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                          textScaler: TextScaler.linear(0.8),
+                        ),
+                      ],
                     ),
                   );
                 },

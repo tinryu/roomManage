@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_project/providers/asset_provider.dart';
 import 'package:app_project/screens/assets/assets_add_screen.dart';
+import 'package:intl/intl.dart';
 
 class AssetsListScreen extends ConsumerWidget {
   const AssetsListScreen({super.key});
@@ -22,80 +23,71 @@ class AssetsListScreen extends ConsumerWidget {
                 itemCount: assets.length,
                 itemBuilder: (context, index) {
                   final asset = assets[index];
-                  return Card(
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    margin: const EdgeInsets.symmetric(vertical: 6),
-                    child: ListTile(
-                      leading:
-                          asset.imageUrl != null && asset.imageUrl!.isNotEmpty
-                          ? ClipRRect(
-                              borderRadius: BorderRadius.circular(6),
-                              child: Image.network(
-                                asset.imageUrl!,
-                                width: 50,
-                                height: 50,
-                                fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) =>
-                                    const Icon(Icons.broken_image, size: 40),
-                              ),
-                            )
-                          : Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: const BoxDecoration(
-                                color: Colors.lightBlue,
-                                shape: BoxShape.rectangle,
-                                borderRadius: BorderRadius.all(
-                                  Radius.circular(12),
-                                ),
-                              ),
-                              child: Icon(
-                                Icons.inventory_2,
-                                color: Colors.white,
-                                size: 24,
+                  return ListTile(
+                    leading:
+                        asset.imageUrl != null && asset.imageUrl!.isNotEmpty
+                        ? ClipRRect(
+                            borderRadius: BorderRadius.circular(6),
+                            child: Image.network(
+                              asset.imageUrl!,
+                              width: 50,
+                              height: 50,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) =>
+                                  const Icon(Icons.broken_image, size: 40),
+                            ),
+                          )
+                        : Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: const BoxDecoration(
+                              color: Colors.lightBlue,
+                              shape: BoxShape.rectangle,
+                              borderRadius: BorderRadius.all(
+                                Radius.circular(12),
                               ),
                             ),
-                      title: Text(
-                        asset.name,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
+                            child: Icon(
+                              Icons.inventory_2,
+                              color: Colors.white,
+                              size: 24,
+                            ),
+                          ),
+                    title: Text(
+                      asset.name,
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                      textScaler: TextScaler.linear(0.8),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16,
+                      ),
+                    ),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "Condition: ${asset.condition}",
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                          textScaler: TextScaler.linear(0.8),
                         ),
-                        overflow: TextOverflow.ellipsis,
-                        maxLines: 1,
-                        textScaler: TextScaler.linear(0.8),
-                      ),
-                      subtitle: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            "Condition: ${asset.condition}",
-                            overflow: TextOverflow.ellipsis,
-                            maxLines: 1,
-                            textScaler: TextScaler.linear(0.8),
-                          ),
-                          Text(
-                            "Quantity: ${asset.quantity}",
-                            overflow: TextOverflow.ellipsis,
-                            maxLines: 1,
-                            textScaler: TextScaler.linear(0.8),
-                          ),
-                          Text(
-                            "Room ID: ${asset.roomid}",
-                            overflow: TextOverflow.ellipsis,
-                            maxLines: 1,
-                            textScaler: TextScaler.linear(0.8),
-                          ),
-                        ],
-                      ),
-                      trailing: Text(
-                        DateTime.parse(
-                          asset.createdAt.toIso8601String(),
-                        ).toLocal().toString().substring(0, 10),
-                        style: const TextStyle(fontSize: 12),
-                      ),
+                        Text(
+                          "Quantity: ${asset.quantity}",
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                          textScaler: TextScaler.linear(0.8),
+                        ),
+                        Text(
+                          "Room ID: ${asset.roomid}",
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                          textScaler: TextScaler.linear(0.8),
+                        ),
+                      ],
+                    ),
+                    trailing: Text(
+                      DateFormat('dd/MM/yyyy HH:mm').format(asset.createdAt),
+                      style: const TextStyle(fontSize: 12),
                     ),
                   );
                 },

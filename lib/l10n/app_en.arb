@@ -5,7 +5,7 @@
   "resources": "Resources",
   "assets": "Assets",
   "services": "Services",
-  "finance": "Finance",
+  "payment": "Payment",
   "financeSumary": "Sumary finances",
   "rooms": "Rooms",
   "roomsManagement": "Management rooms",

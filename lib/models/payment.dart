@@ -23,7 +23,7 @@ class Payment {
     roomId: map['roomId'] ?? '',
     amount: map['amount'],
     isPaid: map['isPaid'],
-    type: map['type'] ?? 'rent', // Default to 'rent' if not provided
+    type: map['type'], // Default to 'rent' if not provided
     datetime: map['datetime'] is String
         ? DateTime.parse(map['datetime'])
         : (map['datetime'] as DateTime? ?? DateTime.now()), // fallback if null,

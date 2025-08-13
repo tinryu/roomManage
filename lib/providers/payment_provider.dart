@@ -1,12 +1,12 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../models/payment.dart';
+import 'package:app_project/models/payment.dart';
 
 class PaymentNotifier extends AsyncNotifier<List<Payment>> {
-  final _client = Supabase.instance.client;
+  final supabase = Supabase.instance.client;
   final String _table = 'payment';
 
-  static const int _pageSize = 1;
+  static const int _pageSize = 10;
   int _offset = 0;
   bool _hasMore = true;
   bool _isLoadingMore = false;
@@ -24,7 +24,7 @@ class PaymentNotifier extends AsyncNotifier<List<Payment>> {
     _isLoadingMore = true;
 
     try {
-      final res = await _client
+      final res = await supabase
           .from(_table)
           .select()
           .order('datetime', ascending: false)
@@ -75,12 +75,13 @@ class PaymentNotifier extends AsyncNotifier<List<Payment>> {
       1,
     ).subtract(Duration(seconds: 1));
 
-    final response = await _client
+    final response = await supabase
         .from(_table)
         .select()
         .gte('datetime', start.toIso8601String())
         .lte('datetime', end.toIso8601String())
-        .order('datetime', ascending: true);
+        .order('datetime', ascending: true)
+        .limit(5);
 
     return (response as List)
         .map((item) => Payment.fromMap(item as Map<String, dynamic>))
@@ -88,7 +89,7 @@ class PaymentNotifier extends AsyncNotifier<List<Payment>> {
   }
 
   Future<void> addPayment(Payment payment) async {
-    await _client.from(_table).insert(payment.toMap()).select().single();
+    await supabase.from(_table).insert(payment.toMap()).select().single();
     state = AsyncValue.data(await _fetchPayments(reset: true));
   }
 

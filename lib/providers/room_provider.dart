@@ -6,7 +6,7 @@ class RoomNotifier extends AsyncNotifier<List<Room>> {
   final _client = Supabase.instance.client;
   final String _table = 'rooms';
 
-  static const int _pageSize = 1;
+  static const int _pageSize = 10;
   int _offset = 0;
   bool _hasMore = true;
   bool _isLoadingMore = false;

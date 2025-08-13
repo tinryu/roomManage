@@ -131,11 +131,11 @@ abstract class AppLocalizations {
   /// **'Services'**
   String get services;
 
-  /// No description provided for @finance.
+  /// No description provided for @payment.
   ///
   /// In en, this message translates to:
-  /// **'Finance'**
-  String get finance;
+  /// **'Payment'**
+  String get payment;
 
   /// No description provided for @financeSumary.
   ///

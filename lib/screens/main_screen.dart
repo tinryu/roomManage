@@ -4,7 +4,7 @@ import 'package:app_project/screens/home/home_screen.dart';
 import 'package:app_project/screens/tenants/tenants_list_screen.dart';
 import 'package:app_project/screens/assets/assets_list_screen.dart';
 import 'package:app_project/screens/rooms/room_list_screen.dart';
-import 'package:app_project/screens/finance/finance_list_screen.dart';
+import 'package:app_project/screens/payment/payment_list_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:app_project/screens/tenants/login_screen.dart' show LoginScreen;
 
@@ -39,7 +39,7 @@ class _MainScreenState extends State<MainScreen> {
       TenantListScreen(),
       AssetsListScreen(),
       RoomListScreen(),
-      FinanceScreen(),
+      PaymentScreen(),
     ]);
   }
 
@@ -63,7 +63,7 @@ class _MainScreenState extends State<MainScreen> {
       local.tenants,
       local.assets,
       local.rooms,
-      local.finance,
+      local.payment,
     ];
     return Scaffold(
       appBar: AppBar(
@@ -152,7 +152,7 @@ class _MainScreenState extends State<MainScreen> {
           BottomNavigationBarItem(icon: Icon(Icons.home), label: local.rooms),
           BottomNavigationBarItem(
             icon: Icon(Icons.currency_exchange),
-            label: local.finance,
+            label: local.payment,
           ),
         ],
       ),

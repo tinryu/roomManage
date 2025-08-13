@@ -6,7 +6,7 @@ class TenantNotifier extends AsyncNotifier<List<Tenant>> {
   final supabase = Supabase.instance.client;
   final String _table = 'tenants';
 
-  static const int _pageSize = 1;
+  static const int _pageSize = 10;
   int _offset = 0;
   bool _hasMore = true;
   bool _isLoadingMore = false;

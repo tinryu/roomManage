@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_project/providers/tenant_provider.dart';
+import 'package:intl/intl.dart';
 
 class TenantListScreen extends ConsumerWidget {
   const TenantListScreen({super.key});
@@ -39,13 +40,17 @@ class TenantListScreen extends ConsumerWidget {
                         shape: BoxShape.rectangle,
                         borderRadius: BorderRadius.all(Radius.circular(12)),
                       ),
-                      child: Icon(Icons.person, color: Colors.white, size: 36),
+                      child: Icon(Icons.person, color: Colors.white, size: 24),
                     ),
                     title: Text(
                       t.name,
                       overflow: TextOverflow.ellipsis,
                       maxLines: 1,
                       textScaler: TextScaler.linear(0.8),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16,
+                      ),
                     ),
                     subtitle: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -71,7 +76,7 @@ class TenantListScreen extends ConsumerWidget {
                               color: Colors.green,
                             ),
                             Text(
-                              t.checkIn.toLocal().toString().split(' ')[0],
+                              DateFormat('dd/MM/yyyy HH:mm').format(t.checkIn),
                               overflow: TextOverflow.ellipsis,
                               maxLines: 1,
                               textScaler: TextScaler.linear(0.8),
@@ -83,7 +88,9 @@ class TenantListScreen extends ConsumerWidget {
                               color: Colors.red,
                             ),
                             Text(
-                              t.checkOut!.toLocal().toString().split(' ')[0],
+                              DateFormat(
+                                'dd/MM/yyyy HH:mm',
+                              ).format(t.checkOut!),
                               overflow: TextOverflow.ellipsis,
                               maxLines: 1,
                               textScaler: TextScaler.linear(0.8),
@@ -109,11 +116,11 @@ class TenantListScreen extends ConsumerWidget {
           ],
         ),
       ),
-      // floatingActionButton: FloatingActionButton(
-      //   backgroundColor: const Color(0xFF4DB6E2),
-      //   child: const Icon(Icons.add),
-      //   onPressed: () {},
-      // ),
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: const Color(0xFF4DB6E2),
+        child: const Icon(Icons.add),
+        onPressed: () {},
+      ),
     );
   }
 }

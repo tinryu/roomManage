@@ -27,7 +27,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get services => 'Dịch vụ';
 
   @override
-  String get finance => 'Tài chính';
+  String get payment => 'Thanh toán';
 
   @override
   String get financeSumary => 'Tổng số liệu';

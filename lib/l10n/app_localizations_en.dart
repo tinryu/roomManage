@@ -27,7 +27,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get services => 'Services';
 
   @override
-  String get finance => 'Finance';
+  String get payment => 'Payment';
 
   @override
   String get financeSumary => 'Sumary finances';
