@@ -107,11 +107,23 @@ abstract class AppLocalizations {
   /// **'Users'**
   String get users;
 
+  /// No description provided for @tenants.
+  ///
+  /// In en, this message translates to:
+  /// **'Tenants'**
+  String get tenants;
+
   /// No description provided for @resources.
   ///
   /// In en, this message translates to:
   /// **'Resources'**
   String get resources;
+
+  /// No description provided for @assets.
+  ///
+  /// In en, this message translates to:
+  /// **'Assets'**
+  String get assets;
 
   /// No description provided for @services.
   ///

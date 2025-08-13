@@ -15,7 +15,13 @@ class AppLocalizationsVi extends AppLocalizations {
   String get users => 'Người dùng';
 
   @override
+  String get tenants => 'Người thuê';
+
+  @override
   String get resources => 'Kho';
+
+  @override
+  String get assets => 'Vật dụng';
 
   @override
   String get services => 'Dịch vụ';

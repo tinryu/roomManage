@@ -3,6 +3,7 @@ class Room {
   final String name;
   final bool isOccupied; // Trạng thái phòng: đã thuê hay trống
   final String? assetIds; // Danh sách ID tài sản liên kết với phòng
+  final String? imageUrl; // URL ảnh phòng
   final String? tenantId; // ID người thuê (nếu có)
 
   Room({
@@ -10,6 +11,7 @@ class Room {
     required this.name,
     this.isOccupied = false,
     this.assetIds,
+    this.imageUrl,
     this.tenantId,
   });
 
@@ -18,6 +20,7 @@ class Room {
     name: map['name'],
     isOccupied: map['isOccupied'],
     assetIds: map['assetIds'] ?? '',
+    imageUrl: map['image_url'] ?? '',
     tenantId: map['tenantId'] ?? '',
   );
 
@@ -26,6 +29,7 @@ class Room {
     'name': name,
     'isOccupied': isOccupied,
     'assetIds': assetIds,
+    'image_url': imageUrl,
     'tenantId': tenantId,
   };
 }

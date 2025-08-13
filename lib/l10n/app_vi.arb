@@ -1,7 +1,9 @@
 {
   "home": "Trang chủ",
   "users": "Người dùng",
+  "tenants": "Người thuê",
   "resources": "Kho",
+  "assets": "Vật dụng",
   "services": "Dịch vụ",
   "finance": "Tài chính",
   "financeSumary": "Tổng số liệu",

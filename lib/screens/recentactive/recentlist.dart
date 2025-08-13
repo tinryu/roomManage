@@ -4,15 +4,25 @@ import 'package:app_project/providers/activity_provider.dart';
 import 'package:intl/intl.dart';
 
 class RecentList extends ConsumerWidget {
-  const RecentList({super.key});
+  final void Function(Locale locale) onLocaleChange;
+  RecentList({super.key, required this.onLocaleChange});
+
+  final localeProvider = StateProvider<Locale>((ref) => const Locale('en'));
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // final currentLocale = ref.watch(localeProvider);
     final activeState = ref.watch(activityProvider);
     final notifier = ref.read(activityProvider.notifier);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Recent actives')),
+      appBar: AppBar(
+        leading: InkWell(
+          child: Icon(Icons.arrow_back),
+          onTap: () => {Navigator.pop(context)},
+        ),
+        title: const Text('Recent actives'),
+      ),
       body: activeState.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text('Loi: $e')),

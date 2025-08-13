@@ -15,7 +15,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get users => 'Users';
 
   @override
+  String get tenants => 'Tenants';
+
+  @override
   String get resources => 'Resources';
+
+  @override
+  String get assets => 'Assets';
 
   @override
   String get services => 'Services';

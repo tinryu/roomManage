@@ -1,7 +1,9 @@
 {
   "home": "Home",
   "users": "Users",
+  "tenants": "Tenants",
   "resources": "Resources",
+  "assets": "Assets",
   "services": "Services",
   "finance": "Finance",
   "financeSumary": "Sumary finances",

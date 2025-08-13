@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:app_project/l10n/app_localizations.dart';
 import 'package:app_project/screens/home/recent_activity_screen.dart';
-import 'package:app_project/screens/recentactive/recentlist.dart'
-    show RecentList;
+import 'package:app_project/screens/home/income_summary_screen.dart';
+import 'package:app_project/screens/home/upcoming_tasks.dart';
+import 'package:app_project/screens/home/analytics_dashboard.dart';
 
 class HomeScreen extends StatefulWidget {
   final void Function(Locale locale) onLocaleChange;
@@ -17,7 +18,6 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final String userName = "Alex";
   Locale? _currentLocale;
 
   @override
@@ -45,194 +45,117 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Greeting
-            Text(
-              local.welcome(userName),
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Colors.blue,
-              ),
+            // Analytics Dashboard
+            AnalyticsDashboard(
+              stats: [
+                {
+                  'icon': Icons.meeting_room,
+                  'value': '5',
+                  'label': 'Rooms Available',
+                },
+                {
+                  'icon': Icons.attach_money,
+                  'value': '2.5M VND',
+                  'label': 'Today Revenue',
+                },
+                {'icon': Icons.login, 'value': '3', 'label': 'Check-ins Today'},
+                {
+                  'icon': Icons.bar_chart,
+                  'value': '85%',
+                  'label': 'Occupancy Rate',
+                },
+                {
+                  'icon': Icons.person,
+                  'value': '10',
+                  'label': local.activeUsers,
+                },
+                {
+                  'icon': Icons.luggage,
+                  'value': '5',
+                  'label': 'Waiting damaged',
+                },
+              ],
             ),
             SizedBox(height: 16),
+            // Income Summary
+            IncomeSummaryScreen(),
+            SizedBox(height: 16),
             // Recent Activity
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  "Recent Activity",
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-                InkWell(
-                  child: Text("View All", style: TextStyle(color: Colors.blue)),
-                  onTap: () => {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const RecentList(),
-                      ),
-                    ),
-                  },
-                ),
-              ],
-            ),
-            SizedBox(height: 12),
             RecentActivityScreen(),
-            SizedBox(height: 24),
-            // Stats
-            Row(
-              children: [
-                _buildStatCard(
-                  local.activeUsers,
-                  "0",
-                  "+12.5%",
-                  Icons.person,
-                  Colors.green,
-                ),
-                SizedBox(width: 12),
-                _buildStatCard(
-                  local.totalRevenue,
-                  "0",
-                  "+8.2%",
-                  Icons.attach_money,
-                  Colors.blue,
-                ),
+            SizedBox(height: 16),
+            // Upcoming Tasks
+            UpcomingTasks(
+              tasks: [
+                {
+                  'title': 'Room 203 - Checkout',
+                  'date': '14/08/2025 - 10:00 AM',
+                },
+                {
+                  'title': 'Room 105 - Maintenance',
+                  'date': '14/08/2025 - 03:00 PM',
+                },
+                {
+                  'title': 'Weekly Income Report',
+                  'date': '15/08/2025 - 09:00 AM',
+                },
               ],
             ),
-            SizedBox(height: 24),
-            // Quick Actions
-            Text(
-              "Quick Actions",
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 12),
-            GridView.count(
-              crossAxisCount: 2,
-              shrinkWrap: true,
-              physics: NeverScrollableScrollPhysics(),
-              mainAxisSpacing: 12,
-              crossAxisSpacing: 12,
-              childAspectRatio: 1.5,
-              children: [
-                _buildQuickAction(
-                  Icons.account_circle,
-                  local.userManagement,
-                  local.manageUserProfile,
-                  color: Colors.red,
-                ),
-                _buildQuickAction(
-                  Icons.shelves,
-                  local.resources,
-                  local.trackResources,
-                  color: Colors.green,
-                ),
-                _buildQuickAction(
-                  Icons.home,
-                  local.rooms,
-                  local.roomsManagement,
-                  color: Colors.yellow,
-                ),
-                _buildQuickAction(
-                  Icons.currency_exchange,
-                  local.finance,
-                  local.financeSumary,
-                  color: Colors.blue,
-                ),
-              ],
-            ),
-            SizedBox(height: 24),
+            SizedBox(height: 16),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildStatCard(
-    String title,
-    String value,
-    String change,
-    IconData icon,
-    Color color,
-  ) {
-    return Expanded(
-      child: Container(
-        padding: EdgeInsets.all(12),
-        margin: EdgeInsets.only(bottom: 12),
-        decoration: BoxDecoration(
-          // ignore: deprecated_member_use
-          color: color.withOpacity(0.05),
-          border: Border.all(color: Colors.grey.shade300),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
-            ),
-            SizedBox(height: 4),
-            Row(
-              children: [
-                Icon(icon, color: color, size: 18),
-                SizedBox(width: 2),
-                Text(
-                  value,
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-              ],
-            ),
-            SizedBox(height: 4),
-            Text(
-              "$change from last week",
-              style: TextStyle(color: color, fontSize: 12),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildQuickAction(
-    IconData icon,
-    String title,
-    String subtitle, {
-    Color? color,
-  }) {
-    return Container(
-      height: 300,
-      width: double.infinity,
-      padding: EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        // ignore: deprecated_member_use
-        color: color?.withOpacity(0.05) ?? Colors.grey.shade100,
-        border: Border.all(color: Colors.grey.shade300),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        verticalDirection: VerticalDirection.down,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            icon,
-            color: color ?? Colors.blue,
-            size: MediaQuery.of(context).size.width * 0.1,
-          ),
-          Text(
-            title,
-            style: TextStyle(fontWeight: FontWeight.bold),
-            overflow: TextOverflow.ellipsis,
-            maxLines: 1,
-          ),
-          Text(
-            subtitle,
-            style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-            overflow: TextOverflow.ellipsis,
-            maxLines: 1,
-          ),
-        ],
-      ),
-    );
-  }
+  // Widget _buildStatCard(
+  //   String title,
+  //   String value,
+  //   String change,
+  //   IconData icon,
+  //   Color color,
+  // ) {
+  //   return Expanded(
+  //     child: Container(
+  //       padding: EdgeInsets.all(12),
+  //       margin: EdgeInsets.only(bottom: 12),
+  //       decoration: BoxDecoration(
+  //         // ignore: deprecated_member_use
+  //         color: Colors.white,
+  //         border: Border.all(color: Colors.grey.shade300),
+  //         borderRadius: BorderRadius.circular(12),
+  //       ),
+  //       child: Column(
+  //         spacing: 4,
+  //         crossAxisAlignment: CrossAxisAlignment.start,
+  //         children: [
+  //           Text(
+  //             title,
+  //             style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+  //             textScaler: TextScaler.linear(0.8),
+  //           ),
+  //           Row(
+  //             spacing: 4,
+  //             children: [
+  //               Icon(icon, size: 18),
+  //               Text(
+  //                 value,
+  //                 style: TextStyle(
+  //                   fontSize: 18,
+  //                   fontWeight: FontWeight.bold,
+  //                   color: color,
+  //                 ),
+  //                 textScaler: TextScaler.linear(0.8),
+  //               ),
+  //             ],
+  //           ),
+  //           Text(
+  //             "$change from last week",
+  //             style: TextStyle(fontSize: 12),
+  //             textScaler: TextScaler.linear(0.8),
+  //           ),
+  //         ],
+  //       ),
+  //     ),
+  //   );
+  // }
 }
