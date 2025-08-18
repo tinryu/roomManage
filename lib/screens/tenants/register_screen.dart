@@ -163,9 +163,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                   const SizedBox(height: 16),
                   TextButton(
-                    onPressed: () {
-                      // TODO: Navigate to Terms & Conditions page
-                    },
+                    onPressed: () {},
                     child: const Text(
                       'Terms & Conditions',
                       textAlign: TextAlign.center,

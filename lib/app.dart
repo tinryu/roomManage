@@ -1,5 +1,3 @@
-// ignore_for_file: deprecated_member_use
-
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -7,15 +5,19 @@ import 'package:app_project/l10n/app_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'screens/main_screen.dart';
 import 'package:app_project/screens/tenants/login_screen.dart' show LoginScreen;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'providers/onboarding_provider.dart';
+import 'screens/onboarding/onboarding_screen.dart';
 
-class MyApp extends StatefulWidget {
+class MyApp extends ConsumerStatefulWidget {
   const MyApp({super.key});
 
   @override
-  State<MyApp> createState() => _MyAppState();
+  ConsumerState<MyApp> createState() => _MyAppState();
 }
 
-class _MyAppState extends State<MyApp> {
+class _MyAppState extends ConsumerState<MyApp> {
   Locale _locale = Locale('en');
   final user = Supabase.instance.client.auth.currentUser;
   ThemeMode _themeMode = ThemeMode.light;
@@ -31,8 +33,21 @@ class _MyAppState extends State<MyApp> {
     });
   }
 
+  Future<void> _setSeenOnboarding() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('seenOnboarding', true);
+    ref.read(seenOnboardingProvider.notifier).state = true;
+  }
+
+  Future<void> _resetSeenOnboarding() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('seenOnboarding', false);
+    ref.read(seenOnboardingProvider.notifier).state = false;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final seen = ref.watch(seenOnboardingProvider);
     return MaterialApp(
       title: 'Room Service Manager',
       locale: _locale,
@@ -43,13 +58,16 @@ class _MyAppState extends State<MyApp> {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      home: user == null
-          ? LoginScreen()
-          : MainScreen(
-              onLocaleChange: _changeLanguage,
-              onThemeChange: _changeTheme,
-              currentThemeMode: _themeMode,
-            ),
+      home: !seen
+          ? OnboardingScreen(onFinish: _setSeenOnboarding)
+          : (user == null
+                ? LoginScreen()
+                : MainScreen(
+                    onLocaleChange: _changeLanguage,
+                    onThemeChange: _changeTheme,
+                    currentThemeMode: _themeMode,
+                    onResetOnboarding: _resetSeenOnboarding,
+                  )),
       themeMode: _themeMode,
       theme: ThemeData(
         fontFamily: 'Roboto',
@@ -107,7 +125,7 @@ class _MyAppState extends State<MyApp> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8),
             side: BorderSide(
-              color: Colors.lightBlue.withOpacity(0.2),
+              color: Colors.lightBlue.withValues(alpha: 0.2),
               width: 1,
             ),
           ),
@@ -203,7 +221,7 @@ class _MyAppState extends State<MyApp> {
           textColor: Colors.black,
           iconColor: Colors.black54,
           selectedColor: Colors.lightBlue,
-          selectedTileColor: Colors.lightBlue.withOpacity(0.1),
+          selectedTileColor: Colors.lightBlue.withValues(alpha: 0.1),
         ),
 
         // Divider theme
@@ -211,15 +229,15 @@ class _MyAppState extends State<MyApp> {
 
         // Switch theme
         switchTheme: SwitchThemeData(
-          thumbColor: MaterialStateProperty.resolveWith((states) {
-            if (states.contains(MaterialState.selected)) {
+          thumbColor: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.selected)) {
               return Colors.lightBlue;
             }
             return Colors.white;
           }),
-          trackColor: MaterialStateProperty.resolveWith((states) {
-            if (states.contains(MaterialState.selected)) {
-              return Colors.lightBlue.withOpacity(0.5);
+          trackColor: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.selected)) {
+              return Colors.lightBlue.withValues(alpha: 0.5);
             }
             return Colors.black26;
           }),
@@ -227,20 +245,20 @@ class _MyAppState extends State<MyApp> {
 
         // Checkbox theme
         checkboxTheme: CheckboxThemeData(
-          fillColor: MaterialStateProperty.resolveWith((states) {
-            if (states.contains(MaterialState.selected)) {
+          fillColor: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.selected)) {
               return Colors.lightBlue;
             }
             return Colors.white;
           }),
-          checkColor: MaterialStateProperty.all(Colors.white),
+          checkColor: WidgetStateProperty.all(Colors.white),
           side: BorderSide(color: Colors.black54),
         ),
 
         // Radio theme
         radioTheme: RadioThemeData(
-          fillColor: MaterialStateProperty.resolveWith((states) {
-            if (states.contains(MaterialState.selected)) {
+          fillColor: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.selected)) {
               return Colors.lightBlue;
             }
             return Colors.black54;
@@ -279,7 +297,7 @@ class _MyAppState extends State<MyApp> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8),
             side: BorderSide(
-              color: Colors.lightBlue.withOpacity(0.2),
+              color: Colors.lightBlue.withValues(alpha: 0.2),
               width: 1,
             ),
           ),

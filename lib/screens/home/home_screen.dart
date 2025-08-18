@@ -4,6 +4,7 @@ import 'package:app_project/screens/home/recent_activity_screen.dart';
 import 'package:app_project/screens/home/income_summary_screen.dart';
 import 'package:app_project/screens/home/upcoming_tasks.dart';
 import 'package:app_project/screens/home/analytics_dashboard.dart';
+import 'package:card_swiper/card_swiper.dart';
 
 class HomeScreen extends StatefulWidget {
   final void Function(Locale locale) onLocaleChange;
@@ -41,10 +42,11 @@ class _HomeScreenState extends State<HomeScreen> {
     final local = AppLocalizations.of(context)!;
     return Scaffold(
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(8),
+        padding: const EdgeInsets.only(left: 8, right: 8, bottom: 8),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            _swiper(),
             // Analytics Dashboard
             AnalyticsDashboard(
               stats: [
@@ -92,55 +94,41 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // Widget _buildStatCard(
-  //   String title,
-  //   String value,
-  //   String change,
-  //   IconData icon,
-  //   Color color,
-  // ) {
-  //   return Expanded(
-  //     child: Container(
-  //       padding: EdgeInsets.all(12),
-  //       margin: EdgeInsets.only(bottom: 12),
-  //       decoration: BoxDecoration(
-  //         // ignore: deprecated_member_use
-  //         color: Colors.white,
-  //         border: Border.all(color: Colors.grey.shade300),
-  //         borderRadius: BorderRadius.circular(12),
-  //       ),
-  //       child: Column(
-  //         spacing: 4,
-  //         crossAxisAlignment: CrossAxisAlignment.start,
-  //         children: [
-  //           Text(
-  //             title,
-  //             style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-  //             textScaler: TextScaler.linear(0.8),
-  //           ),
-  //           Row(
-  //             spacing: 4,
-  //             children: [
-  //               Icon(icon, size: 18),
-  //               Text(
-  //                 value,
-  //                 style: TextStyle(
-  //                   fontSize: 18,
-  //                   fontWeight: FontWeight.bold,
-  //                   color: color,
-  //                 ),
-  //                 textScaler: TextScaler.linear(0.8),
-  //               ),
-  //             ],
-  //           ),
-  //           Text(
-  //             "$change from last week",
-  //             style: TextStyle(fontSize: 12),
-  //             textScaler: TextScaler.linear(0.8),
-  //           ),
-  //         ],
-  //       ),
-  //     ),
-  //   );
-  // }
+  Widget _swiper() {
+    return SizedBox(
+      height: 100,
+      child: Swiper(
+        itemCount: 3,
+        transformer: ScaleAndFadeTransformer(scale: 0.8, fade: 0.5),
+        itemBuilder: (context, index) => Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            color: Colors.blueAccent,
+          ),
+          child: Center(
+            child: Text(
+              'Slide $index',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ),
+        pagination: SwiperPagination(
+          builder: DotSwiperPaginationBuilder(
+            activeSize: 8,
+            size: 4,
+            activeColor: Colors.white,
+            color: Colors.white38,
+          ),
+        ),
+        control: SwiperControl(
+          color: Colors.white,
+          disableColor: Colors.white38,
+        ),
+      ),
+    );
+  }
 }

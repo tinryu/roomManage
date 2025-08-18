@@ -61,6 +61,7 @@ class _UpcomingTasksState extends ConsumerState<UpcomingTasks> {
             children: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                spacing: 8,
                 children: [
                   Text(
                     "Upcoming Tasks",

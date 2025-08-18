@@ -14,11 +14,13 @@ class MainScreen extends StatefulWidget {
   final void Function(Locale locale) onLocaleChange;
   final void Function(ThemeMode mode) onThemeChange;
   final ThemeMode currentThemeMode;
+  final VoidCallback? onResetOnboarding;
   const MainScreen({
     super.key,
     required this.onLocaleChange,
     this.onThemeChange = _noopThemeChange,
     this.currentThemeMode = ThemeMode.light,
+    this.onResetOnboarding,
   });
 
   static void _noopThemeChange(ThemeMode _) {}
@@ -144,6 +146,18 @@ class _MainScreenState extends State<MainScreen> {
                 onPressed: () => {_drawerKey.currentState?.openDrawer()},
               ),
         title: Text(titles[_selectedIndex]),
+        actions: [
+          IconButton(
+            tooltip: 'Reset onboarding',
+            icon: const Icon(Icons.restart_alt),
+            onPressed: () {
+              widget.onResetOnboarding?.call();
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Onboarding reset.')),
+              );
+            },
+          ),
+        ],
       ),
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -151,7 +165,7 @@ class _MainScreenState extends State<MainScreen> {
           children: [
             Expanded(
               child: Padding(
-                padding: EdgeInsets.all(5.0),
+                padding: EdgeInsets.only(left: 5.0, right: 5.0),
                 child: _screens[_selectedIndex],
               ),
             ),
