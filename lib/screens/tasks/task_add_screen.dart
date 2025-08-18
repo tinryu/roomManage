@@ -1,48 +1,30 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:app_project/providers/asset_provider.dart';
-import 'package:app_project/models/asset.dart';
+import 'package:app_project/models/task.dart';
+import 'package:app_project/providers/task_provider.dart';
+// import 'package:app_project/l10n/app_localizations.dart';
 
-class AddAssetScreen extends ConsumerStatefulWidget {
-  final Asset? initialAsset;
-  const AddAssetScreen({super.key, this.initialAsset});
+class AddTaskScreen extends ConsumerStatefulWidget {
+  const AddTaskScreen({super.key});
 
   @override
-  ConsumerState<AddAssetScreen> createState() => _AddAssetScreenState();
+  ConsumerState<AddTaskScreen> createState() => _AddTaskScreenState();
 }
 
-class _AddAssetScreenState extends ConsumerState<AddAssetScreen> {
+class _AddTaskScreenState extends ConsumerState<AddTaskScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController();
-  final _conditionController = TextEditingController();
-  final _roomIdController = TextEditingController();
-  final _quantityController = TextEditingController();
+  final _titleController = TextEditingController();
+  final _contextController = TextEditingController();
 
   String? _imageUrl;
   bool _isLoading = false;
   final ImagePicker _picker = ImagePicker();
 
   @override
-  void initState() {
-    super.initState();
-    final a = widget.initialAsset;
-    if (a != null) {
-      _nameController.text = a.name;
-      _conditionController.text = a.condition;
-      _roomIdController.text = a.roomid;
-      _quantityController.text = a.quantity.toString();
-      _imageUrl = a.imageUrl;
-    }
-  }
-
-  @override
   void dispose() {
-    _nameController.dispose();
-    _conditionController.dispose();
-    _roomIdController.dispose();
-    _quantityController.dispose();
+    _titleController.dispose();
+    _contextController.dispose();
     super.dispose();
   }
 
@@ -56,6 +38,8 @@ class _AddAssetScreenState extends ConsumerState<AddAssetScreen> {
       );
 
       if (image != null) {
+        // In a real app, you would upload the image to your storage service
+        // For now, we'll just store the local path
         setState(() {
           _imageUrl = image.path;
         });
@@ -72,7 +56,7 @@ class _AddAssetScreenState extends ConsumerState<AddAssetScreen> {
     }
   }
 
-  Future<void> _saveAsset() async {
+  Future<void> _saveTask() async {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() {
@@ -80,54 +64,33 @@ class _AddAssetScreenState extends ConsumerState<AddAssetScreen> {
     });
 
     try {
-      final isEditing = widget.initialAsset != null;
-      final notifier = ref.read(assetProvider.notifier);
-      final name = _nameController.text.trim();
-      final condition = _conditionController.text.trim().isEmpty
-          ? 'Good'
-          : _conditionController.text.trim();
-      final roomId = _roomIdController.text.trim();
-      final quantity = int.tryParse(_quantityController.text) ?? 1;
+      final task = Task(
+        createdAt: DateTime.now(),
+        title: _titleController.text.trim(),
+        context: _contextController.text.trim().isEmpty
+            ? null
+            : _contextController.text.trim(),
+        imageUrl: _imageUrl,
+      );
 
-      if (isEditing) {
-        await notifier.updateAsset(
-          id: widget.initialAsset!.id,
-          name: name,
-          condition: condition,
-          roomId: roomId,
-          quantity: quantity,
-          // Not updating image here to avoid upload flow; keep existing if any
-        );
-      } else {
-        await notifier.addAsset(
-          name: name,
-          condition: condition,
-          roomId: roomId,
-          quantity: quantity,
-          imageFile: _imageUrl != null ? File(_imageUrl!) : null,
-        );
-        // Refresh the asset list to ensure latest data
-        await ref.refresh(assetProvider.future);
-      }
+      await ref.read(taskProvider.notifier).addTask(task);
+      // Refresh the asset list to ensure latest data
+      await ref.refresh(taskProvider.future);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              isEditing
-                  ? 'Asset updated successfully!'
-                  : 'Asset created successfully!',
-            ),
+          const SnackBar(
+            content: Text('Task created successfully!'),
             backgroundColor: Colors.green,
           ),
         );
-        Navigator.of(context).pop(true); // Return true to indicate success
+        // Navigator.of(context).pop(true);
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error saving asset: $e'),
+            content: Text('Error creating task: $e'),
             backgroundColor: Colors.red,
           ),
         );
@@ -143,11 +106,11 @@ class _AddAssetScreenState extends ConsumerState<AddAssetScreen> {
 
   @override
   Widget build(BuildContext context) {
+    //  final local = AppLocalizations.of(context)!;
+
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          widget.initialAsset != null ? 'Edit Asset' : 'Add New Asset',
-        ),
+        title: const Text('Add New Task'),
         actions: [
           if (_isLoading)
             const Center(
@@ -165,12 +128,12 @@ class _AddAssetScreenState extends ConsumerState<AddAssetScreen> {
             )
           else
             TextButton(
-              onPressed: _saveAsset,
+              onPressed: _saveTask,
               child: const Text(
                 'Save',
                 style: TextStyle(
                   color: Colors.white,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
             ),
@@ -181,7 +144,7 @@ class _AddAssetScreenState extends ConsumerState<AddAssetScreen> {
         child: ListView(
           padding: const EdgeInsets.all(16.0),
           children: [
-            // Asset Name Field
+            // Title Field
             Card(
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
@@ -189,16 +152,16 @@ class _AddAssetScreenState extends ConsumerState<AddAssetScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Asset Name',
+                      'Task Title',
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w600,
                       ),
                     ),
                     const SizedBox(height: 8),
                     TextFormField(
-                      controller: _nameController,
+                      controller: _titleController,
                       decoration: const InputDecoration(
-                        hintText: 'Enter asset name...',
+                        hintText: 'Enter task title...',
                         border: OutlineInputBorder(),
                         contentPadding: EdgeInsets.symmetric(
                           horizontal: 12,
@@ -207,7 +170,7 @@ class _AddAssetScreenState extends ConsumerState<AddAssetScreen> {
                       ),
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
-                          return 'Please enter an asset name';
+                          return 'Please enter a task title';
                         }
                         return null;
                       },
@@ -220,7 +183,7 @@ class _AddAssetScreenState extends ConsumerState<AddAssetScreen> {
 
             const SizedBox(height: 16),
 
-            // Room ID Field
+            // Context Field
             Card(
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
@@ -228,114 +191,28 @@ class _AddAssetScreenState extends ConsumerState<AddAssetScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Room ID',
+                      'Task Description',
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w600,
                       ),
                     ),
                     const SizedBox(height: 8),
                     TextFormField(
-                      controller: _roomIdController,
+                      controller: _contextController,
                       decoration: const InputDecoration(
-                        hintText: 'Enter room ID...',
+                        hintText: 'Enter task description (optional)...',
                         border: OutlineInputBorder(),
                         contentPadding: EdgeInsets.symmetric(
                           horizontal: 12,
                           vertical: 8,
                         ),
                       ),
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return 'Please enter a room ID';
-                        }
-                        return null;
-                      },
-                      maxLength: 50,
+                      maxLines: 4,
+                      maxLength: 500,
                     ),
                   ],
                 ),
               ),
-            ),
-
-            const SizedBox(height: 16),
-
-            // Condition and Quantity Row
-            Row(
-              children: [
-                // Condition Field
-                Expanded(
-                  child: Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Condition',
-                            style: Theme.of(context).textTheme.titleMedium
-                                ?.copyWith(fontWeight: FontWeight.w600),
-                          ),
-                          const SizedBox(height: 8),
-                          TextFormField(
-                            controller: _conditionController,
-                            decoration: const InputDecoration(
-                              hintText: 'Good',
-                              border: OutlineInputBorder(),
-                              contentPadding: EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 8,
-                              ),
-                            ),
-                            maxLength: 50,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                // Quantity Field
-                Expanded(
-                  child: Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Quantity',
-                            style: Theme.of(context).textTheme.titleMedium
-                                ?.copyWith(fontWeight: FontWeight.w600),
-                          ),
-                          const SizedBox(height: 8),
-                          TextFormField(
-                            controller: _quantityController,
-                            decoration: const InputDecoration(
-                              hintText: '1',
-                              border: OutlineInputBorder(),
-                              contentPadding: EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 8,
-                              ),
-                            ),
-                            keyboardType: TextInputType.number,
-                            validator: (value) {
-                              if (value != null && value.isNotEmpty) {
-                                final quantity = int.tryParse(value);
-                                if (quantity == null || quantity < 1) {
-                                  return 'Enter valid quantity';
-                                }
-                              }
-                              return null;
-                            },
-                            maxLength: 10,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ],
             ),
 
             const SizedBox(height: 16),
@@ -348,7 +225,7 @@ class _AddAssetScreenState extends ConsumerState<AddAssetScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Asset Image',
+                      'Task Image',
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w600,
                       ),
@@ -365,8 +242,8 @@ class _AddAssetScreenState extends ConsumerState<AddAssetScreen> {
                         ),
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(8),
-                          child: Image.file(
-                            File(_imageUrl!),
+                          child: Image.network(
+                            _imageUrl!,
                             fit: BoxFit.cover,
                             errorBuilder: (context, error, stackTrace) {
                               return Container(

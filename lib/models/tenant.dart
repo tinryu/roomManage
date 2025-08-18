@@ -1,5 +1,5 @@
 class Tenant {
-  final int id;
+  final int? id;
   final String name;
   final String phone;
   final String? email;
@@ -7,7 +7,7 @@ class Tenant {
   final DateTime? checkOut;
 
   Tenant({
-    required this.id,
+    this.id,
     required this.name,
     required this.phone,
     this.email,
@@ -35,5 +35,23 @@ class Tenant {
       'checkin': checkIn.toIso8601String(),
       'checkout': checkOut?.toIso8601String(),
     };
+  }
+
+  Tenant copyWith({
+    int? id,
+    String? name,
+    String? phone,
+    String? email,
+    DateTime? checkIn,
+    DateTime? checkOut,
+  }) {
+    return Tenant(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      phone: phone ?? this.phone,
+      email: email ?? this.email,
+      checkIn: checkIn ?? this.checkIn,
+      checkOut: checkOut ?? this.checkOut,
+    );
   }
 }

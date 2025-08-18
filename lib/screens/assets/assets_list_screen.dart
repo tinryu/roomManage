@@ -4,6 +4,9 @@ import 'package:app_project/providers/asset_provider.dart';
 import 'package:app_project/screens/assets/assets_add_screen.dart';
 import 'package:intl/intl.dart';
 
+// Holds selected asset IDs
+final selectedAssetIdsProvider = StateProvider<Set<int>>((ref) => <int>{});
+
 class AssetsListScreen extends ConsumerWidget {
   const AssetsListScreen({super.key});
 
@@ -13,6 +16,117 @@ class AssetsListScreen extends ConsumerWidget {
     final notifier = ref.read(assetProvider.notifier);
 
     return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: Padding(
+          padding: EdgeInsets.only(left: 16),
+          child: // Select All toggle
+          IconButton(
+            tooltip: 'Select All',
+            icon: const Icon(Icons.select_all, color: Colors.black45),
+            onPressed: () {
+              final selected = ref.read(selectedAssetIdsProvider.notifier);
+              final current = ref.read(selectedAssetIdsProvider);
+              final data = assetState.asData?.value ?? [];
+              if (data.isEmpty) return;
+              final pageIds = data.map((a) => a.id).toSet();
+              final allSelected =
+                  pageIds.isNotEmpty && pageIds.difference(current).isEmpty;
+              selected.state = allSelected
+                  ? (current.difference(pageIds))
+                  : ({...current, ...pageIds});
+            },
+          ),
+        ),
+        actions: [
+          Padding(
+            padding: EdgeInsets.only(right: 16),
+            child: Row(
+              children: [
+                // Edit single
+                IconButton(
+                  tooltip: 'Edit',
+                  icon: const Icon(Icons.edit, color: Colors.black45),
+                  onPressed: () async {
+                    final selectedIds = ref.read(selectedAssetIdsProvider);
+                    if (selectedIds.length != 1) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Select exactly one asset to edit'),
+                        ),
+                      );
+                      return;
+                    }
+                    final assets = ref.read(assetProvider).asData?.value ?? [];
+                    final id = selectedIds.first;
+                    final asset = assets.firstWhere(
+                      (a) => a.id == id,
+                      orElse: () => assets.first,
+                    );
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            AddAssetScreen(initialAsset: asset),
+                      ),
+                    );
+                  },
+                ),
+                // Delete bulk
+                IconButton(
+                  tooltip: 'Delete',
+                  icon: const Icon(Icons.delete, color: Colors.black45),
+                  onPressed: () async {
+                    final selectedIds = ref.read(selectedAssetIdsProvider);
+                    if (selectedIds.isEmpty) return;
+                    final confirm = await showDialog<bool>(
+                      context: context,
+                      builder: (ctx) => AlertDialog(
+                        title: const Text('Delete assets'),
+                        content: Text(
+                          'Delete ${selectedIds.length} selected asset(s)?',
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(ctx, false),
+                            child: const Text('Cancel'),
+                          ),
+                          ElevatedButton(
+                            onPressed: () => Navigator.pop(ctx, true),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.red,
+                            ),
+                            child: const Text('Delete'),
+                          ),
+                        ],
+                      ),
+                    );
+                    if (confirm != true) return;
+                    try {
+                      await notifier.deleteAssets(selectedIds.toList());
+                      ref.read(selectedAssetIdsProvider.notifier).state = {};
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Deleted selected assets'),
+                          ),
+                        );
+                      }
+                    } catch (e) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Delete failed: $e')),
+                        );
+                      }
+                    }
+                  },
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
       body: assetState.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text('Lỗi: $e')),
@@ -23,71 +137,124 @@ class AssetsListScreen extends ConsumerWidget {
                 itemCount: assets.length,
                 itemBuilder: (context, index) {
                   final asset = assets[index];
+                  final selectedIds = ref.watch(selectedAssetIdsProvider);
+                  final isChecked = selectedIds.contains(asset.id);
                   return ListTile(
-                    leading:
-                        asset.imageUrl != null && asset.imageUrl!.isNotEmpty
-                        ? ClipRRect(
-                            borderRadius: BorderRadius.circular(6),
-                            child: Image.network(
-                              asset.imageUrl!,
-                              width: 50,
-                              height: 50,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) =>
-                                  const Icon(Icons.broken_image, size: 40),
-                            ),
-                          )
-                        : Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: const BoxDecoration(
-                              color: Colors.lightBlue,
-                              shape: BoxShape.rectangle,
-                              borderRadius: BorderRadius.all(
-                                Radius.circular(12),
-                              ),
-                            ),
-                            child: Icon(
-                              Icons.inventory_2,
-                              color: Colors.white,
-                              size: 24,
-                            ),
-                          ),
-                    title: Text(
-                      asset.name,
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
-                      textScaler: TextScaler.linear(0.8),
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 16,
-                      ),
+                    onTap: () {
+                      final sel = ref.read(selectedAssetIdsProvider.notifier);
+                      final next = {...selectedIds};
+                      if (isChecked) {
+                        next.remove(asset.id);
+                      } else {
+                        next.add(asset.id);
+                      }
+                      sel.state = next;
+                    },
+
+                    leading: Checkbox(
+                      value: isChecked,
+                      onChanged: (v) {
+                        final sel = ref.read(selectedAssetIdsProvider.notifier);
+                        final next = {...selectedIds};
+                        if (v == true) {
+                          next.add(asset.id);
+                        } else {
+                          next.remove(asset.id);
+                        }
+                        sel.state = next;
+                      },
                     ),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    subtitle: Row(
+                      spacing: 8.0,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          "Condition: ${asset.condition}",
-                          overflow: TextOverflow.ellipsis,
-                          maxLines: 1,
-                          textScaler: TextScaler.linear(0.8),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              spacing: 8.0,
+                              children: [
+                                asset.imageUrl != null &&
+                                        asset.imageUrl!.isNotEmpty
+                                    ? ClipRRect(
+                                        borderRadius: BorderRadius.circular(6),
+                                        child: Image.network(
+                                          asset.imageUrl!,
+                                          width: 40,
+                                          height: 40,
+                                          fit: BoxFit.cover,
+                                          errorBuilder:
+                                              (context, error, stackTrace) =>
+                                                  const Icon(
+                                                    Icons.broken_image,
+                                                    size: 40,
+                                                  ),
+                                        ),
+                                      )
+                                    : Container(
+                                        padding: const EdgeInsets.all(8),
+                                        decoration: const BoxDecoration(
+                                          color: Colors.lightBlue,
+                                          shape: BoxShape.rectangle,
+                                          borderRadius: BorderRadius.all(
+                                            Radius.circular(12),
+                                          ),
+                                        ),
+                                        child: Icon(
+                                          Icons.inventory_2,
+                                          color: Colors.white,
+                                          size: 22,
+                                        ),
+                                      ),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      asset.name,
+                                      overflow: TextOverflow.ellipsis,
+                                      maxLines: 1,
+                                      textScaler: TextScaler.linear(0.8),
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 16,
+                                      ),
+                                    ),
+                                    Text(
+                                      "Condition: ${asset.condition}",
+                                      overflow: TextOverflow.ellipsis,
+                                      maxLines: 1,
+                                      textScaler: TextScaler.linear(0.8),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
-                        Text(
-                          "Quantity: ${asset.quantity}",
-                          overflow: TextOverflow.ellipsis,
-                          maxLines: 1,
-                          textScaler: TextScaler.linear(0.8),
-                        ),
-                        Text(
-                          "Room ID: ${asset.roomid}",
-                          overflow: TextOverflow.ellipsis,
-                          maxLines: 1,
-                          textScaler: TextScaler.linear(0.8),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Text(
+                              "Quantity: ${asset.quantity}",
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
+                              textScaler: TextScaler.linear(0.8),
+                            ),
+                            Text(
+                              "Room ID: ${asset.roomid}",
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
+                              textScaler: TextScaler.linear(0.8),
+                            ),
+                            Text(
+                              DateFormat(
+                                'dd/MM/yyyy HH:mm',
+                              ).format(asset.createdAt),
+                              style: const TextStyle(fontSize: 12),
+                            ),
+                          ],
                         ),
                       ],
-                    ),
-                    trailing: Text(
-                      DateFormat('dd/MM/yyyy HH:mm').format(asset.createdAt),
-                      style: const TextStyle(fontSize: 12),
                     ),
                   );
                 },
@@ -106,8 +273,9 @@ class AssetsListScreen extends ConsumerWidget {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        child: const Icon(Icons.add),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+      floatingActionButton: FloatingActionButton.small(
+        child: Icon(Icons.add),
         onPressed: () {
           Navigator.push(
             context,

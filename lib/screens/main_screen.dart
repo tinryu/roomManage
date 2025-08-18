@@ -1,16 +1,27 @@
+import 'package:app_project/screens/tasks/task_list_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:app_project/l10n/app_localizations.dart';
 import 'package:app_project/screens/home/home_screen.dart';
 import 'package:app_project/screens/tenants/tenants_list_screen.dart';
 import 'package:app_project/screens/assets/assets_list_screen.dart';
-import 'package:app_project/screens/rooms/room_list_screen.dart';
+import 'package:app_project/screens/rooms/rooms_list_screen.dart';
 import 'package:app_project/screens/payment/payment_list_screen.dart';
+import 'package:app_project/screens/settings/settings_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:app_project/screens/tenants/login_screen.dart' show LoginScreen;
 
 class MainScreen extends StatefulWidget {
   final void Function(Locale locale) onLocaleChange;
-  const MainScreen({super.key, required this.onLocaleChange});
+  final void Function(ThemeMode mode) onThemeChange;
+  final ThemeMode currentThemeMode;
+  const MainScreen({
+    super.key,
+    required this.onLocaleChange,
+    this.onThemeChange = _noopThemeChange,
+    this.currentThemeMode = ThemeMode.light,
+  });
+
+  static void _noopThemeChange(ThemeMode _) {}
 
   @override
   State<MainScreen> createState() => _MainScreenState();
@@ -19,6 +30,7 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   int _selectedIndex = 0;
   Locale? _currentLocale;
+  final GlobalKey<ScaffoldState> _drawerKey = GlobalKey();
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -56,8 +68,7 @@ class _MainScreenState extends State<MainScreen> {
   @override
   Widget build(BuildContext context) {
     final local = AppLocalizations.of(context)!;
-    // ignore: no_leading_underscores_for_local_identifiers
-    final lang = local.localeName == 'vi' ? 'en' : 'vi';
+
     final List<String> titles = [
       local.home,
       local.tenants,
@@ -66,95 +77,124 @@ class _MainScreenState extends State<MainScreen> {
       local.payment,
     ];
     return Scaffold(
+      key: _drawerKey,
+      drawer: Drawer(
+        width: 250,
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            const DrawerHeader(
+              decoration: BoxDecoration(color: Colors.blue),
+              child: Text(
+                'Drawer Header',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+            ListTile(
+              title: const Text('Setting'),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => SettingsScreen(
+                      onLocaleChange: widget.onLocaleChange,
+                      onThemeChange: widget.onThemeChange,
+                      currentThemeMode: widget.currentThemeMode,
+                    ),
+                  ),
+                );
+                _drawerKey.currentState?.closeDrawer();
+              },
+            ),
+            ListTile(
+              title: const Text('Tasks'),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const TaskListScreen(),
+                  ),
+                );
+                _drawerKey.currentState?.closeDrawer();
+              },
+            ),
+            ListTile(
+              title: const Text('Logout'),
+              onTap: () {
+                _signOut(context);
+              },
+            ),
+          ],
+        ),
+      ),
       appBar: AppBar(
         titleSpacing: 0,
         centerTitle: true,
-        leading: Icon(Icons.solar_power, size: 25),
+        leading: (_selectedIndex > 0)
+            ? IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () => {
+                  setState(() {
+                    _selectedIndex = 0;
+                  }),
+                },
+              )
+            : IconButton(
+                icon: const Icon(Icons.menu),
+                onPressed: () => {_drawerKey.currentState?.openDrawer()},
+              ),
         title: Text(titles[_selectedIndex]),
-        elevation: 0,
-        actionsPadding: EdgeInsets.zero,
-        actions: [
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ElevatedButton(
-                onPressed: () => widget.onLocaleChange(Locale(lang)),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white,
-                  minimumSize: Size(25, 25),
-                  padding: EdgeInsets.zero,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.all(
-                      Radius.elliptical(10, 10),
-                    ), // ⬅ removes rounding
-                  ),
-                ),
-                child: Text(
-                  _currentLocale?.languageCode != 'vi' ? 'VN' : 'EN',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black,
-                  ),
-                  textScaler: TextScaler.linear(0.8),
-                ),
-              ),
-              PopupMenuButton<String>(
-                padding: EdgeInsets.zero,
-                tooltip: 'User',
-                icon: Icon(Icons.person, size: 18),
-                // handle list notification from server, get moodel notifi
-                itemBuilder: (context) => [
-                  PopupMenuItem(
-                    child: Text('Profile', textScaler: TextScaler.linear(0.8)),
-                    onTap: () => {},
-                  ),
-                  PopupMenuItem(
-                    child: Text('Settings', textScaler: TextScaler.linear(0.8)),
-                    onTap: () => {},
-                  ),
-                  PopupMenuItem(
-                    child: Text('Logout', textScaler: TextScaler.linear(0.8)),
-                    onTap: () => {_signOut(context)},
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ],
       ),
-      body: Padding(
-        padding: EdgeInsets.all(5.0),
-        child: _screens[_selectedIndex],
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: Column(
+          children: [
+            Expanded(
+              child: Padding(
+                padding: EdgeInsets.all(5.0),
+                child: _screens[_selectedIndex],
+              ),
+            ),
+          ],
+        ),
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        onTap: (index) {
-          setState(() {
-            _selectedIndex = index;
-          });
-        },
-        type: BottomNavigationBarType.fixed,
-        showUnselectedLabels: true,
-        items: [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.dashboard),
-            label: local.home,
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.account_circle),
-            label: local.tenants,
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.shelves),
-            label: local.assets,
-          ),
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: local.rooms),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.currency_exchange),
-            label: local.payment,
-          ),
-        ],
+      bottomNavigationBar: ClipRRect(
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(20.0),
+          topRight: Radius.circular(20.0),
+        ),
+        child: BottomNavigationBar(
+          showSelectedLabels: false,
+          currentIndex: _selectedIndex,
+          selectedFontSize: 0,
+          unselectedFontSize: 0,
+          onTap: (index) {
+            setState(() {
+              _selectedIndex = index;
+            });
+          },
+          type: BottomNavigationBarType.fixed,
+          showUnselectedLabels: true,
+          items: [
+            BottomNavigationBarItem(
+              icon: Icon(Icons.dashboard),
+              label: local.home,
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.account_circle),
+              label: local.tenants,
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.shelves),
+              label: local.assets,
+            ),
+            BottomNavigationBarItem(icon: Icon(Icons.home), label: local.rooms),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.currency_exchange),
+              label: local.payment,
+            ),
+          ],
+        ),
       ),
     );
   }

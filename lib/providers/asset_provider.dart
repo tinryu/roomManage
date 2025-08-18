@@ -19,6 +19,50 @@ class AssetNotifier extends AsyncNotifier<List<Asset>> {
     return await _fetchAssets(reset: true);
   }
 
+  Future<void> updateAsset({
+    required int id,
+    required String name,
+    required String condition,
+    required String roomId,
+    required int quantity,
+    String? imageUrl,
+  }) async {
+    try {
+      final data = {
+        'name': name,
+        'condition': condition,
+        'roomid': roomId,
+        'quantity': quantity,
+        if (imageUrl != null) 'image_url': imageUrl,
+      };
+      final res = await supabase
+          .from(_table)
+          .update(data)
+          .eq('id', id as Object)
+          .select()
+          .single();
+      final updated = Asset.fromMap(res);
+      final current = state.value ?? [];
+      state = AsyncData(current.map((a) => a.id == updated.id ? updated : a).toList());
+    } catch (e) {
+      state = AsyncValue.error(e, StackTrace.current);
+      rethrow;
+    }
+  }
+
+  Future<void> deleteAssets(List<int> ids) async {
+    if (ids.isEmpty) return;
+    try {
+      await supabase.from(_table).delete().inFilter('id', ids);
+      final idSet = ids.toSet();
+      final current = state.value ?? [];
+      state = AsyncData(current.where((a) => !idSet.contains(a.id)).toList());
+    } catch (e) {
+      state = AsyncValue.error(e, StackTrace.current);
+      rethrow;
+    }
+  }
+
   Future<List<Asset>> _fetchAssets({bool reset = false}) async {
     if (_isLoadingMore) return state.value ?? [];
 

@@ -2,47 +2,46 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:app_project/providers/asset_provider.dart';
-import 'package:app_project/models/asset.dart';
+import 'package:app_project/models/room.dart';
+import 'package:app_project/providers/room_provider.dart';
 
-class AddAssetScreen extends ConsumerStatefulWidget {
-  final Asset? initialAsset;
-  const AddAssetScreen({super.key, this.initialAsset});
+class AddRoomScreen extends ConsumerStatefulWidget {
+  final Room? initialRoom;
+  const AddRoomScreen({super.key, this.initialRoom});
 
   @override
-  ConsumerState<AddAssetScreen> createState() => _AddAssetScreenState();
+  ConsumerState<AddRoomScreen> createState() => _AddRoomScreenState();
 }
 
-class _AddAssetScreenState extends ConsumerState<AddAssetScreen> {
+class _AddRoomScreenState extends ConsumerState<AddRoomScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
-  final _conditionController = TextEditingController();
-  final _roomIdController = TextEditingController();
-  final _quantityController = TextEditingController();
+  final _tenantIdController = TextEditingController();
+  final _assetIdsController = TextEditingController();
 
-  String? _imageUrl;
+  bool _isOccupied = false;
   bool _isLoading = false;
   final ImagePicker _picker = ImagePicker();
+  String? _imagePath;
 
   @override
   void initState() {
     super.initState();
-    final a = widget.initialAsset;
-    if (a != null) {
-      _nameController.text = a.name;
-      _conditionController.text = a.condition;
-      _roomIdController.text = a.roomid;
-      _quantityController.text = a.quantity.toString();
-      _imageUrl = a.imageUrl;
+    final r = widget.initialRoom;
+    if (r != null) {
+      _nameController.text = r.name;
+      _tenantIdController.text = r.tenantId ?? '';
+      _assetIdsController.text = r.assetId ?? '';
+      _isOccupied = r.isOccupied;
+      _imagePath = r.imageUrl;
     }
   }
 
   @override
   void dispose() {
     _nameController.dispose();
-    _conditionController.dispose();
-    _roomIdController.dispose();
-    _quantityController.dispose();
+    _tenantIdController.dispose();
+    _assetIdsController.dispose();
     super.dispose();
   }
 
@@ -54,11 +53,8 @@ class _AddAssetScreenState extends ConsumerState<AddAssetScreen> {
         maxHeight: 1024,
         imageQuality: 80,
       );
-
       if (image != null) {
-        setState(() {
-          _imageUrl = image.path;
-        });
+        setState(() => _imagePath = image.path);
       }
     } catch (e) {
       if (mounted) {
@@ -72,72 +68,53 @@ class _AddAssetScreenState extends ConsumerState<AddAssetScreen> {
     }
   }
 
-  Future<void> _saveAsset() async {
+  Future<void> _saveRoom() async {
     if (!_formKey.currentState!.validate()) return;
 
-    setState(() {
-      _isLoading = true;
-    });
-
+    setState(() => _isLoading = true);
     try {
-      final isEditing = widget.initialAsset != null;
-      final notifier = ref.read(assetProvider.notifier);
-      final name = _nameController.text.trim();
-      final condition = _conditionController.text.trim().isEmpty
-          ? 'Good'
-          : _conditionController.text.trim();
-      final roomId = _roomIdController.text.trim();
-      final quantity = int.tryParse(_quantityController.text) ?? 1;
+      final isEditing = widget.initialRoom != null;
+      final room = Room(
+        id: isEditing ? widget.initialRoom!.id : null,
+        name: _nameController.text.trim(),
+        isOccupied: _isOccupied,
+        assetId: _assetIdsController.text.trim().isEmpty
+            ? null
+            : _assetIdsController.text.trim(),
+        imageUrl: _imagePath, // stored as-is
+        tenantId: _tenantIdController.text.trim().isEmpty
+            ? null
+            : _tenantIdController.text.trim(),
+      );
 
+      final notifier = ref.read(roomProvider.notifier);
       if (isEditing) {
-        await notifier.updateAsset(
-          id: widget.initialAsset!.id,
-          name: name,
-          condition: condition,
-          roomId: roomId,
-          quantity: quantity,
-          // Not updating image here to avoid upload flow; keep existing if any
-        );
+        await notifier.updateRoom(room);
       } else {
-        await notifier.addAsset(
-          name: name,
-          condition: condition,
-          roomId: roomId,
-          quantity: quantity,
-          imageFile: _imageUrl != null ? File(_imageUrl!) : null,
-        );
-        // Refresh the asset list to ensure latest data
-        await ref.refresh(assetProvider.future);
+        await notifier.addRoom(room);
+        await ref.refresh(roomProvider.future);
       }
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              isEditing
-                  ? 'Asset updated successfully!'
-                  : 'Asset created successfully!',
-            ),
+            content: Text(isEditing ? 'Room updated successfully!' : 'Room created successfully!'),
             backgroundColor: Colors.green,
           ),
         );
-        Navigator.of(context).pop(true); // Return true to indicate success
+        Navigator.of(context).pop(true);
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error saving asset: $e'),
+            content: Text('Error saving room: $e'),
             backgroundColor: Colors.red,
           ),
         );
       }
     } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -145,9 +122,7 @@ class _AddAssetScreenState extends ConsumerState<AddAssetScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          widget.initialAsset != null ? 'Edit Asset' : 'Add New Asset',
-        ),
+        title: Text(widget.initialRoom != null ? 'Edit Room' : 'Add New Room'),
         actions: [
           if (_isLoading)
             const Center(
@@ -165,7 +140,7 @@ class _AddAssetScreenState extends ConsumerState<AddAssetScreen> {
             )
           else
             TextButton(
-              onPressed: _saveAsset,
+              onPressed: _saveRoom,
               child: const Text(
                 'Save',
                 style: TextStyle(
@@ -181,7 +156,7 @@ class _AddAssetScreenState extends ConsumerState<AddAssetScreen> {
         child: ListView(
           padding: const EdgeInsets.all(16.0),
           children: [
-            // Asset Name Field
+            // Room Name
             Card(
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
@@ -189,7 +164,7 @@ class _AddAssetScreenState extends ConsumerState<AddAssetScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Asset Name',
+                      'Room Name',
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w600,
                       ),
@@ -198,19 +173,17 @@ class _AddAssetScreenState extends ConsumerState<AddAssetScreen> {
                     TextFormField(
                       controller: _nameController,
                       decoration: const InputDecoration(
-                        hintText: 'Enter asset name...',
+                        hintText: 'Enter room name...',
                         border: OutlineInputBorder(),
                         contentPadding: EdgeInsets.symmetric(
                           horizontal: 12,
                           vertical: 8,
                         ),
                       ),
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return 'Please enter an asset name';
-                        }
-                        return null;
-                      },
+                      validator: (value) =>
+                          (value == null || value.trim().isEmpty)
+                          ? 'Please enter room name'
+                          : null,
                       maxLength: 100,
                     ),
                   ],
@@ -220,49 +193,9 @@ class _AddAssetScreenState extends ConsumerState<AddAssetScreen> {
 
             const SizedBox(height: 16),
 
-            // Room ID Field
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Room ID',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    TextFormField(
-                      controller: _roomIdController,
-                      decoration: const InputDecoration(
-                        hintText: 'Enter room ID...',
-                        border: OutlineInputBorder(),
-                        contentPadding: EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 8,
-                        ),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return 'Please enter a room ID';
-                        }
-                        return null;
-                      },
-                      maxLength: 50,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 16),
-
-            // Condition and Quantity Row
+            // Tenant ID and Occupied
             Row(
               children: [
-                // Condition Field
                 Expanded(
                   child: Card(
                     child: Padding(
@@ -271,15 +204,15 @@ class _AddAssetScreenState extends ConsumerState<AddAssetScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Condition',
+                            'Tenant ID',
                             style: Theme.of(context).textTheme.titleMedium
                                 ?.copyWith(fontWeight: FontWeight.w600),
                           ),
                           const SizedBox(height: 8),
                           TextFormField(
-                            controller: _conditionController,
+                            controller: _tenantIdController,
                             decoration: const InputDecoration(
-                              hintText: 'Good',
+                              hintText: 'Optional',
                               border: OutlineInputBorder(),
                               contentPadding: EdgeInsets.symmetric(
                                 horizontal: 12,
@@ -294,7 +227,6 @@ class _AddAssetScreenState extends ConsumerState<AddAssetScreen> {
                   ),
                 ),
                 const SizedBox(width: 8),
-                // Quantity Field
                 Expanded(
                   child: Card(
                     child: Padding(
@@ -303,32 +235,16 @@ class _AddAssetScreenState extends ConsumerState<AddAssetScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Quantity',
+                            'Occupied',
                             style: Theme.of(context).textTheme.titleMedium
                                 ?.copyWith(fontWeight: FontWeight.w600),
                           ),
                           const SizedBox(height: 8),
-                          TextFormField(
-                            controller: _quantityController,
-                            decoration: const InputDecoration(
-                              hintText: '1',
-                              border: OutlineInputBorder(),
-                              contentPadding: EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 8,
-                              ),
-                            ),
-                            keyboardType: TextInputType.number,
-                            validator: (value) {
-                              if (value != null && value.isNotEmpty) {
-                                final quantity = int.tryParse(value);
-                                if (quantity == null || quantity < 1) {
-                                  return 'Enter valid quantity';
-                                }
-                              }
-                              return null;
-                            },
-                            maxLength: 10,
+                          SwitchListTile(
+                            title: Text(_isOccupied ? 'Occupied' : 'Vacant'),
+                            value: _isOccupied,
+                            onChanged: (v) => setState(() => _isOccupied = v),
+                            contentPadding: EdgeInsets.zero,
                           ),
                         ],
                       ),
@@ -336,6 +252,40 @@ class _AddAssetScreenState extends ConsumerState<AddAssetScreen> {
                   ),
                 ),
               ],
+            ),
+
+            const SizedBox(height: 16),
+
+            // Asset IDs
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Asset IDs',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    TextFormField(
+                      controller: _assetIdsController,
+                      decoration: const InputDecoration(
+                        hintText: 'Comma-separated IDs (optional)',
+                        border: OutlineInputBorder(),
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
+                      ),
+                      maxLines: 2,
+                      maxLength: 200,
+                    ),
+                  ],
+                ),
+              ),
             ),
 
             const SizedBox(height: 16),
@@ -348,14 +298,13 @@ class _AddAssetScreenState extends ConsumerState<AddAssetScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Asset Image',
+                      'Room Image',
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w600,
                       ),
                     ),
                     const SizedBox(height: 8),
-
-                    if (_imageUrl != null) ...[
+                    if (_imagePath != null) ...[
                       Container(
                         width: double.infinity,
                         height: 200,
@@ -366,20 +315,19 @@ class _AddAssetScreenState extends ConsumerState<AddAssetScreen> {
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(8),
                           child: Image.file(
-                            File(_imageUrl!),
+                            File(_imagePath!),
                             fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
-                              return Container(
-                                color: Colors.grey.shade200,
-                                child: const Center(
-                                  child: Icon(
-                                    Icons.broken_image,
-                                    size: 50,
-                                    color: Colors.grey,
+                            errorBuilder: (context, error, stackTrace) =>
+                                Container(
+                                  color: Colors.grey.shade200,
+                                  child: const Center(
+                                    child: Icon(
+                                      Icons.broken_image,
+                                      size: 50,
+                                      color: Colors.grey,
+                                    ),
                                   ),
                                 ),
-                              );
-                            },
                           ),
                         ),
                       ),
@@ -392,11 +340,7 @@ class _AddAssetScreenState extends ConsumerState<AddAssetScreen> {
                             label: const Text('Change Image'),
                           ),
                           TextButton.icon(
-                            onPressed: () {
-                              setState(() {
-                                _imageUrl = null;
-                              });
-                            },
+                            onPressed: () => setState(() => _imagePath = null),
                             icon: const Icon(Icons.delete),
                             label: const Text('Remove Image'),
                             style: TextButton.styleFrom(

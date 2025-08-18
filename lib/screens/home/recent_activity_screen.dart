@@ -2,8 +2,8 @@ import 'package:app_project/models/activity.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_project/providers/activity_provider.dart';
-import 'package:app_project/screens/recentactive/recentlist.dart'
-    show RecentList;
+// import 'package:app_project/screens/recentactive/recentlist.dart'
+//     show RecentList;
 import 'package:intl/intl.dart';
 
 class RecentActivityScreen extends ConsumerStatefulWidget {
@@ -36,6 +36,7 @@ class _RecentActivityScreenState extends ConsumerState<RecentActivityScreen> {
       final activities = await activityNotifier.getMonthlyActivitys(
         year: 2025,
         month: 8,
+        limit: 5,
       );
       setState(() {
         recentActivities = activities;
@@ -64,22 +65,7 @@ class _RecentActivityScreenState extends ConsumerState<RecentActivityScreen> {
                 children: [
                   Text(
                     "Recent Activity",
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-                  ),
-                  InkWell(
-                    child: Text(
-                      "View All",
-                      style: TextStyle(fontSize: 12, color: Colors.black),
-                    ),
-                    onTap: () => {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              RecentList(onLocaleChange: (Locale locale) {}),
-                        ),
-                      ),
-                    },
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                   ),
                 ],
               ),
@@ -98,13 +84,12 @@ class _RecentActivityScreenState extends ConsumerState<RecentActivityScreen> {
                           spacing: 16,
                           children: recentActivities.map((act) {
                             return Container(
-                              width: 160,
+                              width: 200,
                               height: 80,
                               padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
-                                color: Colors.white,
                                 borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: Colors.grey.shade100),
+                                border: Border.all(color: Colors.grey[100]!),
                               ),
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,

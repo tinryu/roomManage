@@ -64,13 +64,61 @@ class TenantNotifier extends AsyncNotifier<List<Tenant>> {
   }
 
   Future<void> addTenant(Tenant tenant) async {
-    await supabase.from(_table).insert(tenant.toMap());
-    state = AsyncData(await _fetchTenants());
+    try {
+      final data = {
+        'name': tenant.name,
+        'phone': tenant.phone,
+        'email': tenant.email,
+        'checkin': tenant.checkIn.toIso8601String(),
+        'checkout': tenant.checkOut?.toIso8601String(),
+      };
+      final res = await supabase.from(_table).insert(data).select().single();
+      final newTenant = Tenant.fromMap(res);
+      final current = state.value ?? [];
+      state = AsyncData([newTenant, ...current]);
+    } catch (e) {
+      state = AsyncError(e, StackTrace.current);
+      rethrow;
+    }
+  }
+
+  Future<void> updateTenant(Tenant tenant) async {
+    if (tenant.id == null) return;
+    try {
+      final data = {
+        'name': tenant.name,
+        'phone': tenant.phone,
+        'email': tenant.email,
+        'checkin': tenant.checkIn.toIso8601String(),
+        'checkout': tenant.checkOut?.toIso8601String(),
+      };
+      final res = await supabase
+          .from(_table)
+          .update(data)
+          .eq('id', tenant.id as int)
+          .select()
+          .single();
+      final updated = Tenant.fromMap(res);
+      final current = state.value ?? [];
+      state = AsyncData(current.map((t) => t.id == updated.id ? updated : t).toList());
+    } catch (e) {
+      state = AsyncError(e, StackTrace.current);
+      rethrow;
+    }
   }
 
   Future<void> deleteTenant(String id) async {
     await supabase.from(_table).delete().eq('id', id);
-    state = AsyncData(await _fetchTenants());
+    final current = state.value ?? [];
+    state = AsyncData(current.where((t) => '${t.id}' != id).toList());
+  }
+
+  Future<void> deleteTenants(List<int> ids) async {
+    if (ids.isEmpty) return;
+    await supabase.from(_table).delete().inFilter('id', ids);
+    final idSet = ids.toSet();
+    final current = state.value ?? [];
+    state = AsyncData(current.where((t) => !(t.id != null && idSet.contains(t.id))).toList());
   }
 
   bool get hasMore => _hasMore;

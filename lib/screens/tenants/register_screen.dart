@@ -1,64 +1,71 @@
-import 'package:app_project/screens/tenants/forgot_screen.dart';
-import 'package:app_project/screens/tenants/register_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:app_project/screens/main_screen.dart' show MainScreen;
+import 'package:app_project/screens/tenants/verify_mobile_screen.dart';
 
-class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+class RegisterScreen extends StatefulWidget {
+  const RegisterScreen({super.key});
 
   @override
-  // ignore: library_private_types_in_public_api
-  _LoginScreenState createState() => _LoginScreenState();
+  State<RegisterScreen> createState() => _RegisterScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _RegisterScreenState extends State<RegisterScreen> {
+  final _usernameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+
   bool _isLoading = false;
   String? _errorMessage;
-  void _changeLanguage(Locale locale) {
-    setState(() {});
+
+  @override
+  void dispose() {
+    _usernameController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
   }
 
-  Future<void> _signIn() async {
+  Future<void> _signUp() async {
     setState(() {
       _isLoading = true;
       _errorMessage = null;
     });
 
     try {
-      final response = await Supabase.instance.client.auth.signInWithPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text.trim(),
+      final email = _emailController.text.trim();
+      final password = _passwordController.text.trim();
+      final username = _usernameController.text.trim();
+
+      if (email.isEmpty || password.isEmpty) {
+        throw 'Email and password are required';
+      }
+
+      final response = await Supabase.instance.client.auth.signUp(
+        email: email,
+        password: password,
+        data: {'username': username},
       );
+
       if (response.user != null) {
-        // Navigate to the home screen on successful login
         if (mounted) {
+          // After registering, go to mobile verification flow
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(
-              builder: (context) => MainScreen(onLocaleChange: _changeLanguage),
-            ),
+            MaterialPageRoute(builder: (context) => const VerifyMobileScreen()),
           );
         }
       }
     } catch (e) {
       setState(() {
-        _errorMessage = 'Login failed: $e';
+        _errorMessage = 'Sign up failed: $e';
       });
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
-  }
-
-  @override
-  void dispose() {
-    _emailController.dispose();
-    _passwordController.dispose();
-    super.dispose();
   }
 
   @override
@@ -76,15 +83,30 @@ class _LoginScreenState extends State<LoginScreen> {
                 children: [
                   const SizedBox(height: 8),
                   const Text(
-                    'Log in',
+                    'Welcome to\n Room Manage',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 28,
                       fontWeight: FontWeight.w700,
                       color: Colors.black,
+                      height: 1.2,
                     ),
                   ),
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Create your account',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 14, color: Colors.black54),
+                  ),
+                  const SizedBox(height: 28),
+                  TextField(
+                    controller: _usernameController,
+                    decoration: const InputDecoration(
+                      labelText: 'Username',
+                      border: UnderlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
                   TextField(
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
@@ -102,30 +124,12 @@ class _LoginScreenState extends State<LoginScreen> {
                       border: UnderlineInputBorder(),
                     ),
                   ),
-                  const SizedBox(height: 6),
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: TextButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const ForgotScreen(),
-                          ),
-                        );
-                      },
-                      child: const Text(
-                        'Forgot Password?',
-                        style: TextStyle(color: Colors.black54),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 16),
                   SizedBox(
                     width: double.infinity,
                     height: 48,
                     child: ElevatedButton(
-                      onPressed: _isLoading ? null : _signIn,
+                      onPressed: _isLoading ? null : _signUp,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.lightBlue,
                         foregroundColor: Colors.white,
@@ -145,7 +149,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 ),
                               ),
                             )
-                          : const Text('Login'),
+                          : const Text('Sign-up'),
                     ),
                   ),
                   if (_errorMessage != null)
@@ -157,18 +161,28 @@ class _LoginScreenState extends State<LoginScreen> {
                         style: const TextStyle(color: Colors.red),
                       ),
                     ),
-                  const SizedBox(height: 28),
+                  const SizedBox(height: 16),
                   TextButton(
                     onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const RegisterScreen(),
-                        ),
-                      );
+                      // TODO: Navigate to Terms & Conditions page
                     },
                     child: const Text(
-                      'Sign up an account',
+                      'Terms & Conditions',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: Colors.blueAccent),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  TextButton(
+                    onPressed: () {
+                      if (Navigator.of(context).canPop()) {
+                        Navigator.of(context).pop();
+                      } else {
+                        Navigator.of(context).maybePop();
+                      }
+                    },
+                    child: const Text(
+                      'Log in your account',
                       textAlign: TextAlign.center,
                       style: TextStyle(color: Colors.blueAccent),
                     ),

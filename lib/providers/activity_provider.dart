@@ -69,7 +69,11 @@ class ActivityNotifier extends AsyncNotifier<List<Activity>> {
     state = AsyncValue.data([...state.value ?? [], activity]);
   }
 
-  Future<List<Activity>> getMonthlyActivitys({int? year, int? month}) async {
+  Future<List<Activity>> getMonthlyActivitys({
+    int? year,
+    int? month,
+    int? limit,
+  }) async {
     final now = DateTime.now();
     final selectedYear = year ?? now.year;
     final selectedMonth = month ?? now.month;
@@ -88,7 +92,7 @@ class ActivityNotifier extends AsyncNotifier<List<Activity>> {
         .gte('timestamp', start.toIso8601String())
         .lte('timestamp', end.toIso8601String())
         .order('timestamp', ascending: true)
-        .limit(5);
+        .limit(limit ?? 5);
 
     return (response as List)
         .map((item) => Activity.fromMap(item as Map<String, dynamic>))

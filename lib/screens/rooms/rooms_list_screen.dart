@@ -1,29 +1,19 @@
-import 'package:app_project/screens/tenants/tenant_add_screen.dart';
+import 'package:app_project/screens/rooms/rooms_add_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:app_project/providers/tenant_provider.dart';
-import 'package:intl/intl.dart';
+import 'package:app_project/providers/room_provider.dart';
 
-// Holds selected tenant IDs
-final selectedTenantIdsProvider = StateProvider<Set<int>>((ref) => <int>{});
+// Holds selected room IDs
+final selectedRoomIdsProvider = StateProvider<Set<int>>((ref) => <int>{});
 
-class TenantListScreen extends ConsumerWidget {
-  const TenantListScreen({super.key});
-
-  String formatPhone(String phone) {
-    // Xoá ký tự không phải số
-    final digits = phone.replaceAll(RegExp(r'\D'), '');
-    // Thêm dấu cách hoặc dấu gạch theo định dạng
-    if (digits.length == 10) {
-      return '${digits.substring(0, 4)} ${digits.substring(4, 7)} ${digits.substring(7)}';
-    }
-    return phone;
-  }
+class RoomListScreen extends ConsumerWidget {
+  const RoomListScreen({super.key});
+  // Tạo ID ngẫu nhiên cho phòng mới;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final tenantState = ref.watch(tenantProvider);
-    final notifier = ref.read(tenantProvider.notifier);
+    final roomState = ref.watch(roomProvider);
+    final notifier = ref.read(roomProvider.notifier);
 
     return Scaffold(
       appBar: AppBar(
@@ -35,13 +25,13 @@ class TenantListScreen extends ConsumerWidget {
             tooltip: 'Select All',
             icon: const Icon(Icons.select_all, color: Colors.black45),
             onPressed: () {
-              final selected = ref.read(selectedTenantIdsProvider.notifier);
-              final current = ref.read(selectedTenantIdsProvider);
-              final data = tenantState.asData?.value ?? [];
+              final selected = ref.read(selectedRoomIdsProvider.notifier);
+              final current = ref.read(selectedRoomIdsProvider);
+              final data = roomState.asData?.value ?? [];
               if (data.isEmpty) return;
               final pageIds = data
-                  .where((t) => t.id != null)
-                  .map((t) => t.id!)
+                  .where((r) => r.id != null)
+                  .map((r) => r.id!)
                   .toSet();
               final allSelected =
                   pageIds.isNotEmpty && pageIds.difference(current).isEmpty;
@@ -56,49 +46,47 @@ class TenantListScreen extends ConsumerWidget {
             padding: EdgeInsets.only(right: 16),
             child: Row(
               children: [
-                // Edit (single selection)
+                // Edit
                 IconButton(
                   tooltip: 'Edit',
                   icon: const Icon(Icons.edit, color: Colors.black45),
                   onPressed: () async {
-                    final selectedIds = ref.read(selectedTenantIdsProvider);
+                    final selectedIds = ref.read(selectedRoomIdsProvider);
                     if (selectedIds.length != 1) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
-                          content: Text('Select exactly one tenant to edit'),
+                          content: Text('Select exactly one room to edit'),
                         ),
                       );
                       return;
                     }
-                    final tenants =
-                        ref.read(tenantProvider).asData?.value ?? [];
+                    final rooms = ref.read(roomProvider).asData?.value ?? [];
                     final id = selectedIds.first;
-                    final tenant = tenants.firstWhere(
-                      (t) => t.id == id,
-                      orElse: () => tenants.first,
+                    final room = rooms.firstWhere(
+                      (r) => r.id == id,
+                      orElse: () => rooms.first,
                     );
                     await Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) =>
-                            AddTenantScreen(initialTenant: tenant),
+                        builder: (context) => AddRoomScreen(initialRoom: room),
                       ),
                     );
                   },
                 ),
-                // Delete (bulk)
+                // Delete
                 IconButton(
                   tooltip: 'Delete',
                   icon: const Icon(Icons.delete, color: Colors.black45),
                   onPressed: () async {
-                    final selectedIds = ref.read(selectedTenantIdsProvider);
+                    final selectedIds = ref.read(selectedRoomIdsProvider);
                     if (selectedIds.isEmpty) return;
                     final confirm = await showDialog<bool>(
                       context: context,
                       builder: (ctx) => AlertDialog(
-                        title: const Text('Delete tenants'),
+                        title: const Text('Delete rooms'),
                         content: Text(
-                          'Delete ${selectedIds.length} selected tenant(s)?',
+                          'Delete ${selectedIds.length} selected room(s)?',
                         ),
                         actions: [
                           TextButton(
@@ -117,12 +105,12 @@ class TenantListScreen extends ConsumerWidget {
                     );
                     if (confirm != true) return;
                     try {
-                      await notifier.deleteTenants(selectedIds.toList());
-                      ref.read(selectedTenantIdsProvider.notifier).state = {};
+                      await notifier.deleteRooms(selectedIds.toList());
+                      ref.read(selectedRoomIdsProvider.notifier).state = {};
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
-                            content: Text('Deleted selected tenants'),
+                            content: Text('Deleted selected rooms'),
                           ),
                         );
                       }
@@ -140,46 +128,47 @@ class TenantListScreen extends ConsumerWidget {
           ),
         ],
       ),
-      body: tenantState.when(
+      body: roomState.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, _) => Center(child: Text(err.toString())),
-        data: (tenants) => Column(
+        error: (e, _) => Center(child: Text('Lỗi: $e')),
+        data: (rooms) => Column(
           children: [
             Expanded(
               child: ListView.builder(
-                itemCount: tenants.length,
+                itemCount: rooms.length,
                 itemBuilder: (context, index) {
-                  final t = tenants[index];
-                  final selectedIds = ref.watch(selectedTenantIdsProvider);
-                  final isChecked = t.id != null && selectedIds.contains(t.id!);
+                  final room = rooms[index];
+                  final selectedIds = ref.watch(selectedRoomIdsProvider);
+                  final isChecked =
+                      room.id != null && selectedIds.contains(room.id!);
                   return ListTile(
-                    onTap: t.id == null
+                    onTap: room.id == null
                         ? null
                         : () {
                             final sel = ref.read(
-                              selectedTenantIdsProvider.notifier,
+                              selectedRoomIdsProvider.notifier,
                             );
                             final next = {...selectedIds};
                             if (isChecked) {
-                              next.remove(t.id!);
+                              next.remove(room.id!);
                             } else {
-                              next.add(t.id!);
+                              next.add(room.id!);
                             }
                             sel.state = next;
                           },
                     leading: Checkbox(
                       value: isChecked,
-                      onChanged: t.id == null
+                      onChanged: room.id == null
                           ? null
                           : (v) {
                               final sel = ref.read(
-                                selectedTenantIdsProvider.notifier,
+                                selectedRoomIdsProvider.notifier,
                               );
                               final next = {...selectedIds};
                               if (v == true) {
-                                next.add(t.id!);
+                                next.add(room.id!);
                               } else {
-                                next.remove(t.id!);
+                                next.remove(room.id!);
                               }
                               sel.state = next;
                             },
@@ -188,30 +177,38 @@ class TenantListScreen extends ConsumerWidget {
                       spacing: 8.0,
                       mainAxisAlignment: MainAxisAlignment.start,
                       children: [
-                        Column(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: const BoxDecoration(
-                                color: Colors.lightBlue,
-                                shape: BoxShape.rectangle,
-                                borderRadius: BorderRadius.all(
-                                  Radius.circular(12),
+                        room.imageUrl != null && room.imageUrl!.isNotEmpty
+                            ? ClipRRect(
+                                borderRadius: BorderRadius.circular(6),
+                                child: Image.network(
+                                  room.imageUrl!,
+                                  width: 50,
+                                  height: 50,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) =>
+                                      const Icon(Icons.broken_image, size: 40),
+                                ),
+                              )
+                            : Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: const BoxDecoration(
+                                  color: Colors.lightBlue,
+                                  shape: BoxShape.rectangle,
+                                  borderRadius: BorderRadius.all(
+                                    Radius.circular(12),
+                                  ),
+                                ),
+                                child: Icon(
+                                  Icons.inventory_2,
+                                  color: Colors.white,
+                                  size: 24,
                                 ),
                               ),
-                              child: Icon(
-                                Icons.person,
-                                color: Colors.white,
-                                size: 24,
-                              ),
-                            ),
-                          ],
-                        ),
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              t.name,
+                              room.name,
                               overflow: TextOverflow.ellipsis,
                               maxLines: 1,
                               textScaler: TextScaler.linear(0.8),
@@ -220,44 +217,11 @@ class TenantListScreen extends ConsumerWidget {
                                 fontSize: 16,
                               ),
                             ),
-                            Row(
-                              children: [
-                                Icon(Icons.phone_android_rounded, size: 12),
-                                Text(
-                                  formatPhone(t.phone),
-                                  overflow: TextOverflow.ellipsis,
-                                  maxLines: 1,
-                                  textScaler: TextScaler.linear(0.8),
-                                ),
-                              ],
-                            ),
-                            Row(
-                              children: [
-                                Icon(Icons.house_sharp, size: 12),
-                                Text(
-                                  DateFormat('dd/MM/yyyy').format(t.checkIn),
-                                  overflow: TextOverflow.ellipsis,
-                                  maxLines: 1,
-                                  textScaler: TextScaler.linear(0.8),
-                                ),
-                                SizedBox(width: 8),
-                                Icon(
-                                  t.checkOut != null
-                                      ? Icons.arrow_circle_right_rounded
-                                      : null,
-                                  size: 12,
-                                ),
-                                Text(
-                                  t.checkOut != null
-                                      ? DateFormat(
-                                          'dd/MM/yyyy',
-                                        ).format(t.checkOut!)
-                                      : '',
-                                  overflow: TextOverflow.ellipsis,
-                                  maxLines: 1,
-                                  textScaler: TextScaler.linear(0.8),
-                                ),
-                              ],
+                            Text(
+                              room.isOccupied ? 'Đã thuê' : 'Trống',
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
+                              textScaler: TextScaler.linear(0.8),
                             ),
                           ],
                         ),
@@ -286,7 +250,7 @@ class TenantListScreen extends ConsumerWidget {
         onPressed: () {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => const AddTenantScreen()),
+            MaterialPageRoute(builder: (context) => const AddRoomScreen()),
           );
         },
       ),

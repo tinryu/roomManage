@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:app_project/l10n/app_localizations.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'screens/main_screen.dart';
 import 'package:app_project/screens/tenants/login_screen.dart' show LoginScreen;
 
@@ -17,9 +18,16 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   Locale _locale = Locale('en');
   final user = Supabase.instance.client.auth.currentUser;
+  ThemeMode _themeMode = ThemeMode.light;
   void _changeLanguage(Locale locale) {
     setState(() {
       _locale = locale;
+    });
+  }
+
+  void _changeTheme(ThemeMode mode) {
+    setState(() {
+      _themeMode = mode;
     });
   }
 
@@ -37,8 +45,14 @@ class _MyAppState extends State<MyApp> {
       ],
       home: user == null
           ? LoginScreen()
-          : MainScreen(onLocaleChange: _changeLanguage),
+          : MainScreen(
+              onLocaleChange: _changeLanguage,
+              onThemeChange: _changeTheme,
+              currentThemeMode: _themeMode,
+            ),
+      themeMode: _themeMode,
       theme: ThemeData(
+        fontFamily: 'Roboto',
         // Primary color scheme using lightblue, white, and black
         primarySwatch: Colors.lightBlue,
         primaryColor: Colors.lightBlue,
@@ -55,43 +69,39 @@ class _MyAppState extends State<MyApp> {
         ),
 
         // Text theme using black for readability
-        textTheme: TextTheme(
-          bodyLarge: TextStyle(color: Colors.black, fontSize: 16),
-          bodyMedium: TextStyle(color: Colors.black, fontSize: 14),
-          bodySmall: TextStyle(color: Colors.black87, fontSize: 12),
-          labelLarge: TextStyle(color: Colors.black, fontSize: 16),
-          labelMedium: TextStyle(color: Colors.black, fontSize: 14),
-          labelSmall: TextStyle(color: Colors.black87, fontSize: 12),
-          titleLarge: TextStyle(color: Colors.black, fontSize: 16),
-          titleMedium: TextStyle(color: Colors.black, fontSize: 14),
-          titleSmall: TextStyle(color: Colors.black87, fontSize: 12),
-          headlineLarge: TextStyle(color: Colors.black, fontSize: 16),
-          headlineMedium: TextStyle(color: Colors.black, fontSize: 14),
-          headlineSmall: TextStyle(color: Colors.black87, fontSize: 12),
-          displayLarge: TextStyle(color: Colors.black, fontSize: 16),
-          displayMedium: TextStyle(color: Colors.black, fontSize: 14),
-          displaySmall: TextStyle(color: Colors.black87, fontSize: 12),
+        textTheme: GoogleFonts.interTextTheme(
+          TextTheme(
+            bodyLarge: TextStyle(fontSize: 16, color: Colors.black),
+            bodyMedium: TextStyle(fontSize: 14, color: Colors.black),
+            bodySmall: TextStyle(fontSize: 12, color: Colors.black),
+            labelLarge: TextStyle(fontSize: 16, color: Colors.black),
+            labelMedium: TextStyle(fontSize: 14, color: Colors.black),
+            labelSmall: TextStyle(fontSize: 12, color: Colors.black),
+            titleLarge: TextStyle(fontSize: 16, color: Colors.black),
+            titleMedium: TextStyle(fontSize: 14, color: Colors.black),
+            titleSmall: TextStyle(fontSize: 12, color: Colors.black),
+            headlineLarge: TextStyle(fontSize: 16, color: Colors.black),
+            headlineMedium: TextStyle(fontSize: 14, color: Colors.black),
+            headlineSmall: TextStyle(fontSize: 12, color: Colors.black),
+            displayLarge: TextStyle(fontSize: 16, color: Colors.black),
+            displayMedium: TextStyle(fontSize: 14, color: Colors.black),
+            displaySmall: TextStyle(fontSize: 12, color: Colors.black),
+          ),
         ),
 
         // Icon theme
-        iconTheme: IconThemeData(color: Colors.lightBlue),
-        primaryIconTheme: IconThemeData(color: Colors.white),
+        iconTheme: IconThemeData(color: Colors.white),
 
         // AppBar theme
         appBarTheme: AppBarTheme(
           backgroundColor: Colors.lightBlue,
           foregroundColor: Colors.white,
-          titleTextStyle: TextStyle(
-            color: Colors.white,
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
+          titleTextStyle: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
           elevation: 0,
         ),
 
         // Card theme
         cardTheme: CardThemeData(
-          color: Colors.white,
           shadowColor: Colors.black26,
           elevation: 2,
           shape: RoundedRectangleBorder(
@@ -236,6 +246,73 @@ class _MyAppState extends State<MyApp> {
             return Colors.black54;
           }),
         ),
+      ),
+      darkTheme: ThemeData(
+        brightness: Brightness.dark,
+        primarySwatch: Colors.lightBlue,
+        primaryColor: Colors.lightBlue,
+        scaffoldBackgroundColor: Colors.black,
+        colorScheme: ColorScheme.dark(
+          primary: Colors.lightBlue,
+          secondary: Colors.lightBlue[300]!,
+          surface: const Color(0xFF121212),
+          onPrimary: Colors.black,
+          onSecondary: Colors.black,
+          onSurface: Colors.white,
+        ),
+        textTheme: GoogleFonts.interTextTheme(
+          const TextTheme(
+            bodyLarge: TextStyle(fontSize: 16),
+            bodyMedium: TextStyle(fontSize: 14),
+            bodySmall: TextStyle(fontSize: 12),
+          ),
+        ).apply(bodyColor: Colors.white, displayColor: Colors.white),
+        iconTheme: const IconThemeData(color: Colors.lightBlue),
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Colors.lightBlue,
+          foregroundColor: Colors.white,
+          elevation: 0,
+        ),
+        cardTheme: CardThemeData(
+          shadowColor: Colors.black54,
+          elevation: 2,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+            side: BorderSide(
+              color: Colors.lightBlue.withOpacity(0.2),
+              width: 1,
+            ),
+          ),
+        ),
+        bottomNavigationBarTheme: BottomNavigationBarThemeData(
+          backgroundColor: const Color(0xFF1E1E1E),
+          selectedItemColor: Colors.lightBlue,
+          unselectedItemColor: Colors.white70,
+          type: BottomNavigationBarType.fixed,
+        ),
+        inputDecorationTheme: InputDecorationTheme(
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: const BorderSide(color: Colors.white54),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: const BorderSide(color: Colors.lightBlue, width: 2),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: const BorderSide(color: Colors.white54),
+          ),
+          labelStyle: const TextStyle(color: Colors.white70),
+          hintStyle: const TextStyle(color: Colors.white60),
+          prefixIconColor: Colors.white70,
+          suffixIconColor: Colors.white70,
+        ),
+        dividerTheme: const DividerThemeData(
+          color: Colors.white70,
+          thickness: 1,
+        ),
+        listTileTheme: ListTileThemeData(textColor: Colors.white),
       ),
       debugShowCheckedModeBanner: false,
     );

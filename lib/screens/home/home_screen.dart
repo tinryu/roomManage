@@ -84,22 +84,7 @@ class _HomeScreenState extends State<HomeScreen> {
             RecentActivityScreen(),
             SizedBox(height: 16),
             // Upcoming Tasks
-            UpcomingTasks(
-              tasks: [
-                {
-                  'title': 'Room 203 - Checkout',
-                  'date': '14/08/2025 - 10:00 AM',
-                },
-                {
-                  'title': 'Room 105 - Maintenance',
-                  'date': '14/08/2025 - 03:00 PM',
-                },
-                {
-                  'title': 'Weekly Income Report',
-                  'date': '15/08/2025 - 09:00 AM',
-                },
-              ],
-            ),
+            UpcomingTasks(),
             SizedBox(height: 16),
           ],
         ),

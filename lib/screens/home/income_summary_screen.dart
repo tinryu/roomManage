@@ -30,10 +30,11 @@ class _IncomeSummaryScreenState extends ConsumerState<IncomeSummaryScreen> {
     });
 
     try {
-      final paymentNotifier = ref.read(paymentServiceProvider.notifier);
+      final paymentNotifier = ref.read(paymentProvider.notifier);
       final payments = await paymentNotifier.getMonthlyPayments(
         year: 2025,
         month: 8,
+        limit: 5,
       );
       setState(() {
         monthlyPayments = payments;
@@ -61,8 +62,8 @@ class _IncomeSummaryScreenState extends ConsumerState<IncomeSummaryScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    "Income Summary",
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                    "Recent Income",
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                   ),
                 ],
               ),
@@ -83,14 +84,12 @@ class _IncomeSummaryScreenState extends ConsumerState<IncomeSummaryScreen> {
                           spacing: 16,
                           children: monthlyPayments.map((pay) {
                             return Container(
-                              width: 160,
+                              width: 200,
                               height: 80,
                               padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
-                                // ignore: deprecated_member_use
-                                color: Colors.white,
                                 borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: Colors.grey.shade100),
+                                border: Border.all(color: Colors.grey[100]!),
                               ),
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,

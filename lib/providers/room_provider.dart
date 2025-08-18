@@ -1,9 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../models/room.dart';
+import 'package:app_project/models/room.dart';
 
 class RoomNotifier extends AsyncNotifier<List<Room>> {
-  final _client = Supabase.instance.client;
+  final supabase = Supabase.instance.client;
   final String _table = 'rooms';
 
   static const int _pageSize = 10;
@@ -24,7 +24,7 @@ class RoomNotifier extends AsyncNotifier<List<Room>> {
     _isLoadingMore = true;
 
     try {
-      final res = await _client
+      final res = await supabase
           .from(_table)
           .select()
           .order('created_at', ascending: false)
@@ -63,18 +63,67 @@ class RoomNotifier extends AsyncNotifier<List<Room>> {
   }
 
   Future<void> addRoom(Room room) async {
-    await _client.from(_table).insert(room.toMap()).select().single();
-    state = AsyncValue.data(await _fetchRooms(reset: true));
+    try {
+      final data = {
+        'name': room.name,
+        'isOccupied': room.isOccupied,
+        'assetId': room.assetId,
+        'image_url': room.imageUrl,
+        'tenantId': room.tenantId,
+      };
+      final res = await supabase.from(_table).insert(data).select().single();
+
+      final newRoom = Room.fromMap(res);
+      final current = state.value ?? [];
+      state = AsyncData([newRoom, ...current]);
+    } catch (e) {
+      state = AsyncError(e, StackTrace.current);
+      rethrow;
+    }
   }
 
   Future<void> updateRoom(Room room) async {
-    await _client.from(_table).update(room.toMap()).eq('id', room.id as Object);
-    state = AsyncValue.data(await _fetchRooms(reset: true));
+    if (room.id == null) return;
+    try {
+      final data = {
+        'name': room.name,
+        'isOccupied': room.isOccupied,
+        'assetId': room.assetId,
+        'image_url': room.imageUrl,
+        'tenantId': room.tenantId,
+      };
+      final res = await supabase
+          .from(_table)
+          .update(data)
+          .eq('id', room.id as Object)
+          .select()
+          .single();
+      final updated = Room.fromMap(res);
+      final current = state.value ?? [];
+      state = AsyncData(current.map((r) => r.id == updated.id ? updated : r).toList());
+    } catch (e) {
+      state = AsyncError(e, StackTrace.current);
+      rethrow;
+    }
   }
 
   Future<void> deleteRoom(String id) async {
-    await _client.from(_table).delete().eq('id', id);
-    state = AsyncValue.data(await _fetchRooms(reset: true));
+    await supabase.from(_table).delete().eq('id', id);
+    final current = state.value ?? [];
+    state = AsyncData(current.where((r) => '${r.id}' != id).toList());
+  }
+
+  Future<void> deleteRooms(List<int> ids) async {
+    if (ids.isEmpty) return;
+    try {
+      await supabase.from(_table).delete().inFilter('id', ids);
+      final idSet = ids.toSet();
+      final current = state.value ?? [];
+      state = AsyncData(current.where((r) => !(r.id != null && idSet.contains(r.id))).toList());
+    } catch (e) {
+      state = AsyncError(e, StackTrace.current);
+      rethrow;
+    }
   }
 
   bool get hasMore => _hasMore;

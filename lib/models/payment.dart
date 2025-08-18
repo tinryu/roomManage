@@ -19,8 +19,8 @@ class Payment {
 
   factory Payment.fromMap(Map<String, dynamic> map) => Payment(
     id: map['id'],
-    tenantId: map['tenantId'] ?? '',
-    roomId: map['roomId'] ?? '',
+    tenantId: map['tenantid'] ?? '',
+    roomId: map['roomid'] ?? '',
     amount: map['amount'],
     isPaid: map['isPaid'],
     type: map['type'], // Default to 'rent' if not provided
@@ -31,8 +31,8 @@ class Payment {
 
   Map<String, dynamic> toMap() => {
     'id': id,
-    'tenantId': tenantId,
-    'roomId': roomId,
+    'tenantid': tenantId,
+    'roomid': roomId,
     'amount': amount,
     'isPaid': isPaid,
     'type': type,
