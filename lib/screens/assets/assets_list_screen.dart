@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_project/providers/asset_provider.dart';
 import 'package:app_project/screens/assets/assets_add_screen.dart';
-import 'package:intl/intl.dart';
+import 'package:app_project/utils/format.dart';
 
 // Holds selected asset IDs
 final selectedAssetIdsProvider = StateProvider<Set<int>>((ref) => <int>{});
@@ -247,9 +247,7 @@ class AssetsListScreen extends ConsumerWidget {
                               textScaler: TextScaler.linear(0.8),
                             ),
                             Text(
-                              DateFormat(
-                                'dd/MM/yyyy HH:mm',
-                              ).format(asset.createdAt),
+                              appFormatDate(context, asset.createdAt),
                               style: const TextStyle(fontSize: 12),
                             ),
                           ],

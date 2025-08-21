@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:app_project/providers/task_provider.dart';
 import 'package:app_project/screens/tasks/task_detail_screen.dart';
 import 'package:app_project/screens/tasks/task_add_screen.dart';
+import 'package:app_project/utils/format.dart';
 
 class TaskListScreen extends ConsumerStatefulWidget {
   const TaskListScreen({super.key});
@@ -201,9 +202,7 @@ class _TaskListScreenState extends ConsumerState<TaskListScreen> {
                                         ),
                                         const SizedBox(width: 4),
                                         Text(
-                                          DateFormat(
-                                            'dd/MM/yyyy - HH:mm',
-                                          ).format(task.createdAt),
+                                          '${appFormatDate(context, task.createdAt)} - ${DateFormat('HH:mm').format(task.createdAt)}',
                                           style: TextStyle(
                                             fontSize: 12,
                                             color: Colors.grey[500],

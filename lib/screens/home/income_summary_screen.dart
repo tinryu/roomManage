@@ -1,55 +1,22 @@
-import 'package:app_project/providers/payment_provider.dart';
-import 'package:app_project/models/payment.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:provider/provider.dart' as p;
+import 'package:app_project/providers/dashboard_provider.dart';
 import 'package:intl/intl.dart';
+import 'package:app_project/utils/format.dart';
 
-class IncomeSummaryScreen extends ConsumerStatefulWidget {
+class IncomeSummaryScreen extends StatefulWidget {
   const IncomeSummaryScreen({super.key});
 
   @override
-  ConsumerState<IncomeSummaryScreen> createState() =>
-      _IncomeSummaryScreenState();
+  State<IncomeSummaryScreen> createState() => _IncomeSummaryScreenState();
 }
 
-class _IncomeSummaryScreenState extends ConsumerState<IncomeSummaryScreen> {
-  List<Payment> monthlyPayments = [];
-  bool isLoading = true;
-  String? error;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadMonthlyPayments();
-  }
-
-  Future<void> _loadMonthlyPayments() async {
-    setState(() {
-      isLoading = true;
-      error = null;
-    });
-
-    try {
-      final paymentNotifier = ref.read(paymentProvider.notifier);
-      final payments = await paymentNotifier.getMonthlyPayments(
-        year: 2025,
-        month: 8,
-        limit: 5,
-      );
-      setState(() {
-        monthlyPayments = payments;
-        isLoading = false;
-      });
-    } catch (e) {
-      setState(() {
-        error = e.toString();
-        isLoading = false;
-      });
-    }
-  }
-
+class _IncomeSummaryScreenState extends State<IncomeSummaryScreen> {
   @override
   Widget build(BuildContext context) {
+    final dp = p.Provider.of<DashboardProvider>(context);
+    final isLoading = dp.isLoading;
+    final monthlyPayments = dp.recentPayments;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -70,14 +37,14 @@ class _IncomeSummaryScreenState extends ConsumerState<IncomeSummaryScreen> {
               SizedBox(height: 12),
               isLoading
                   ? const Center(child: CircularProgressIndicator())
-                  : error != null
-                  ? Center(child: Text('Lỗi: $error'))
                   : monthlyPayments.isEmpty
                   ? const Center(
                       child: Text('Không có dữ liệu thanh toán tháng này'),
                     )
                   : RefreshIndicator(
-                      onRefresh: _loadMonthlyPayments,
+                      onRefresh: () async {
+                        await dp.fetchDashboard(homeLimit: 5);
+                      },
                       child: SingleChildScrollView(
                         scrollDirection: Axis.horizontal,
                         child: Row(
@@ -130,7 +97,10 @@ class _IncomeSummaryScreenState extends ConsumerState<IncomeSummaryScreen> {
                                             textScaler: TextScaler.linear(0.8),
                                           ),
                                           Text(
-                                            '${NumberFormat('#,###', 'vi_VN').format(pay.amount)} VND',
+                                            appFormatCurrencyCompact(
+                                              context,
+                                              pay.amount,
+                                            ),
                                             style: TextStyle(
                                               fontWeight: FontWeight.w600,
                                               fontSize: 16,
@@ -140,9 +110,7 @@ class _IncomeSummaryScreenState extends ConsumerState<IncomeSummaryScreen> {
                                             textScaler: TextScaler.linear(0.8),
                                           ),
                                           Text(
-                                            DateFormat(
-                                              'dd/MM/yyyy - HH:mm',
-                                            ).format(pay.datetime),
+                                            '${appFormatDate(context, pay.datetime)} - ${DateFormat('HH:mm').format(pay.datetime)}',
                                             style: TextStyle(
                                               fontSize: 12,
                                               fontWeight: FontWeight.w400,

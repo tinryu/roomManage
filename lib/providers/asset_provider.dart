@@ -38,9 +38,12 @@ class AssetNotifier extends AsyncNotifier<List<Asset>> {
       final res = await supabase
           .from(_table)
           .update(data)
-          .eq('id', id as Object)
+          .eq('id', id)
           .select()
-          .single();
+          .maybeSingle();
+      if (res == null) {
+        throw StateError('No asset found with id $id to update');
+      }
       final updated = Asset.fromMap(res);
       final current = state.value ?? [];
       state = AsyncData(current.map((a) => a.id == updated.id ? updated : a).toList());

@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:provider/provider.dart' as p;
 import 'app.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'providers/onboarding_provider.dart';
+import 'providers/dashboard_provider.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -20,9 +22,16 @@ Future<void> main() async {
   final seen = prefs.getBool('seenOnboarding') ?? false;
 
   runApp(
-    ProviderScope(
-      overrides: [seenOnboardingProvider.overrideWith((ref) => seen)],
-      child: const MyApp(),
+    p.MultiProvider(
+      providers: [
+        p.ChangeNotifierProvider<DashboardProvider>(
+          create: (_) => DashboardProvider(),
+        ),
+      ],
+      child: ProviderScope(
+        overrides: [seenOnboardingProvider.overrideWith((ref) => seen)],
+        child: const MyApp(),
+      ),
     ),
   );
 }

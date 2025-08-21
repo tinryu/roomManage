@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:app_project/models/task.dart';
 import 'package:app_project/providers/task_provider.dart';
+import 'package:app_project/utils/format.dart';
 
 class TaskDetailScreen extends ConsumerStatefulWidget {
   final Task task;
@@ -179,7 +180,7 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
                                         ),
                                         const SizedBox(width: 4),
                                         Text(
-                                          'Created ${DateFormat('dd/MM/yyyy - HH:mm').format(widget.task.createdAt)}',
+                                          'Created ${appFormatDate(context, widget.task.createdAt)} - ${DateFormat('HH:mm').format(widget.task.createdAt)}',
                                           style: TextStyle(
                                             fontSize: 14,
                                             color: Colors.grey[600],
@@ -402,16 +403,13 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
                           const SizedBox(height: 12),
                           _buildInfoRow(
                             'Created Date',
-                            DateFormat(
-                              'EEEE, dd MMMM yyyy',
-                            ).format(widget.task.createdAt),
+                            appFormatDate(context, widget.task.createdAt),
                           ),
                           const SizedBox(height: 12),
                           _buildInfoRow(
                             'Created Time',
-                            DateFormat(
-                              'HH:mm:ss',
-                            ).format(widget.task.createdAt),
+                            // Keep time-only formatting local
+                            DateFormat('HH:mm:ss').format(widget.task.createdAt),
                           ),
                         ],
                       ),

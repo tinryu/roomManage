@@ -130,6 +130,9 @@ class _AddPaymentScreenState extends ConsumerState<AddPaymentScreen> {
       appBar: AppBar(
         title: Text(
           widget.initialPayment != null ? 'Edit Payment' : 'Add New Payment',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          textScaler: TextScaler.linear(0.7),
         ),
         actions: [
           if (_isLoading)
@@ -155,6 +158,9 @@ class _AddPaymentScreenState extends ConsumerState<AddPaymentScreen> {
                   color: Colors.white,
                   fontWeight: FontWeight.w600,
                 ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textScaler: TextScaler.linear(0.7),
               ),
             ),
         ],
@@ -176,9 +182,15 @@ class _AddPaymentScreenState extends ConsumerState<AddPaymentScreen> {
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w600,
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textScaler: TextScaler.linear(0.7),
                     ),
                     const SizedBox(height: 8),
                     TextFormField(
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodySmall?.copyWith(fontSize: 12),
                       controller: _amountController,
                       decoration: const InputDecoration(
                         hintText: 'Enter amount...',
@@ -224,9 +236,15 @@ class _AddPaymentScreenState extends ConsumerState<AddPaymentScreen> {
                             'Tenant ID',
                             style: Theme.of(context).textTheme.titleMedium
                                 ?.copyWith(fontWeight: FontWeight.w600),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            textScaler: TextScaler.linear(0.7),
                           ),
                           const SizedBox(height: 8),
                           TextFormField(
+                            style: Theme.of(
+                              context,
+                            ).textTheme.bodySmall?.copyWith(fontSize: 12),
                             controller: _tenantIdController,
                             decoration: const InputDecoration(
                               hintText: 'Optional',
@@ -256,9 +274,15 @@ class _AddPaymentScreenState extends ConsumerState<AddPaymentScreen> {
                             'Room ID',
                             style: Theme.of(context).textTheme.titleMedium
                                 ?.copyWith(fontWeight: FontWeight.w600),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            textScaler: TextScaler.linear(0.7),
                           ),
                           const SizedBox(height: 8),
                           TextFormField(
+                            style: Theme.of(
+                              context,
+                            ).textTheme.bodySmall?.copyWith(fontSize: 12),
                             controller: _roomIdController,
                             decoration: const InputDecoration(
                               hintText: 'Optional',
@@ -292,9 +316,15 @@ class _AddPaymentScreenState extends ConsumerState<AddPaymentScreen> {
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w600,
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textScaler: TextScaler.linear(0.7),
                     ),
                     const SizedBox(height: 8),
                     TextFormField(
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodySmall?.copyWith(fontSize: 12),
                       controller: _typeController,
                       decoration: const InputDecoration(
                         hintText: 'rent, utilities, deposit, etc.',
@@ -328,6 +358,9 @@ class _AddPaymentScreenState extends ConsumerState<AddPaymentScreen> {
                             'Payment Date',
                             style: Theme.of(context).textTheme.titleMedium
                                 ?.copyWith(fontWeight: FontWeight.w600),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            textScaler: TextScaler.linear(0.7),
                           ),
                           const SizedBox(height: 8),
                           InkWell(
@@ -344,11 +377,19 @@ class _AddPaymentScreenState extends ConsumerState<AddPaymentScreen> {
                               ),
                               child: Row(
                                 children: [
-                                  const Icon(Icons.calendar_today, size: 20),
+                                  const Icon(
+                                    Icons.calendar_today,
+                                    size: 20,
+                                    color: Colors.grey,
+                                  ),
                                   const SizedBox(width: 8),
                                   Text(
                                     '${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}',
-                                    style: const TextStyle(fontSize: 16),
+                                    style: Theme.of(context).textTheme.bodySmall
+                                        ?.copyWith(fontSize: 12),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    textScaler: TextScaler.linear(0.7),
                                   ),
                                 ],
                               ),
@@ -372,10 +413,20 @@ class _AddPaymentScreenState extends ConsumerState<AddPaymentScreen> {
                             'Payment Status',
                             style: Theme.of(context).textTheme.titleMedium
                                 ?.copyWith(fontWeight: FontWeight.w600),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            textScaler: TextScaler.linear(0.7),
                           ),
                           const SizedBox(height: 8),
                           SwitchListTile(
-                            title: Text(_isPaid ? 'Paid' : 'Unpaid'),
+                            title: Text(
+                              _isPaid ? 'Paid' : 'Unpaid',
+                              maxLines: 1,
+                              style: Theme.of(context).textTheme.titleMedium
+                                  ?.copyWith(fontWeight: FontWeight.w600),
+                              overflow: TextOverflow.ellipsis,
+                              textScaler: TextScaler.linear(0.7),
+                            ),
                             value: _isPaid,
                             onChanged: (value) {
                               setState(() {

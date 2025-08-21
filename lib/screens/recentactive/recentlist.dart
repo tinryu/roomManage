@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_project/providers/activity_provider.dart';
 import 'package:intl/intl.dart';
+import 'package:app_project/utils/format.dart';
 
 class RecentList extends ConsumerWidget {
   final void Function(Locale locale) onLocaleChange;
@@ -36,7 +37,7 @@ class RecentList extends ConsumerWidget {
                   return ListTile(
                     title: Text(act.action),
                     subtitle: Text(
-                      DateFormat('dd/MM/yyyy HH:mm').format(act.timestamp),
+                      '${appFormatDate(context, act.timestamp)} - ${DateFormat('HH:mm').format(act.timestamp)}',
                       style: const TextStyle(
                         color: Colors.blueGrey,
                         fontSize: 10,

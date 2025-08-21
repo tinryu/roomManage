@@ -95,9 +95,12 @@ class TenantNotifier extends AsyncNotifier<List<Tenant>> {
       final res = await supabase
           .from(_table)
           .update(data)
-          .eq('id', tenant.id as int)
+          .eq('id', tenant.id!)
           .select()
-          .single();
+          .maybeSingle();
+      if (res == null) {
+        throw StateError('No tenant found with id ${tenant.id} to update');
+      }
       final updated = Tenant.fromMap(res);
       final current = state.value ?? [];
       state = AsyncData(current.map((t) => t.id == updated.id ? updated : t).toList());
@@ -107,10 +110,10 @@ class TenantNotifier extends AsyncNotifier<List<Tenant>> {
     }
   }
 
-  Future<void> deleteTenant(String id) async {
+  Future<void> deleteTenant(int id) async {
     await supabase.from(_table).delete().eq('id', id);
     final current = state.value ?? [];
-    state = AsyncData(current.where((t) => '${t.id}' != id).toList());
+    state = AsyncData(current.where((t) => t.id != id).toList());
   }
 
   Future<void> deleteTenants(List<int> ids) async {

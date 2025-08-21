@@ -1,57 +1,24 @@
-import 'package:app_project/models/activity.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:app_project/providers/activity_provider.dart';
+import 'package:provider/provider.dart' as p;
+import 'package:app_project/providers/dashboard_provider.dart';
 // import 'package:app_project/screens/recentactive/recentlist.dart'
 //     show RecentList;
 import 'package:intl/intl.dart';
+import 'package:app_project/utils/format.dart';
 
-class RecentActivityScreen extends ConsumerStatefulWidget {
+class RecentActivityScreen extends StatefulWidget {
   const RecentActivityScreen({super.key});
 
   @override
-  ConsumerState<RecentActivityScreen> createState() =>
-      _RecentActivityScreenState();
+  State<RecentActivityScreen> createState() => _RecentActivityScreenState();
 }
 
-class _RecentActivityScreenState extends ConsumerState<RecentActivityScreen> {
-  List<Activity> recentActivities = [];
-  bool isLoading = true;
-  String? error;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadRecentActivities();
-  }
-
-  Future<void> _loadRecentActivities() async {
-    setState(() {
-      isLoading = true;
-      error = null;
-    });
-
-    try {
-      final activityNotifier = ref.read(activityProvider.notifier);
-      final activities = await activityNotifier.getMonthlyActivitys(
-        year: 2025,
-        month: 8,
-        limit: 5,
-      );
-      setState(() {
-        recentActivities = activities;
-        isLoading = false;
-      });
-    } catch (e) {
-      setState(() {
-        error = e.toString();
-        isLoading = false;
-      });
-    }
-  }
-
+class _RecentActivityScreenState extends State<RecentActivityScreen> {
   @override
   Widget build(BuildContext context) {
+    final dp = p.Provider.of<DashboardProvider>(context);
+    final isLoading = dp.isLoading;
+    final recentActivities = dp.recentActivities;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -72,12 +39,12 @@ class _RecentActivityScreenState extends ConsumerState<RecentActivityScreen> {
               const SizedBox(height: 12),
               isLoading
                   ? const Center(child: CircularProgressIndicator())
-                  : error != null
-                  ? Center(child: Text('Lỗi: $error'))
                   : recentActivities.isEmpty
                   ? const Center(child: Text('Không có hoạt động gần đây'))
                   : RefreshIndicator(
-                      onRefresh: _loadRecentActivities,
+                      onRefresh: () async {
+                        await dp.fetchDashboard(homeLimit: 5);
+                      },
                       child: SingleChildScrollView(
                         scrollDirection: Axis.horizontal,
                         child: Row(
@@ -144,9 +111,7 @@ class _RecentActivityScreenState extends ConsumerState<RecentActivityScreen> {
                                             textScaler: TextScaler.linear(0.8),
                                           ),
                                           Text(
-                                            DateFormat(
-                                              'dd/MM/yyyy HH:mm',
-                                            ).format(act.timestamp),
+                                            '${appFormatDate(context, act.timestamp)} - ${DateFormat('HH:mm').format(act.timestamp)}',
                                             style: const TextStyle(
                                               fontSize: 12,
                                               fontWeight: FontWeight.w400,

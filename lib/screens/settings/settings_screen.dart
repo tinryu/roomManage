@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:app_project/screens/tenants/login_screen.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:app_project/providers/settings_provider.dart';
+import 'package:app_project/utils/format.dart';
 
-class SettingsScreen extends StatefulWidget {
+class SettingsScreen extends ConsumerStatefulWidget {
   final void Function(Locale locale) onLocaleChange;
   final void Function(ThemeMode mode)? onThemeChange;
   final ThemeMode? currentThemeMode;
@@ -15,13 +17,11 @@ class SettingsScreen extends StatefulWidget {
   });
 
   @override
-  State<SettingsScreen> createState() => _SettingsScreenState();
+  ConsumerState<SettingsScreen> createState() => _SettingsScreenState();
 }
 
-class _SettingsScreenState extends State<SettingsScreen> {
+class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   late Locale _currentLocale;
-  String _dateFormatPattern = 'yyyy-MM-dd';
-  String _currencyCode = 'VND';
   late ThemeMode _themeMode;
 
   @override
@@ -32,13 +32,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _pickCurrency() async {
-    // Common currency options with symbols
-    final options = <Map<String, String>>[
-      {'code': 'VND', 'symbol': '₫'},
-      {'code': 'USD', 'symbol': r'$'},
-      {'code': 'EUR', 'symbol': '€'},
-      {'code': 'JPY', 'symbol': '¥'},
-    ];
+    // Common currency options (symbol will be resolved by currencySymbolFor)
+    final options = <String>['VND', 'USD', 'EUR', 'JPY'];
 
     await showModalBottomSheet<void>(
       context: context,
@@ -49,16 +44,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
         return SafeArea(
           child: ListView(
             shrinkWrap: true,
-            children: options.map((opt) {
-              final code = opt['code']!;
-              final symbol = opt['symbol']!;
-              final selected = _currencyCode == code;
-              // Example amount preview
-              final nf = NumberFormat.currency(
-                symbol: symbol,
-                decimalDigits: code == 'JPY' || code == 'VND' ? 0 : 2,
-              );
-              final preview = nf.format(2500000);
+            children: options.map((code) {
+              final settings = ref.watch(settingsProvider).valueOrNull;
+              final selected = (settings?.currencyCode ?? 'VND') == code;
+              final symbol = currencySymbolFor(code);
+              // Example amount preview using centralized formatter
+              final preview = appFormatCurrency(context, 2500000, code: code);
 
               return ListTile(
                 leading: Icon(
@@ -67,11 +58,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       : Icons.radio_button_off,
                   color: selected ? Colors.lightBlue : null,
                 ),
-                title: Text('$code ($symbol) '),
-                subtitle: Text(preview, style: TextStyle(color: Colors.grey)),
-                onTap: () {
-                  setState(() => _currencyCode = code);
-                  Navigator.pop(context);
+                title: Text('$code ($symbol) ', textScaler: TextScaler.linear(0.8)),
+                subtitle: Text(
+                  preview,
+                  style: TextStyle(color: Colors.grey),
+                  textScaler: TextScaler.linear(0.8),
+                ),
+                onTap: () async {
+                  await ref
+                      .read(settingsProvider.notifier)
+                      .setCurrencyCode(code);
+                  // ignore: use_build_context_synchronously
+                  if (mounted) Navigator.pop(context);
                 },
               );
             }).toList(),
@@ -110,7 +108,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         selected ? Icons.radio_button_checked : Icons.radio_button_off,
         color: selected ? Colors.lightBlue : null,
       ),
-      title: Text(label),
+      title: Text(label, textScaler: TextScaler.linear(0.8)),
       onTap: () {
         setState(() => _themeMode = mode);
         widget.onThemeChange?.call(mode);
@@ -132,7 +130,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             children: [
               ListTile(
                 leading: const Icon(Icons.language),
-                title: const Text('English (EN)'),
+                title: Text('English (EN)', textScaler: TextScaler.linear(0.8)),
                 trailing: _currentLocale.languageCode == 'en'
                     ? const Icon(Icons.check, color: Colors.lightBlue)
                     : null,
@@ -144,7 +142,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               ListTile(
                 leading: const Icon(Icons.language),
-                title: const Text('Tiếng Việt (VI)'),
+                title: Text(
+                  'Tiếng Việt (VI)',
+                  textScaler: TextScaler.linear(0.8),
+                ),
                 trailing: _currentLocale.languageCode == 'vi'
                     ? const Icon(Icons.check, color: Colors.lightBlue)
                     : null,
@@ -173,13 +174,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _pickDateFormat() async {
-    final patterns = <String, String>{
-      'yyyy-MM-dd': DateFormat('yyyy-MM-dd').format(DateTime.now()),
-      'dd/MM/yyyy': DateFormat('dd/MM/yyyy').format(DateTime.now()),
-      'MM-dd-yyyy': DateFormat('MM-dd-yyyy').format(DateTime.now()),
-      'MMM d, y': DateFormat('MMM d, y').format(DateTime.now()),
-      'yyyy-MM-dd HH:mm': DateFormat('yyyy-MM-dd HH:mm').format(DateTime.now()),
-    };
+    // Candidate patterns; preview computed via appFormatDate to reflect app's logic
+    final patterns = <String>[
+      'yyyy-MM-dd',
+      'dd/MM/yyyy',
+      'MM-dd-yyyy',
+      'MMM d, y',
+      'yyyy-MM-dd HH:mm',
+    ];
 
     await showModalBottomSheet<void>(
       context: context,
@@ -190,10 +192,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
         return SafeArea(
           child: ListView(
             shrinkWrap: true,
-            children: patterns.entries.map((e) {
-              final pattern = e.key;
-              final preview = e.value;
-              final selected = _dateFormatPattern == pattern;
+            children: patterns.map((pattern) {
+              final preview = appFormatDate(
+                context,
+                DateTime.now(),
+                pattern: pattern,
+              );
+              final currentPattern =
+                  ref.read(settingsProvider).valueOrNull?.dateFormatPattern ??
+                  'yyyy-MM-dd';
+              final selected = currentPattern == pattern;
               return ListTile(
                 leading: Icon(
                   selected
@@ -201,11 +209,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       : Icons.radio_button_off,
                   color: selected ? Colors.lightBlue : null,
                 ),
-                title: Text(pattern),
-                subtitle: Text(preview),
-                onTap: () {
-                  setState(() => _dateFormatPattern = pattern);
-                  Navigator.pop(context);
+                title: Text(pattern, textScaler: TextScaler.linear(0.8)),
+                subtitle: Text(preview, textScaler: TextScaler.linear(0.8)),
+                onTap: () async {
+                  await ref
+                      .read(settingsProvider.notifier)
+                      .setDateFormatPattern(pattern);
+                  // ignore: use_build_context_synchronously
+                  if (mounted) Navigator.pop(context);
                 },
               );
             }).toList(),
@@ -217,6 +228,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final settingsAsync = ref.watch(settingsProvider);
+    final settings = settingsAsync.valueOrNull;
     return Scaffold(
       appBar: AppBar(title: const Text('Settings'), centerTitle: true),
       body: ListView(
@@ -232,31 +245,37 @@ class _SettingsScreenState extends State<SettingsScreen> {
               children: [
                 ListTile(
                   leading: const Icon(Icons.language),
-                  title: const Text('Language'),
+                  title: Text('Language', textScaler: TextScaler.linear(0.8)),
                   subtitle: Text(_currentLocale.languageCode.toUpperCase()),
                   onTap: _pickLanguage,
                 ),
                 const Divider(height: 1),
                 ListTile(
                   leading: const Icon(Icons.brightness_6_outlined),
-                  title: const Text('Theme'),
+                  title: Text('Theme', textScaler: TextScaler.linear(0.8)),
                   subtitle: Text(_themeMode.name),
                   onTap: _pickTheme,
                 ),
                 const Divider(height: 1),
                 ListTile(
                   leading: const Icon(Icons.calendar_today_outlined),
-                  title: const Text('Date format'),
+                  title: Text(
+                    'Date format',
+                    textScaler: TextScaler.linear(0.8),
+                  ),
                   subtitle: Text(
-                    DateFormat(_dateFormatPattern).format(DateTime.now()),
+                    appFormatDate(context, DateTime.now()),
                   ),
                   onTap: _pickDateFormat,
                 ),
                 const Divider(height: 1),
                 ListTile(
                   leading: const Icon(Icons.monetization_on_outlined),
-                  title: const Text('Currency'),
-                  subtitle: Text(_currencyCode),
+                  title: Text('Currency', textScaler: TextScaler.linear(0.8)),
+                  subtitle: Text(
+                    settings?.currencyCode ?? 'VND',
+                    textScaler: TextScaler.linear(0.8),
+                  ),
                   onTap: _pickCurrency,
                 ),
               ],
@@ -274,13 +293,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 SwitchListTile(
                   value: true,
                   onChanged: (val) {}, // placeholder
-                  title: const Text('Payment reminders'),
+                  title: Text(
+                    'Payment reminders',
+                    textScaler: TextScaler.linear(0.8),
+                  ),
                 ),
                 const Divider(height: 1),
                 SwitchListTile(
                   value: true,
                   onChanged: (val) {}, // placeholder
-                  title: const Text('Task reminders'),
+                  title: Text(
+                    'Task reminders',
+                    textScaler: TextScaler.linear(0.8),
+                  ),
                 ),
               ],
             ),
@@ -295,8 +320,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
             child: Column(
               children: [
                 ListTile(
-                  leading: const Icon(Icons.person_outline),
-                  title: const Text('Profile'),
+                  leading: Icon(Icons.person_outline),
+                  title: Text('Profile', textScaler: TextScaler.linear(0.8)),
                   onTap: () {},
                 ),
                 const Divider(height: 1),
@@ -305,6 +330,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   title: const Text(
                     'Logout',
                     style: TextStyle(color: Colors.red),
+                    textScaler: TextScaler.linear(0.8),
                   ),
                   onTap: _signOut,
                 ),
@@ -320,8 +346,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             child: ListTile(
               leading: const Icon(Icons.info_outline),
-              title: const Text('About'),
-              subtitle: const Text('Room Manager • v1.0.0'),
+              title: const Text('About', textScaler: TextScaler.linear(0.8)),
+              subtitle: const Text(
+                'Room Manager • v1.0.0',
+                textScaler: TextScaler.linear(0.8),
+              ),
               onTap: () {},
             ),
           ),

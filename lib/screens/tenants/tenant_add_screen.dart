@@ -88,9 +88,14 @@ class _AddTenantScreenState extends ConsumerState<AddTenantScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(widget.initialTenant != null
-                ? 'Tenant updated successfully!'
-                : 'Tenant added successfully!'),
+            content: Text(
+              widget.initialTenant != null
+                  ? 'Tenant updated successfully!'
+                  : 'Tenant added successfully!',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textScaler: TextScaler.linear(0.7),
+            ),
             backgroundColor: Colors.green,
           ),
         );
@@ -100,7 +105,12 @@ class _AddTenantScreenState extends ConsumerState<AddTenantScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error saving tenant: $e'),
+            content: Text(
+              'Error saving tenant: $e',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textScaler: TextScaler.linear(0.7),
+            ),
             backgroundColor: Colors.red,
           ),
         );
@@ -114,7 +124,9 @@ class _AddTenantScreenState extends ConsumerState<AddTenantScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.initialTenant != null ? 'Edit Tenant' : 'Add New Tenant'),
+        title: Text(
+          widget.initialTenant != null ? 'Edit Tenant' : 'Add New Tenant',
+        ),
         actions: [
           if (_isLoading)
             const Center(
@@ -139,6 +151,9 @@ class _AddTenantScreenState extends ConsumerState<AddTenantScreen> {
                   color: Colors.white,
                   fontWeight: FontWeight.w600,
                 ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textScaler: TextScaler.linear(0.7),
               ),
             ),
         ],
@@ -160,9 +175,15 @@ class _AddTenantScreenState extends ConsumerState<AddTenantScreen> {
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w600,
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textScaler: TextScaler.linear(0.7),
                     ),
                     const SizedBox(height: 8),
                     TextFormField(
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodySmall?.copyWith(fontSize: 12),
                       controller: _nameController,
                       decoration: const InputDecoration(
                         hintText: 'Enter full name...',
@@ -198,9 +219,15 @@ class _AddTenantScreenState extends ConsumerState<AddTenantScreen> {
                             'Phone',
                             style: Theme.of(context).textTheme.titleMedium
                                 ?.copyWith(fontWeight: FontWeight.w600),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            textScaler: TextScaler.linear(0.7),
                           ),
                           const SizedBox(height: 8),
                           TextFormField(
+                            style: Theme.of(
+                              context,
+                            ).textTheme.bodySmall?.copyWith(fontSize: 12),
                             controller: _phoneController,
                             decoration: const InputDecoration(
                               hintText: '+84...',
@@ -233,9 +260,15 @@ class _AddTenantScreenState extends ConsumerState<AddTenantScreen> {
                             'Email',
                             style: Theme.of(context).textTheme.titleMedium
                                 ?.copyWith(fontWeight: FontWeight.w600),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            textScaler: TextScaler.linear(0.7),
                           ),
                           const SizedBox(height: 8),
                           TextFormField(
+                            style: Theme.of(
+                              context,
+                            ).textTheme.bodySmall?.copyWith(fontSize: 12),
                             controller: _emailController,
                             decoration: const InputDecoration(
                               hintText: 'Optional',
@@ -272,6 +305,9 @@ class _AddTenantScreenState extends ConsumerState<AddTenantScreen> {
                             'Check-in',
                             style: Theme.of(context).textTheme.titleMedium
                                 ?.copyWith(fontWeight: FontWeight.w600),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            textScaler: TextScaler.linear(0.7),
                           ),
                           const SizedBox(height: 8),
                           InkWell(
@@ -288,11 +324,19 @@ class _AddTenantScreenState extends ConsumerState<AddTenantScreen> {
                               ),
                               child: Row(
                                 children: [
-                                  const Icon(Icons.calendar_today, size: 20),
+                                  const Icon(
+                                    Icons.calendar_today,
+                                    size: 20,
+                                    color: Colors.grey,
+                                  ),
                                   const SizedBox(width: 8),
                                   Text(
                                     '${_checkIn.day}/${_checkIn.month}/${_checkIn.year}',
-                                    style: const TextStyle(fontSize: 16),
+                                    style: Theme.of(context).textTheme.bodySmall
+                                        ?.copyWith(fontSize: 12),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    textScaler: TextScaler.linear(0.7),
                                   ),
                                 ],
                               ),
@@ -315,6 +359,9 @@ class _AddTenantScreenState extends ConsumerState<AddTenantScreen> {
                             'Check-out',
                             style: Theme.of(context).textTheme.titleMedium
                                 ?.copyWith(fontWeight: FontWeight.w600),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            textScaler: TextScaler.linear(0.7),
                           ),
                           const SizedBox(height: 8),
                           InkWell(
@@ -331,13 +378,21 @@ class _AddTenantScreenState extends ConsumerState<AddTenantScreen> {
                               ),
                               child: Row(
                                 children: [
-                                  const Icon(Icons.calendar_today, size: 20),
+                                  const Icon(
+                                    Icons.calendar_today,
+                                    size: 20,
+                                    color: Colors.grey,
+                                  ),
                                   const SizedBox(width: 8),
                                   Text(
                                     _checkOut == null
                                         ? 'Optional'
                                         : '${_checkOut!.day}/${_checkOut!.month}/${_checkOut!.year}',
-                                    style: const TextStyle(fontSize: 16),
+                                    style: Theme.of(context).textTheme.bodySmall
+                                        ?.copyWith(fontSize: 12),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    textScaler: TextScaler.linear(0.7),
                                   ),
                                 ],
                               ),

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_project/providers/payment_provider.dart';
 import 'package:intl/intl.dart';
+import 'package:app_project/utils/format.dart';
 
 // Holds the set of selected payment IDs for checkbox selection
 final selectedPaymentIdsProvider = StateProvider<Set<int>>((ref) => <int>{});
@@ -249,13 +250,13 @@ class PaymentScreen extends ConsumerWidget {
                           ],
                         ),
                         Text(
-                          'Amount: ${NumberFormat('#,###', 'vi_VN').format(pay.amount)} VND',
+                          'Amount: ${appFormatCurrencyCompact(context, pay.amount)}',
                           overflow: TextOverflow.ellipsis,
                           maxLines: 1,
                           textScaler: TextScaler.linear(0.8),
                         ),
                         Text(
-                          'Date transfer: ${DateFormat('dd/MM/yyyy HH:mm').format(pay.datetime)}',
+                          'Date transfer: ${appFormatDate(context, pay.datetime)} - ${DateFormat('HH:mm').format(pay.datetime)}',
                           overflow: TextOverflow.ellipsis,
                           maxLines: 1,
                           textScaler: TextScaler.linear(0.8),

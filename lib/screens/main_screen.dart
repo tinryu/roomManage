@@ -85,15 +85,17 @@ class _MainScreenState extends State<MainScreen> {
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
-            const DrawerHeader(
-              decoration: BoxDecoration(color: Colors.blue),
-              child: Text(
-                'Drawer Header',
-                style: TextStyle(color: Colors.white),
+            DrawerHeader(
+              decoration: BoxDecoration(
+                image: DecorationImage(
+                  image: AssetImage('assets/images/room1.png'),
+                  fit: BoxFit.cover,
+                ),
               ),
+              child: const Text(''),
             ),
             ListTile(
-              title: const Text('Setting'),
+              title: const Text('Setting', textScaler: TextScaler.linear(0.9)),
               onTap: () {
                 Navigator.push(
                   context,
@@ -109,7 +111,7 @@ class _MainScreenState extends State<MainScreen> {
               },
             ),
             ListTile(
-              title: const Text('Tasks'),
+              title: const Text('Tasks', textScaler: TextScaler.linear(0.9)),
               onTap: () {
                 Navigator.push(
                   context,
@@ -121,7 +123,7 @@ class _MainScreenState extends State<MainScreen> {
               },
             ),
             ListTile(
-              title: const Text('Logout'),
+              title: const Text('Logout', textScaler: TextScaler.linear(0.9)),
               onTap: () {
                 _signOut(context);
               },
@@ -165,7 +167,7 @@ class _MainScreenState extends State<MainScreen> {
           children: [
             Expanded(
               child: Padding(
-                padding: EdgeInsets.only(left: 5.0, right: 5.0),
+                padding: EdgeInsets.zero,
                 child: _screens[_selectedIndex],
               ),
             ),

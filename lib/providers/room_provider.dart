@@ -95,22 +95,28 @@ class RoomNotifier extends AsyncNotifier<List<Room>> {
       final res = await supabase
           .from(_table)
           .update(data)
-          .eq('id', room.id as Object)
+          .eq('id', room.id!)
           .select()
-          .single();
+          .maybeSingle();
+
+      if (res == null) {
+        throw StateError('No room found with id ${room.id} to update');
+      }
       final updated = Room.fromMap(res);
       final current = state.value ?? [];
-      state = AsyncData(current.map((r) => r.id == updated.id ? updated : r).toList());
+      state = AsyncData(
+        current.map((r) => r.id == updated.id ? updated : r).toList(),
+      );
     } catch (e) {
       state = AsyncError(e, StackTrace.current);
       rethrow;
     }
   }
 
-  Future<void> deleteRoom(String id) async {
+  Future<void> deleteRoom(int id) async {
     await supabase.from(_table).delete().eq('id', id);
     final current = state.value ?? [];
-    state = AsyncData(current.where((r) => '${r.id}' != id).toList());
+    state = AsyncData(current.where((r) => r.id != id).toList());
   }
 
   Future<void> deleteRooms(List<int> ids) async {
@@ -119,7 +125,9 @@ class RoomNotifier extends AsyncNotifier<List<Room>> {
       await supabase.from(_table).delete().inFilter('id', ids);
       final idSet = ids.toSet();
       final current = state.value ?? [];
-      state = AsyncData(current.where((r) => !(r.id != null && idSet.contains(r.id))).toList());
+      state = AsyncData(
+        current.where((r) => !(r.id != null && idSet.contains(r.id))).toList(),
+      );
     } catch (e) {
       state = AsyncError(e, StackTrace.current);
       rethrow;

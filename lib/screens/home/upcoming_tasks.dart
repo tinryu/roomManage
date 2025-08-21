@@ -1,56 +1,24 @@
 import 'package:app_project/screens/tasks/task_detail_screen.dart';
 import 'package:app_project/screens/tasks/task_list_screen.dart';
 import 'package:flutter/material.dart';
-import 'package:app_project/providers/task_provider.dart';
-import 'package:app_project/models/task.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart' as p;
+import 'package:app_project/providers/dashboard_provider.dart';
+import 'package:app_project/utils/format.dart';
 
-class UpcomingTasks extends ConsumerStatefulWidget {
+class UpcomingTasks extends StatefulWidget {
   const UpcomingTasks({super.key});
 
   @override
-  ConsumerState<UpcomingTasks> createState() => _UpcomingTasksState();
+  State<UpcomingTasks> createState() => _UpcomingTasksState();
 }
 
-class _UpcomingTasksState extends ConsumerState<UpcomingTasks> {
-  bool isLoading = false;
-  String? error;
-  List<Task> monthlyTasks = [];
-
-  @override
-  void initState() {
-    super.initState();
-    _loadUpcomingTasks();
-  }
-
-  Future<void> _loadUpcomingTasks() async {
-    setState(() {
-      isLoading = true;
-      error = null;
-    });
-
-    try {
-      final taskNotifier = ref.read(taskProvider.notifier);
-      final tasks = await taskNotifier.getUpcomingTasks(
-        year: 2025,
-        month: 8,
-        limit: 2,
-      );
-      setState(() {
-        monthlyTasks = tasks;
-        isLoading = false;
-      });
-    } catch (e) {
-      setState(() {
-        error = e.toString();
-        isLoading = false;
-      });
-    }
-  }
-
+class _UpcomingTasksState extends State<UpcomingTasks> {
   @override
   Widget build(BuildContext context) {
+    final dp = p.Provider.of<DashboardProvider>(context);
+    final isLoading = dp.isLoading;
+    final upcomingTasks = dp.upcomingTasks;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -83,22 +51,22 @@ class _UpcomingTasksState extends ConsumerState<UpcomingTasks> {
               SizedBox(height: 12),
               isLoading
                   ? Center(child: CircularProgressIndicator())
-                  : error != null
-                  ? Center(child: Text('Lỗi: $error'))
-                  : monthlyTasks.isEmpty
+                  : upcomingTasks.isEmpty
                   ? Center(child: Text('Không có task'))
                   : RefreshIndicator(
-                      onRefresh: _loadUpcomingTasks,
+                      onRefresh: () async {
+                        await dp.fetchDashboard(taskLimit: 3);
+                      },
                       child: Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 12),
+                        padding: EdgeInsets.symmetric(vertical: 8),
                         child: ListView.separated(
                           shrinkWrap: true,
                           physics: const NeverScrollableScrollPhysics(),
-                          itemCount: monthlyTasks.length,
+                          itemCount: upcomingTasks.length,
                           separatorBuilder: (context, index) =>
                               const Divider(thickness: 0.3),
                           itemBuilder: (context, index) {
-                            final task = monthlyTasks[index];
+                            final task = upcomingTasks[index];
                             return InkWell(
                               onTap: () {
                                 Navigator.push(
@@ -137,7 +105,7 @@ class _UpcomingTasksState extends ConsumerState<UpcomingTasks> {
                                         size: 24,
                                       ),
                                     ),
-                                    SizedBox(width: 10),
+                                    SizedBox(width: 20),
                                     Expanded(
                                       child: Column(
                                         crossAxisAlignment:
@@ -155,9 +123,7 @@ class _UpcomingTasksState extends ConsumerState<UpcomingTasks> {
                                           ),
                                           SizedBox(height: 4),
                                           Text(
-                                            DateFormat(
-                                              'dd/MM/yyyy - HH:mm',
-                                            ).format(task.createdAt),
+                                            '${appFormatDate(context, task.createdAt)} - ${DateFormat('HH:mm').format(task.createdAt)}',
                                             style: const TextStyle(
                                               fontSize: 13,
                                               color: Colors.grey,

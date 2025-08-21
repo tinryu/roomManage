@@ -47,9 +47,12 @@ class PaymentNotifier extends AsyncNotifier<List<Payment>> {
       final res = await supabase
           .from(_table)
           .update(data)
-          .eq('id', payment.id as int)
+          .eq('id', payment.id!)
           .select()
-          .single();
+          .maybeSingle();
+      if (res == null) {
+        throw StateError('No payment found with id ${payment.id} to update');
+      }
 
       final updatedPayment = Payment.fromMap(res);
       final current = state.value ?? [];

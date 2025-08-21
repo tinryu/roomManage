@@ -2,7 +2,7 @@ import 'package:app_project/screens/tenants/tenant_add_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_project/providers/tenant_provider.dart';
-import 'package:intl/intl.dart';
+import 'package:app_project/utils/format.dart';
 
 // Holds selected tenant IDs
 final selectedTenantIdsProvider = StateProvider<Set<int>>((ref) => <int>{});
@@ -235,7 +235,7 @@ class TenantListScreen extends ConsumerWidget {
                               children: [
                                 Icon(Icons.house_sharp, size: 12),
                                 Text(
-                                  DateFormat('dd/MM/yyyy').format(t.checkIn),
+                                  appFormatDate(context, t.checkIn),
                                   overflow: TextOverflow.ellipsis,
                                   maxLines: 1,
                                   textScaler: TextScaler.linear(0.8),
@@ -249,9 +249,7 @@ class TenantListScreen extends ConsumerWidget {
                                 ),
                                 Text(
                                   t.checkOut != null
-                                      ? DateFormat(
-                                          'dd/MM/yyyy',
-                                        ).format(t.checkOut!)
+                                      ? appFormatDate(context, t.checkOut!)
                                       : '',
                                   overflow: TextOverflow.ellipsis,
                                   maxLines: 1,

@@ -98,7 +98,11 @@ class _AddRoomScreenState extends ConsumerState<AddRoomScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(isEditing ? 'Room updated successfully!' : 'Room created successfully!'),
+            content: Text(
+              isEditing
+                  ? 'Room updated successfully!'
+                  : 'Room created successfully!',
+            ),
             backgroundColor: Colors.green,
           ),
         );
@@ -122,7 +126,12 @@ class _AddRoomScreenState extends ConsumerState<AddRoomScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.initialRoom != null ? 'Edit Room' : 'Add New Room'),
+        title: Text(
+          widget.initialRoom != null ? 'Edit Room' : 'Add New Room',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          textScaler: TextScaler.linear(0.7),
+        ),
         actions: [
           if (_isLoading)
             const Center(
@@ -147,6 +156,9 @@ class _AddRoomScreenState extends ConsumerState<AddRoomScreen> {
                   color: Colors.white,
                   fontWeight: FontWeight.w600,
                 ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textScaler: TextScaler.linear(0.7),
               ),
             ),
         ],
@@ -168,9 +180,15 @@ class _AddRoomScreenState extends ConsumerState<AddRoomScreen> {
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w600,
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textScaler: TextScaler.linear(0.7),
                     ),
                     const SizedBox(height: 8),
                     TextFormField(
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodySmall?.copyWith(fontSize: 12),
                       controller: _nameController,
                       decoration: const InputDecoration(
                         hintText: 'Enter room name...',
@@ -207,9 +225,15 @@ class _AddRoomScreenState extends ConsumerState<AddRoomScreen> {
                             'Tenant ID',
                             style: Theme.of(context).textTheme.titleMedium
                                 ?.copyWith(fontWeight: FontWeight.w600),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            textScaler: TextScaler.linear(0.7),
                           ),
                           const SizedBox(height: 8),
                           TextFormField(
+                            style: Theme.of(
+                              context,
+                            ).textTheme.bodySmall?.copyWith(fontSize: 12),
                             controller: _tenantIdController,
                             decoration: const InputDecoration(
                               hintText: 'Optional',
@@ -230,7 +254,7 @@ class _AddRoomScreenState extends ConsumerState<AddRoomScreen> {
                 Expanded(
                   child: Card(
                     child: Padding(
-                      padding: const EdgeInsets.all(16.0),
+                      padding: const EdgeInsets.all(22.8),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -238,13 +262,21 @@ class _AddRoomScreenState extends ConsumerState<AddRoomScreen> {
                             'Occupied',
                             style: Theme.of(context).textTheme.titleMedium
                                 ?.copyWith(fontWeight: FontWeight.w600),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            textScaler: TextScaler.linear(0.7),
                           ),
                           const SizedBox(height: 8),
                           SwitchListTile(
-                            title: Text(_isOccupied ? 'Occupied' : 'Vacant'),
+                            title: Text(
+                              _isOccupied ? 'Occupied' : 'Vacant',
+                              style: Theme.of(
+                                context,
+                              ).textTheme.bodySmall?.copyWith(fontSize: 12),
+                            ),
                             value: _isOccupied,
                             onChanged: (v) => setState(() => _isOccupied = v),
-                            contentPadding: EdgeInsets.zero,
+                            contentPadding: EdgeInsets.all(2),
                           ),
                         ],
                       ),
@@ -268,9 +300,15 @@ class _AddRoomScreenState extends ConsumerState<AddRoomScreen> {
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w600,
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textScaler: TextScaler.linear(0.7),
                     ),
                     const SizedBox(height: 8),
                     TextFormField(
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodySmall?.copyWith(fontSize: 12),
                       controller: _assetIdsController,
                       decoration: const InputDecoration(
                         hintText: 'Comma-separated IDs (optional)',
@@ -302,6 +340,9 @@ class _AddRoomScreenState extends ConsumerState<AddRoomScreen> {
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w600,
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textScaler: TextScaler.linear(0.7),
                     ),
                     const SizedBox(height: 8),
                     if (_imagePath != null) ...[
@@ -337,12 +378,22 @@ class _AddRoomScreenState extends ConsumerState<AddRoomScreen> {
                           TextButton.icon(
                             onPressed: _pickImage,
                             icon: const Icon(Icons.edit),
-                            label: const Text('Change Image'),
+                            label: const Text(
+                              'Change Image',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              textScaler: TextScaler.linear(0.7),
+                            ),
                           ),
                           TextButton.icon(
                             onPressed: () => setState(() => _imagePath = null),
                             icon: const Icon(Icons.delete),
-                            label: const Text('Remove Image'),
+                            label: const Text(
+                              'Remove Image',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              textScaler: TextScaler.linear(0.7),
+                            ),
                             style: TextButton.styleFrom(
                               foregroundColor: Colors.red,
                             ),
@@ -377,6 +428,9 @@ class _AddRoomScreenState extends ConsumerState<AddRoomScreen> {
                                   color: Colors.grey,
                                   fontSize: 16,
                                 ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                textScaler: TextScaler.linear(0.7),
                               ),
                             ],
                           ),

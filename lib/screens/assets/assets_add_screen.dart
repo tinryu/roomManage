@@ -147,6 +147,10 @@ class _AddAssetScreenState extends ConsumerState<AddAssetScreen> {
       appBar: AppBar(
         title: Text(
           widget.initialAsset != null ? 'Edit Asset' : 'Add New Asset',
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          textScaler: TextScaler.linear(0.8),
         ),
         actions: [
           if (_isLoading)
@@ -172,6 +176,9 @@ class _AddAssetScreenState extends ConsumerState<AddAssetScreen> {
                   color: Colors.white,
                   fontWeight: FontWeight.w600,
                 ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textScaler: TextScaler.linear(0.8),
               ),
             ),
         ],
@@ -193,9 +200,15 @@ class _AddAssetScreenState extends ConsumerState<AddAssetScreen> {
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w600,
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textScaler: TextScaler.linear(0.8),
                     ),
                     const SizedBox(height: 8),
                     TextFormField(
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodySmall?.copyWith(fontSize: 12),
                       controller: _nameController,
                       decoration: const InputDecoration(
                         hintText: 'Enter asset name...',
@@ -232,9 +245,15 @@ class _AddAssetScreenState extends ConsumerState<AddAssetScreen> {
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w600,
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textScaler: TextScaler.linear(0.8),
                     ),
                     const SizedBox(height: 8),
                     TextFormField(
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodySmall?.copyWith(fontSize: 12),
                       controller: _roomIdController,
                       decoration: const InputDecoration(
                         hintText: 'Enter room ID...',
@@ -274,9 +293,15 @@ class _AddAssetScreenState extends ConsumerState<AddAssetScreen> {
                             'Condition',
                             style: Theme.of(context).textTheme.titleMedium
                                 ?.copyWith(fontWeight: FontWeight.w600),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            textScaler: TextScaler.linear(0.8),
                           ),
                           const SizedBox(height: 8),
                           TextFormField(
+                            style: Theme.of(
+                              context,
+                            ).textTheme.bodySmall?.copyWith(fontSize: 12),
                             controller: _conditionController,
                             decoration: const InputDecoration(
                               hintText: 'Good',
@@ -306,9 +331,15 @@ class _AddAssetScreenState extends ConsumerState<AddAssetScreen> {
                             'Quantity',
                             style: Theme.of(context).textTheme.titleMedium
                                 ?.copyWith(fontWeight: FontWeight.w600),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            textScaler: TextScaler.linear(0.8),
                           ),
                           const SizedBox(height: 8),
                           TextFormField(
+                            style: Theme.of(
+                              context,
+                            ).textTheme.bodySmall?.copyWith(fontSize: 12),
                             controller: _quantityController,
                             decoration: const InputDecoration(
                               hintText: '1',
@@ -352,6 +383,9 @@ class _AddAssetScreenState extends ConsumerState<AddAssetScreen> {
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w600,
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textScaler: TextScaler.linear(0.8),
                     ),
                     const SizedBox(height: 8),
 
@@ -385,11 +419,18 @@ class _AddAssetScreenState extends ConsumerState<AddAssetScreen> {
                       ),
                       const SizedBox(height: 8),
                       Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
                         children: [
                           TextButton.icon(
                             onPressed: _pickImage,
                             icon: const Icon(Icons.edit),
-                            label: const Text('Change Image'),
+                            label: const Text(
+                              'Change Image',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              textScaler: TextScaler.linear(0.7),
+                            ),
                           ),
                           TextButton.icon(
                             onPressed: () {
@@ -398,7 +439,12 @@ class _AddAssetScreenState extends ConsumerState<AddAssetScreen> {
                               });
                             },
                             icon: const Icon(Icons.delete),
-                            label: const Text('Remove Image'),
+                            label: const Text(
+                              'Remove Image',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              textScaler: TextScaler.linear(0.7),
+                            ),
                             style: TextButton.styleFrom(
                               foregroundColor: Colors.red,
                             ),
@@ -433,6 +479,9 @@ class _AddAssetScreenState extends ConsumerState<AddAssetScreen> {
                                   color: Colors.grey,
                                   fontSize: 16,
                                 ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                textScaler: TextScaler.linear(0.8),
                               ),
                             ],
                           ),
