@@ -12,6 +12,7 @@ class AuthGate extends StatefulWidget {
   final void Function(ThemeMode mode)? onThemeChange;
   final ThemeMode? currentThemeMode;
   final Future<void> Function()? onResetOnboarding;
+  final Future<void> Function(Session session)? onConfirmed; // optional hook
 
   const AuthGate({
     super.key,
@@ -19,6 +20,7 @@ class AuthGate extends StatefulWidget {
     this.onThemeChange,
     this.currentThemeMode,
     this.onResetOnboarding,
+    this.onConfirmed,
   });
 
   @override
@@ -35,12 +37,34 @@ class _AuthGateState extends State<AuthGate> {
     final auth = Supabase.instance.client.auth;
     _session = auth.currentSession;
 
-    _sub = auth.onAuthStateChange.listen((data) {
+    _sub = auth.onAuthStateChange.listen((data) async {
+      final previous = _session;
       setState(() {
         // When user confirms email and the app is opened via deep link,
         // Supabase emits signedIn with a valid session.
         _session = auth.currentSession;
       });
+
+      // Transition from no session to a valid session => confirmation success
+      if (previous == null && _session != null) {
+        if (mounted) {
+          // Optional custom action for the app (e.g., fetch profile, route, analytics)
+          if (widget.onConfirmed != null) {
+            await widget.onConfirmed!(_session!);
+          }
+          // User feedback
+          // ignore: use_build_context_synchronously
+          ScaffoldMessenger.of(context)
+            ..hideCurrentSnackBar()
+            ..showSnackBar(
+              const SnackBar(
+                content: Text('Email confirmed. You are now signed in.'),
+                behavior: SnackBarBehavior.floating,
+                duration: Duration(seconds: 2),
+              ),
+            );
+        }
+      }
     });
   }
 
