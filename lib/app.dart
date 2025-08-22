@@ -3,8 +3,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:app_project/l10n/app_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'screens/main_screen.dart';
-import 'package:app_project/screens/tenants/login_screen.dart' show LoginScreen;
+// import 'screens/main_screen.dart';
+import 'widgets/auth_gate.dart';
+// import 'package:app_project/screens/tenants/login_screen.dart' show LoginScreen;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'providers/onboarding_provider.dart';
@@ -60,14 +61,12 @@ class _MyAppState extends ConsumerState<MyApp> {
       ],
       home: !seen
           ? OnboardingScreen(onFinish: _setSeenOnboarding)
-          : (user == null
-                ? LoginScreen()
-                : MainScreen(
-                    onLocaleChange: _changeLanguage,
-                    onThemeChange: _changeTheme,
-                    currentThemeMode: _themeMode,
-                    onResetOnboarding: _resetSeenOnboarding,
-                  )),
+          : AuthGate(
+              onLocaleChange: _changeLanguage,
+              onThemeChange: _changeTheme,
+              currentThemeMode: _themeMode,
+              onResetOnboarding: _resetSeenOnboarding,
+            ),
       themeMode: _themeMode,
       theme: ThemeData(
         fontFamily: 'Roboto',
