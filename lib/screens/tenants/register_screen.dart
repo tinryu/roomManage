@@ -1,15 +1,17 @@
+import 'package:app_project/screens/tenants/login_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:app_project/screens/tenants/verify_mobile_screen.dart';
+import 'package:app_project/providers/user_provider.dart';
 
-class RegisterScreen extends StatefulWidget {
+class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
 
   @override
-  State<RegisterScreen> createState() => _RegisterScreenState();
+  ConsumerState<RegisterScreen> createState() => _RegisterScreenState();
 }
 
-class _RegisterScreenState extends State<RegisterScreen> {
+class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _usernameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -39,25 +41,51 @@ class _RegisterScreenState extends State<RegisterScreen> {
       if (email.isEmpty || password.isEmpty) {
         throw 'Email and password are required';
       }
+      // Basic email format validation before calling sign up
+      final emailRegex = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
+      if (!emailRegex.hasMatch(email)) {
+        throw 'Please enter a valid email address';
+      }
 
-      final response = await Supabase.instance.client.auth.signUp(
-        email: email,
-        password: password,
-        data: {'username': username},
-      );
+      final auth = await ref
+          .read(userProvider.notifier)
+          .addUser(
+            email: email,
+            password: password,
+            data: {'username': username},
+            // Replace with your app's deep link configured in Supabase Auth URL settings
+            emailRedirectTo: 'roommanage://auth-callback',
+          );
 
-      if (response.user != null) {
+      if (auth.user != null) {
         if (mounted) {
-          // After registering, go to mobile verification flow
+          // Show success alert then navigate to login
+          ScaffoldMessenger.of(context)
+            ..hideCurrentSnackBar()
+            ..showSnackBar(
+              const SnackBar(
+                content: Text('Registration successful. Please log in.'),
+                backgroundColor: Colors.green,
+                behavior: SnackBarBehavior.floating,
+                duration: Duration(seconds: 2),
+              ),
+            );
+
+          await Future.delayed(const Duration(milliseconds: 800));
           Navigator.pushReplacement(
+            // ignore: use_build_context_synchronously
             context,
-            MaterialPageRoute(builder: (context) => const VerifyMobileScreen()),
+            MaterialPageRoute(builder: (context) => const LoginScreen()),
           );
         }
       }
     } catch (e) {
       setState(() {
-        _errorMessage = 'Sign up failed: $e';
+        if (e is AuthException) {
+          _errorMessage = 'Sign up failed: ${e.message}';
+        } else {
+          _errorMessage = 'Sign up failed: $e';
+        }
       });
     } finally {
       if (mounted) {

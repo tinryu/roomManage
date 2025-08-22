@@ -28,12 +28,12 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: const Text('Cancel', textScaler: TextScaler.linear(0.8)),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Delete'),
+            child: const Text('Delete', textScaler: TextScaler.linear(0.8)),
           ),
         ],
       ),
@@ -50,7 +50,10 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
           Navigator.pop(context);
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Task deleted successfully'),
+              content: Text(
+                'Task deleted successfully',
+                textScaler: TextScaler.linear(0.8),
+              ),
               backgroundColor: Colors.green,
             ),
           );
@@ -62,7 +65,10 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
           });
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Error deleting task: $e'),
+              content: Text(
+                'Error deleting task: $e',
+                textScaler: TextScaler.linear(0.8),
+              ),
               backgroundColor: Colors.red,
             ),
           );
@@ -100,7 +106,11 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
                   children: [
                     Icon(Icons.delete, color: Colors.red),
                     SizedBox(width: 8),
-                    Text('Delete Task', style: TextStyle(color: Colors.red)),
+                    Text(
+                      'Delete Task',
+                      style: TextStyle(color: Colors.red),
+                      textScaler: TextScaler.linear(0.8),
+                    ),
                   ],
                 ),
               ),
@@ -115,7 +125,7 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
                 children: [
                   CircularProgressIndicator(color: Colors.lightBlue),
                   SizedBox(height: 16),
-                  Text('Deleting task...'),
+                  Text('Deleting task...', textScaler: TextScaler.linear(0.8)),
                 ],
               ),
             )
@@ -409,7 +419,9 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
                           _buildInfoRow(
                             'Created Time',
                             // Keep time-only formatting local
-                            DateFormat('HH:mm:ss').format(widget.task.createdAt),
+                            DateFormat(
+                              'HH:mm:ss',
+                            ).format(widget.task.createdAt),
                           ),
                         ],
                       ),

@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:app_project/providers/user_provider.dart';
 
-class ForgotScreen extends StatefulWidget {
+class ForgotScreen extends ConsumerStatefulWidget {
   const ForgotScreen({super.key});
 
   @override
-  State<ForgotScreen> createState() => _ForgotScreenState();
+  ConsumerState<ForgotScreen> createState() => _ForgotScreenState();
 }
 
-class _ForgotScreenState extends State<ForgotScreen> {
+class _ForgotScreenState extends ConsumerState<ForgotScreen> {
   final _emailController = TextEditingController();
   bool _isLoading = false;
   String? _errorMessage;
@@ -33,14 +35,20 @@ class _ForgotScreenState extends State<ForgotScreen> {
         throw 'Please enter your email';
       }
 
-      await Supabase.instance.client.auth.resetPasswordForEmail(email);
+      await ref
+          .read(userProvider.notifier)
+          .sendPasswordResetEmail(email);
 
       setState(() {
         _successMessage = 'Password reset link sent to $email';
       });
     } catch (e) {
       setState(() {
-        _errorMessage = 'Failed to send reset email: $e';
+        if (e is AuthException) {
+          _errorMessage = 'Failed to send reset email: ${e.message}';
+        } else {
+          _errorMessage = 'Failed to send reset email: $e';
+        }
       });
     } finally {
       if (mounted) {

@@ -80,7 +80,10 @@ class _AddTaskScreenState extends ConsumerState<AddTaskScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Task created successfully!'),
+            content: Text(
+              'Task created successfully!',
+              textScaler: TextScaler.linear(0.8),
+            ),
             backgroundColor: Colors.green,
           ),
         );
@@ -90,7 +93,10 @@ class _AddTaskScreenState extends ConsumerState<AddTaskScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error creating task: $e'),
+            content: Text(
+              'Error creating task: $e',
+              textScaler: TextScaler.linear(0.8),
+            ),
             backgroundColor: Colors.red,
           ),
         );
@@ -135,6 +141,7 @@ class _AddTaskScreenState extends ConsumerState<AddTaskScreen> {
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
                 ),
+                textScaler: TextScaler.linear(0.8),
               ),
             ),
         ],
@@ -156,6 +163,7 @@ class _AddTaskScreenState extends ConsumerState<AddTaskScreen> {
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w600,
                       ),
+                      textScaler: TextScaler.linear(0.8),
                     ),
                     const SizedBox(height: 8),
                     TextFormField(
@@ -195,6 +203,7 @@ class _AddTaskScreenState extends ConsumerState<AddTaskScreen> {
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w600,
                       ),
+                      textScaler: TextScaler.linear(0.8),
                     ),
                     const SizedBox(height: 8),
                     TextFormField(
@@ -229,6 +238,7 @@ class _AddTaskScreenState extends ConsumerState<AddTaskScreen> {
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w600,
                       ),
+                      textScaler: TextScaler.linear(0.8),
                     ),
                     const SizedBox(height: 8),
 
@@ -266,7 +276,10 @@ class _AddTaskScreenState extends ConsumerState<AddTaskScreen> {
                           TextButton.icon(
                             onPressed: _pickImage,
                             icon: const Icon(Icons.edit),
-                            label: const Text('Change Image'),
+                            label: const Text(
+                              'Change Image',
+                              textScaler: TextScaler.linear(0.8),
+                            ),
                           ),
                           TextButton.icon(
                             onPressed: () {
@@ -275,7 +288,10 @@ class _AddTaskScreenState extends ConsumerState<AddTaskScreen> {
                               });
                             },
                             icon: const Icon(Icons.delete),
-                            label: const Text('Remove Image'),
+                            label: const Text(
+                              'Remove Image',
+                              textScaler: TextScaler.linear(0.8),
+                            ),
                             style: TextButton.styleFrom(
                               foregroundColor: Colors.red,
                             ),
@@ -310,6 +326,7 @@ class _AddTaskScreenState extends ConsumerState<AddTaskScreen> {
                                   color: Colors.grey,
                                   fontSize: 16,
                                 ),
+                                textScaler: TextScaler.linear(0.8),
                               ),
                             ],
                           ),

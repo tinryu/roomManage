@@ -31,7 +31,7 @@ class AnalyticsDashboard extends StatelessWidget {
                       crossAxisCount: isLarge ? 6 : (isWide ? 3 : 2),
                       crossAxisSpacing: 16,
                       mainAxisSpacing: 16,
-                      childAspectRatio: 2.5,
+                      childAspectRatio: 1.5,
                     ),
                     itemCount: stats.length,
                     itemBuilder: (context, index) {
@@ -80,15 +80,18 @@ class AnalyticsDashboard extends StatelessWidget {
                                       textScaler: TextScaler.linear(0.8),
                                     ),
                                     SizedBox(height: 2),
-                                    Text(
-                                      stat['label'],
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w600,
+                                    Padding(
+                                      padding: EdgeInsets.all(4),
+                                      child: Text(
+                                        stat['label'],
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
+                                        maxLines: 1,
+                                        textScaler: TextScaler.linear(0.8),
                                       ),
-                                      overflow: TextOverflow.fade,
-                                      maxLines: 1,
-                                      textScaler: TextScaler.linear(0.8),
                                     ),
                                   ],
                                 ),

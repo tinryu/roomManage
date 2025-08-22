@@ -46,6 +46,7 @@ class _TaskListScreenState extends ConsumerState<TaskListScreen> {
         title: const Text(
           'Tasks',
           style: TextStyle(fontWeight: FontWeight.w600, color: Colors.white),
+          textScaler: TextScaler.linear(0.8),
         ),
         elevation: 0,
         actions: [
@@ -74,6 +75,7 @@ class _TaskListScreenState extends ConsumerState<TaskListScreen> {
                   fontWeight: FontWeight.w600,
                   color: Colors.grey[600],
                 ),
+                textScaler: TextScaler.linear(0.8),
               ),
               const SizedBox(height: 8),
               Text(
@@ -109,11 +111,13 @@ class _TaskListScreenState extends ConsumerState<TaskListScreen> {
                         fontWeight: FontWeight.w600,
                         color: Colors.grey[600],
                       ),
+                      textScaler: TextScaler.linear(0.8),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       'Create your first task to get started',
                       style: TextStyle(fontSize: 14, color: Colors.grey[500]),
+                      textScaler: TextScaler.linear(0.8),
                     ),
                   ],
                 ),
@@ -181,6 +185,7 @@ class _TaskListScreenState extends ConsumerState<TaskListScreen> {
                                       ),
                                       maxLines: 2,
                                       overflow: TextOverflow.ellipsis,
+                                      textScaler: TextScaler.linear(0.8),
                                     ),
                                     if (task.context != null &&
                                         task.context!.isNotEmpty) ...[
@@ -190,6 +195,7 @@ class _TaskListScreenState extends ConsumerState<TaskListScreen> {
                                         style: TextStyle(fontSize: 14),
                                         maxLines: 2,
                                         overflow: TextOverflow.ellipsis,
+                                        textScaler: TextScaler.linear(0.8),
                                       ),
                                     ],
                                     const SizedBox(height: 8),
@@ -207,6 +213,7 @@ class _TaskListScreenState extends ConsumerState<TaskListScreen> {
                                             fontSize: 12,
                                             color: Colors.grey[500],
                                           ),
+                                          textScaler: TextScaler.linear(0.8),
                                         ),
                                         if (task.imageUrl != null) ...[
                                           const SizedBox(width: 12),
