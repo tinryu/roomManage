@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:app_project/models/task.dart';
+import 'package:app_project/services/notification_service.dart';
 
 class TaskNotifier extends AsyncNotifier<List<Task>> {
   final supabase = Supabase.instance.client;
@@ -11,6 +12,9 @@ class TaskNotifier extends AsyncNotifier<List<Task>> {
   int _offset = 0;
   bool _hasMore = true;
   bool _isLoadingMore = false;
+
+  // Use an offset to avoid colliding with payment notification IDs
+  int _notifIdForTask(int id) => 1000000 + id;
 
   @override
   Future<List<Task>> build() async {
@@ -108,12 +112,25 @@ class TaskNotifier extends AsyncNotifier<List<Task>> {
         'context': task.context,
         'image_url': imageUrl ?? '',
         'created_at': DateTime.now().toIso8601String(),
+        'due_at': task.dueAt?.toIso8601String(),
       };
       final res = await supabase.from(_table).insert(data).select().single();
 
       final newTask = Task.fromMap(res);
       final current = state.value ?? [];
       state = AsyncData([newTask, ...current]);
+
+      // Schedule notification if dueAt is in the future
+      if (newTask.id != null &&
+          newTask.dueAt != null &&
+          newTask.dueAt!.isAfter(DateTime.now())) {
+        await NotificationService().scheduleTaskReminder(
+          id: _notifIdForTask(newTask.id!),
+          title: newTask.title,
+          when: newTask.dueAt!,
+          payload: 'task:${newTask.id}',
+        );
+      }
     } catch (e) {
       state = AsyncError(e, StackTrace.current);
       rethrow;
@@ -122,13 +139,28 @@ class TaskNotifier extends AsyncNotifier<List<Task>> {
 
   Future<void> updateTask(Task task) async {
     try {
-      await supabase.from(_table).update(task.toMap()).eq('id', task.id!);
+      // Avoid sending ID in update payload
+      final payload = task.toMap()..remove('id');
+      await supabase.from(_table).update(payload).eq('id', task.id!);
 
       final current = state.value ?? [];
       final index = current.indexWhere((t) => t.id == task.id);
       if (index != -1) {
         current[index] = task;
         state = AsyncData([...current]);
+      }
+
+      // Reschedule notification: cancel previous and schedule new if future
+      if (task.id != null) {
+        await NotificationService().cancel(_notifIdForTask(task.id!));
+        if (task.dueAt != null && task.dueAt!.isAfter(DateTime.now())) {
+          await NotificationService().scheduleTaskReminder(
+            id: _notifIdForTask(task.id!),
+            title: task.title,
+            when: task.dueAt!,
+            payload: 'task:${task.id}',
+          );
+        }
       }
     } catch (e) {
       state = AsyncError(e, StackTrace.current);
@@ -138,16 +170,41 @@ class TaskNotifier extends AsyncNotifier<List<Task>> {
 
   Future<void> _deleteImage(String imageUrl) async {
     try {
-      // Extract filename from the full URL
+      // Extract storage path from the public URL.
+      // Typical public URL example:
+      // https://<project>.supabase.co/storage/v1/object/public/images/uploads/123.jpg
       final uri = Uri.parse(imageUrl);
-      final pathSegments = uri.pathSegments;
+      final path =
+          uri.path; // e.g. /storage/v1/object/public/images/uploads/123.jpg
 
-      // Find the filename after 'images' in the path
-      final imagesIndex = pathSegments.indexOf('images');
-      if (imagesIndex != -1 && imagesIndex < pathSegments.length - 1) {
-        final fileName = pathSegments.sublist(imagesIndex + 1).join('/');
-        await supabase.storage.from('images').remove([fileName]);
+      const bucket = 'images';
+      final marker = '/object/public/$bucket/';
+
+      String? storagePath;
+      final idx = path.indexOf(marker);
+      if (idx != -1) {
+        storagePath = path.substring(idx + marker.length);
+      } else {
+        // Fallback: find the bucket segment and take the rest
+        final segments = uri.pathSegments;
+        final bIdx = segments.indexOf(bucket);
+        if (bIdx != -1 && bIdx < segments.length - 1) {
+          storagePath = segments.sublist(bIdx + 1).join('/');
+        }
       }
+
+      if (storagePath == null || storagePath.isEmpty) {
+        // ignore: avoid_print
+        print('Could not extract storage path from URL: $imageUrl');
+        return;
+      }
+
+      // URL-decode in case any characters are percent-encoded
+      final decodedPath = Uri.decodeComponent(storagePath);
+
+      // ignore: avoid_print
+      print('Deleting from bucket "$bucket": $decodedPath');
+      await supabase.storage.from(bucket).remove([decodedPath]);
     } catch (e) {
       // Log error but don't throw - we still want to delete the task even if image deletion fails
       // ignore: avoid_print
@@ -172,6 +229,10 @@ class TaskNotifier extends AsyncNotifier<List<Task>> {
       // Update local state
       final updated = current.where((task) => task.id != id).toList();
       state = AsyncData(updated);
+      if (taskToDelete.dueAt != null &&
+          taskToDelete.dueAt!.isAfter(DateTime.now())) {
+        await NotificationService().cancel(_notifIdForTask(id));
+      }
     } catch (e) {
       state = AsyncError(e, StackTrace.current);
       rethrow;

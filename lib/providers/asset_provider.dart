@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:app_project/models/asset.dart';
@@ -19,40 +20,6 @@ class AssetNotifier extends AsyncNotifier<List<Asset>> {
     return await _fetchAssets(reset: true);
   }
 
-  Future<void> updateAsset({
-    required int id,
-    required String name,
-    required String condition,
-    required String roomId,
-    required int quantity,
-    String? imageUrl,
-  }) async {
-    try {
-      final data = {
-        'name': name,
-        'condition': condition,
-        'roomid': roomId,
-        'quantity': quantity,
-        if (imageUrl != null) 'image_url': imageUrl,
-      };
-      final res = await supabase
-          .from(_table)
-          .update(data)
-          .eq('id', id)
-          .select()
-          .maybeSingle();
-      if (res == null) {
-        throw StateError('No asset found with id $id to update');
-      }
-      final updated = Asset.fromMap(res);
-      final current = state.value ?? [];
-      state = AsyncData(current.map((a) => a.id == updated.id ? updated : a).toList());
-    } catch (e) {
-      state = AsyncValue.error(e, StackTrace.current);
-      rethrow;
-    }
-  }
-
   Future<void> deleteAssets(List<int> ids) async {
     if (ids.isEmpty) return;
     try {
@@ -62,6 +29,23 @@ class AssetNotifier extends AsyncNotifier<List<Asset>> {
       state = AsyncData(current.where((a) => !idSet.contains(a.id)).toList());
     } catch (e) {
       state = AsyncValue.error(e, StackTrace.current);
+      rethrow;
+    }
+  }
+
+  Future<List<Asset>> fetchAssetsByIds(List<int> ids) async {
+    try {
+      if (ids.isEmpty) return [];
+
+      final res = await supabase
+          .from(_table)
+          .select('id, name')
+          .inFilter('id', ids);
+
+      final data = res as List;
+      return data.map((e) => Asset.fromMap(e)).toList();
+    } catch (e) {
+      debugPrint('Error fetching assets by IDs: $e');
       rethrow;
     }
   }
@@ -77,6 +61,7 @@ class AssetNotifier extends AsyncNotifier<List<Asset>> {
           .select()
           .order('created_at', ascending: false)
           .range(_offset, _offset + _pageSize - 1);
+
       final data = res as List;
       final fetched = data.map((e) => Asset.fromMap(e)).toList();
 
@@ -124,7 +109,7 @@ class AssetNotifier extends AsyncNotifier<List<Asset>> {
   Future<void> addAsset({
     required String name,
     required String condition,
-    required String roomId,
+    int? roomId,
     required int quantity,
     File? imageFile,
   }) async {
@@ -139,7 +124,7 @@ class AssetNotifier extends AsyncNotifier<List<Asset>> {
       final data = {
         'name': name,
         'condition': condition,
-        'roomid': roomId,
+        'room_id': roomId,
         'quantity': quantity,
         'image_url': imageUrl ?? '',
         'created_at': DateTime.now().toIso8601String(),
@@ -149,6 +134,46 @@ class AssetNotifier extends AsyncNotifier<List<Asset>> {
       state = AsyncValue.data(await _fetchAssets());
     } catch (e) {
       state = AsyncValue.error(e, StackTrace.current);
+    }
+  }
+
+  Future<void> updateAsset({
+    required int id,
+    required String name,
+    required String condition,
+    int? roomId,
+    required int quantity,
+    File? imageFile,
+  }) async {
+    try {
+      String? imageUrl;
+      if (imageFile != null) {
+        imageUrl = await _uploadImage(imageFile);
+      }
+      final data = {
+        'name': name,
+        'condition': condition,
+        'room_id': roomId,
+        'quantity': quantity,
+        'image_url': imageUrl,
+      };
+      final res = await supabase
+          .from(_table)
+          .update(data)
+          .eq('id', id)
+          .select()
+          .maybeSingle();
+      if (res == null) {
+        throw StateError('No asset found with id $id to update');
+      }
+      final updated = Asset.fromMap(res);
+      final current = state.value ?? [];
+      state = AsyncData(
+        current.map((a) => a.id == updated.id ? updated : a).toList(),
+      );
+    } catch (e) {
+      state = AsyncValue.error(e, StackTrace.current);
+      rethrow;
     }
   }
 

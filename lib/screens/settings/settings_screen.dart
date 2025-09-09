@@ -1,3 +1,4 @@
+import 'package:app_project/screens/tenants/profile_detail_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:app_project/screens/tenants/login_screen.dart';
@@ -58,7 +59,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       : Icons.radio_button_off,
                   color: selected ? Colors.lightBlue : null,
                 ),
-                title: Text('$code ($symbol) ', textScaler: TextScaler.linear(0.8)),
+                title: Text(
+                  '$code ($symbol) ',
+                  textScaler: TextScaler.linear(0.8),
+                ),
                 subtitle: Text(
                   preview,
                   style: TextStyle(color: Colors.grey),
@@ -263,9 +267,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     'Date format',
                     textScaler: TextScaler.linear(0.8),
                   ),
-                  subtitle: Text(
-                    appFormatDate(context, DateTime.now()),
-                  ),
+                  subtitle: Text(appFormatDate(context, DateTime.now())),
                   onTap: _pickDateFormat,
                 ),
                 const Divider(height: 1),
@@ -322,7 +324,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 ListTile(
                   leading: Icon(Icons.person_outline),
                   title: Text('Profile', textScaler: TextScaler.linear(0.8)),
-                  onTap: () {},
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const ProfileDetailScreen(),
+                      ),
+                    );
+                  },
                 ),
                 const Divider(height: 1),
                 ListTile(

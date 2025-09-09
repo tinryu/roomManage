@@ -3,7 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:app_project/models/room.dart';
+import 'package:app_project/models/asset.dart';
 import 'package:app_project/providers/room_provider.dart';
+import 'package:app_project/providers/asset_provider.dart';
+import 'package:app_project/providers/tenant_provider.dart';
 
 class AddRoomScreen extends ConsumerStatefulWidget {
   final Room? initialRoom;
@@ -17,12 +20,27 @@ class _AddRoomScreenState extends ConsumerState<AddRoomScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _tenantIdController = TextEditingController();
-  final _assetIdsController = TextEditingController();
+  final List<Asset?> _selectedAssets = [null]; // For dropdown selection
 
   bool _isOccupied = false;
   bool _isLoading = false;
   final ImagePicker _picker = ImagePicker();
   String? _imagePath;
+
+  void _addAssetField() {
+    setState(() {
+      _selectedAssets.add(null);
+    });
+  }
+
+  void _removeAssetField(int index) {
+    if (_selectedAssets.length > 1) {
+      // Keep at least one field
+      setState(() {
+        _selectedAssets.removeAt(index);
+      });
+    }
+  }
 
   @override
   void initState() {
@@ -30,10 +48,26 @@ class _AddRoomScreenState extends ConsumerState<AddRoomScreen> {
     final r = widget.initialRoom;
     if (r != null) {
       _nameController.text = r.name;
-      _tenantIdController.text = r.tenantId ?? '';
-      _assetIdsController.text = r.assetId ?? '';
-      _isOccupied = r.isOccupied;
+      _tenantIdController.text = r.tenantId?.toString() ?? '';
+      _isOccupied = r.is_occupied;
       _imagePath = r.imageUrl;
+
+      // Initialize asset selections if they exist
+      if (r.asset_ids != null && r.asset_ids!.isNotEmpty) {
+        _selectedAssets.clear();
+        for (var id in r.asset_ids!) {
+          // We'll populate these with actual asset data when the provider loads
+          _selectedAssets.add(
+            Asset(
+              id: id,
+              name: 'Loading...',
+              condition: '',
+              quantity: 1,
+              createdAt: DateTime.now(),
+            ),
+          );
+        }
+      }
     }
   }
 
@@ -41,7 +75,6 @@ class _AddRoomScreenState extends ConsumerState<AddRoomScreen> {
   void dispose() {
     _nameController.dispose();
     _tenantIdController.dispose();
-    _assetIdsController.dispose();
     super.dispose();
   }
 
@@ -72,26 +105,44 @@ class _AddRoomScreenState extends ConsumerState<AddRoomScreen> {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
+
     try {
       final isEditing = widget.initialRoom != null;
-      final room = Room(
-        id: isEditing ? widget.initialRoom!.id : null,
-        name: _nameController.text.trim(),
-        isOccupied: _isOccupied,
-        assetId: _assetIdsController.text.trim().isEmpty
-            ? null
-            : _assetIdsController.text.trim(),
-        imageUrl: _imagePath, // stored as-is
-        tenantId: _tenantIdController.text.trim().isEmpty
-            ? null
-            : _tenantIdController.text.trim(),
-      );
-
       final notifier = ref.read(roomProvider.notifier);
+      final name = _nameController.text.trim();
+      final isOccupied = _isOccupied;
+      final tenantIdString = _tenantIdController.text.trim();
+
+      // Get all non-empty asset IDs
+      final assetIds = _selectedAssets
+          .where((asset) => asset != null)
+          .map((asset) => asset!.id)
+          .toList();
+
+      final tenantId = tenantIdString.isNotEmpty
+          ? int.tryParse(tenantIdString)
+          : null;
+
       if (isEditing) {
-        await notifier.updateRoom(room);
+        await notifier.updateRoom(
+          id: widget.initialRoom!.id!,
+          name: name,
+          isOccupied: isOccupied,
+          assetIds: assetIds,
+          imageFile:
+              _imagePath != null && _imagePath != widget.initialRoom?.imageUrl
+              ? File(_imagePath!)
+              : null,
+          tenantId: tenantId,
+        );
       } else {
-        await notifier.addRoom(room);
+        await notifier.addRoom(
+          name: name,
+          isOccupied: isOccupied,
+          assetIds: assetIds,
+          imageFile: _imagePath != null ? File(_imagePath!) : null,
+          tenantId: tenantId,
+        );
         await ref.refresh(roomProvider.future);
       }
 
@@ -126,12 +177,8 @@ class _AddRoomScreenState extends ConsumerState<AddRoomScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          widget.initialRoom != null ? 'Edit Room' : 'Add New Room',
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          textScaler: TextScaler.linear(0.7),
-        ),
+        title: Text(widget.initialRoom != null ? 'Edit Room' : 'Add New Room'),
+        centerTitle: true,
         actions: [
           if (_isLoading)
             const Center(
@@ -156,9 +203,6 @@ class _AddRoomScreenState extends ConsumerState<AddRoomScreen> {
                   color: Colors.white,
                   fontWeight: FontWeight.w600,
                 ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                textScaler: TextScaler.linear(0.7),
               ),
             ),
         ],
@@ -182,7 +226,7 @@ class _AddRoomScreenState extends ConsumerState<AddRoomScreen> {
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      textScaler: TextScaler.linear(0.7),
+                      textScaler: TextScaler.linear(0.8),
                     ),
                     const SizedBox(height: 8),
                     TextFormField(
@@ -215,9 +259,10 @@ class _AddRoomScreenState extends ConsumerState<AddRoomScreen> {
             Row(
               children: [
                 Expanded(
+                  flex: 2,
                   child: Card(
                     child: Padding(
-                      padding: const EdgeInsets.all(16.0),
+                      padding: const EdgeInsets.all(12.0),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -227,23 +272,82 @@ class _AddRoomScreenState extends ConsumerState<AddRoomScreen> {
                                 ?.copyWith(fontWeight: FontWeight.w600),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            textScaler: TextScaler.linear(0.7),
+                            textScaler: TextScaler.linear(0.8),
                           ),
                           const SizedBox(height: 8),
-                          TextFormField(
-                            style: Theme.of(
-                              context,
-                            ).textTheme.bodySmall?.copyWith(fontSize: 12),
-                            controller: _tenantIdController,
-                            decoration: const InputDecoration(
-                              hintText: 'Optional',
-                              border: OutlineInputBorder(),
-                              contentPadding: EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 8,
-                              ),
-                            ),
-                            maxLength: 50,
+                          Consumer(
+                            builder: (context, ref, _) {
+                              final tenantsAsync = ref.watch(tenantProvider);
+                              // Initialize with the current tenant ID from controller if it exists
+                              final selectedTenantId =
+                                  _tenantIdController.text.isNotEmpty
+                                  ? int.tryParse(_tenantIdController.text)
+                                  : null;
+
+                              return tenantsAsync.when(
+                                data: (tenants) {
+                                  // Add a null option for no tenant
+                                  final List<DropdownMenuItem<int>>
+                                  tenantOptions = [
+                                    const DropdownMenuItem<int>(
+                                      value: null,
+                                      child: Text(
+                                        'Select a tenant',
+                                        textScaler: TextScaler.linear(0.8),
+                                      ),
+                                    ),
+                                    ...tenants.map<DropdownMenuItem<int>>(
+                                      (tenant) => DropdownMenuItem<int>(
+                                        value: tenant.id,
+                                        child: Text(
+                                          tenant.name,
+                                          overflow: TextOverflow.ellipsis,
+                                          textScaler: TextScaler.linear(0.8),
+                                        ),
+                                      ),
+                                    ),
+                                  ];
+
+                                  return DropdownButtonFormField<int>(
+                                    value: selectedTenantId,
+                                    items: tenantOptions,
+                                    onChanged: (int? value) {
+                                      setState(() {
+                                        _tenantIdController.text =
+                                            value?.toString() ?? '';
+                                      });
+                                    },
+                                    validator: (value) {
+                                      // Add validation if needed
+                                      return null;
+                                    },
+                                    hint: const Text('Select a tenant'),
+                                    decoration: const InputDecoration(
+                                      border: OutlineInputBorder(),
+                                      contentPadding: EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                        vertical: 8,
+                                      ),
+                                    ),
+                                    isExpanded: true,
+                                    style: Theme.of(context).textTheme.bodySmall
+                                        ?.copyWith(fontSize: 12),
+                                  );
+                                },
+                                loading: () => const Center(
+                                  child: CircularProgressIndicator(),
+                                ),
+                                error: (error, stack) => Text(
+                                  'Error loading tenants',
+                                  style: Theme.of(context).textTheme.bodySmall
+                                      ?.copyWith(
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.error,
+                                      ),
+                                ),
+                              );
+                            },
                           ),
                         ],
                       ),
@@ -252,31 +356,35 @@ class _AddRoomScreenState extends ConsumerState<AddRoomScreen> {
                 ),
                 const SizedBox(width: 8),
                 Expanded(
+                  flex: 1,
                   child: Card(
                     child: Padding(
-                      padding: const EdgeInsets.all(22.8),
+                      padding: const EdgeInsets.all(12.0),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Occupied',
+                            _isOccupied ? 'Occupied' : 'Vacant',
                             style: Theme.of(context).textTheme.titleMedium
                                 ?.copyWith(fontWeight: FontWeight.w600),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            textScaler: TextScaler.linear(0.7),
+                            textScaler: TextScaler.linear(0.8),
                           ),
                           const SizedBox(height: 8),
-                          SwitchListTile(
-                            title: Text(
-                              _isOccupied ? 'Occupied' : 'Vacant',
-                              style: Theme.of(
-                                context,
-                              ).textTheme.bodySmall?.copyWith(fontSize: 12),
-                            ),
+                          Switch(
                             value: _isOccupied,
                             onChanged: (v) => setState(() => _isOccupied = v),
-                            contentPadding: EdgeInsets.all(2),
+                            thumbIcon: _isOccupied
+                                ? WidgetStateProperty.all(Icon(Icons.check))
+                                : WidgetStateProperty.all(Icon(Icons.close)),
+                            activeColor: Theme.of(context).colorScheme.primary,
+                            activeTrackColor: Theme.of(
+                              context,
+                            ).colorScheme.primaryContainer,
+                            inactiveTrackColor: Theme.of(
+                              context,
+                            ).colorScheme.surface,
                           ),
                         ],
                       ),
@@ -295,31 +403,146 @@ class _AddRoomScreenState extends ConsumerState<AddRoomScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Asset IDs',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      textScaler: TextScaler.linear(0.7),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Assets',
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.w600),
+                          textScaler: TextScaler.linear(0.8),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 8),
-                    TextFormField(
-                      style: Theme.of(
-                        context,
-                      ).textTheme.bodySmall?.copyWith(fontSize: 12),
-                      controller: _assetIdsController,
-                      decoration: const InputDecoration(
-                        hintText: 'Comma-separated IDs (optional)',
-                        border: OutlineInputBorder(),
-                        contentPadding: EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 8,
+                    Column(
+                      children: [
+                        ...List.generate(
+                          _selectedAssets.length,
+                          (index) => Padding(
+                            padding: const EdgeInsets.only(bottom: 8.0),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Expanded(
+                                  child: Consumer(
+                                    builder: (context, ref, _) {
+                                      final assetsAsync = ref.watch(
+                                        assetProvider,
+                                      );
+                                      return assetsAsync.when(
+                                        data: (assets) {
+                                          final availableAssets = assets
+                                              .where(
+                                                (a) => !_selectedAssets.any(
+                                                  (selected) =>
+                                                      selected != null &&
+                                                      selected.id == a.id &&
+                                                      _selectedAssets.indexOf(
+                                                            selected,
+                                                          ) !=
+                                                          index,
+                                                ),
+                                              )
+                                              .toList();
+
+                                          return DropdownButtonFormField<Asset>(
+                                            value: _selectedAssets[index],
+                                            decoration: const InputDecoration(
+                                              labelText: 'Select Asset',
+                                              border: OutlineInputBorder(),
+                                              contentPadding:
+                                                  EdgeInsets.symmetric(
+                                                    horizontal: 12,
+                                                    vertical: 8,
+                                                  ),
+                                            ),
+                                            items: [
+                                              const DropdownMenuItem<Asset>(
+                                                value: null,
+                                                child: Text(
+                                                  'Select an asset',
+                                                  textScaler: TextScaler.linear(
+                                                    0.8,
+                                                  ),
+                                                ),
+                                              ),
+                                              ...availableAssets.map(
+                                                (asset) =>
+                                                    DropdownMenuItem<Asset>(
+                                                      value: asset,
+                                                      child: Text(
+                                                        asset.name,
+                                                        textScaler:
+                                                            TextScaler.linear(
+                                                              0.8,
+                                                            ),
+                                                      ),
+                                                    ),
+                                              ),
+                                            ],
+                                            onChanged: (Asset? newValue) {
+                                              setState(() {
+                                                _selectedAssets[index] =
+                                                    newValue;
+                                              });
+                                            },
+                                            validator: (value) {
+                                              if (value == null) {
+                                                return 'Please select an asset';
+                                              }
+                                              return null;
+                                            },
+                                          );
+                                        },
+                                        loading: () =>
+                                            const CircularProgressIndicator(),
+                                        error: (error, stack) => Text(
+                                          'Error loading assets: $error',
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ),
+                                if (_selectedAssets.length > 1)
+                                  IconButton(
+                                    icon: const Icon(
+                                      Icons.remove_circle_outline,
+                                      color: Colors.grey,
+                                      size: 24,
+                                    ),
+                                    onPressed: () => _removeAssetField(index),
+                                    padding: const EdgeInsets.only(
+                                      left: 8,
+                                      top: 8,
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
                         ),
-                      ),
-                      maxLines: 2,
-                      maxLength: 200,
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: TextButton.icon(
+                            onPressed: _addAssetField,
+                            icon: const Icon(
+                              Icons.add_circle_outline,
+                              size: 20,
+                            ),
+                            label: const Text(
+                              'Add another asset',
+                              textScaler: TextScaler.linear(0.8),
+                            ),
+                            style: TextButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 0,
+                                vertical: 8,
+                              ),
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -342,7 +565,7 @@ class _AddRoomScreenState extends ConsumerState<AddRoomScreen> {
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      textScaler: TextScaler.linear(0.7),
+                      textScaler: TextScaler.linear(0.8),
                     ),
                     const SizedBox(height: 8),
                     if (_imagePath != null) ...[
@@ -355,47 +578,73 @@ class _AddRoomScreenState extends ConsumerState<AddRoomScreen> {
                         ),
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(8),
-                          child: Image.file(
-                            File(_imagePath!),
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) =>
-                                Container(
-                                  color: Colors.grey.shade200,
-                                  child: const Center(
-                                    child: Icon(
-                                      Icons.broken_image,
-                                      size: 50,
-                                      color: Colors.grey,
-                                    ),
-                                  ),
+                          child: widget.initialRoom != null
+                              ? _imagePath != widget.initialRoom?.imageUrl
+                                    ? Image.file(
+                                        File(_imagePath!),
+                                        fit: BoxFit.cover,
+                                        errorBuilder:
+                                            (context, error, stackTrace) =>
+                                                Container(
+                                                  color: Colors.grey.shade200,
+                                                  child: const Center(
+                                                    child: Icon(
+                                                      Icons.broken_image,
+                                                      size: 50,
+                                                      color: Colors.grey,
+                                                    ),
+                                                  ),
+                                                ),
+                                      )
+                                    : Image.network(
+                                        widget.initialRoom!.imageUrl!,
+                                        fit: BoxFit.cover,
+                                        errorBuilder:
+                                            (context, error, stackTrace) =>
+                                                Container(
+                                                  color: Colors.grey.shade200,
+                                                  child: const Center(
+                                                    child: Icon(
+                                                      Icons.broken_image,
+                                                      size: 50,
+                                                      color: Colors.grey,
+                                                    ),
+                                                  ),
+                                                ),
+                                      )
+                              : Image.file(
+                                  File(_imagePath!),
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) =>
+                                      Container(
+                                        color: Colors.grey.shade200,
+                                        child: const Center(
+                                          child: Icon(
+                                            Icons.broken_image,
+                                            size: 50,
+                                            color: Colors.grey,
+                                          ),
+                                        ),
+                                      ),
                                 ),
-                          ),
                         ),
                       ),
                       const SizedBox(height: 8),
                       Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
                         children: [
-                          TextButton.icon(
+                          IconButton(
                             onPressed: _pickImage,
-                            icon: const Icon(Icons.edit),
-                            label: const Text(
-                              'Change Image',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              textScaler: TextScaler.linear(0.7),
+                            icon: const Icon(Icons.folder),
+                            style: IconButton.styleFrom(
+                              foregroundColor: Colors.blue,
                             ),
                           ),
-                          TextButton.icon(
+                          IconButton(
                             onPressed: () => setState(() => _imagePath = null),
-                            icon: const Icon(Icons.delete),
-                            label: const Text(
-                              'Remove Image',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              textScaler: TextScaler.linear(0.7),
-                            ),
-                            style: TextButton.styleFrom(
-                              foregroundColor: Colors.red,
+                            icon: const Icon(Icons.close),
+                            style: IconButton.styleFrom(
+                              foregroundColor: Colors.grey,
                             ),
                           ),
                         ],
@@ -430,7 +679,7 @@ class _AddRoomScreenState extends ConsumerState<AddRoomScreen> {
                                 ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
-                                textScaler: TextScaler.linear(0.7),
+                                textScaler: TextScaler.linear(0.8),
                               ),
                             ],
                           ),

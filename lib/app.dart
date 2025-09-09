@@ -10,6 +10,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'providers/onboarding_provider.dart';
 import 'screens/onboarding/onboarding_screen.dart';
+import 'services/notification_service.dart';
 
 class MyApp extends ConsumerStatefulWidget {
   const MyApp({super.key});
@@ -22,6 +23,13 @@ class _MyAppState extends ConsumerState<MyApp> {
   Locale _locale = Locale('en');
   final user = Supabase.instance.client.auth.currentUser;
   ThemeMode _themeMode = ThemeMode.light;
+  
+  @override
+  void initState() {
+    super.initState();
+    // Initialize local notifications (Android runtime permission handled inside)
+    NotificationService().init();
+  }
   void _changeLanguage(Locale locale) {
     setState(() {
       _locale = locale;

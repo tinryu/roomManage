@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:app_project/models/task.dart';
 import 'package:app_project/providers/task_provider.dart';
+import 'package:intl/intl.dart';
 // import 'package:app_project/l10n/app_localizations.dart';
 
 class AddTaskScreen extends ConsumerStatefulWidget {
@@ -20,6 +21,7 @@ class _AddTaskScreenState extends ConsumerState<AddTaskScreen> {
   String? _imageUrl;
   bool _isLoading = false;
   final ImagePicker _picker = ImagePicker();
+  DateTime? _dueAt;
 
   @override
   void dispose() {
@@ -71,6 +73,7 @@ class _AddTaskScreenState extends ConsumerState<AddTaskScreen> {
             ? null
             : _contextController.text.trim(),
         imageUrl: _imageUrl,
+        dueAt: _dueAt,
       );
 
       await ref.read(taskProvider.notifier).addTask(task);
@@ -117,6 +120,7 @@ class _AddTaskScreenState extends ConsumerState<AddTaskScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Add New Task'),
+        centerTitle: true,
         actions: [
           if (_isLoading)
             const Center(
@@ -141,7 +145,6 @@ class _AddTaskScreenState extends ConsumerState<AddTaskScreen> {
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
                 ),
-                textScaler: TextScaler.linear(0.8),
               ),
             ),
         ],
@@ -183,6 +186,92 @@ class _AddTaskScreenState extends ConsumerState<AddTaskScreen> {
                         return null;
                       },
                       maxLength: 100,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            // Due Date & Time
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Due date (optional)',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                      textScaler: const TextScaler.linear(0.8),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 12,
+                            ),
+                            decoration: BoxDecoration(
+                              border: Border.all(color: Colors.black38),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              _dueAt == null
+                                  ? 'No due date selected'
+                                  : DateFormat('yMMMd • HH:mm').format(_dueAt!),
+                              style: const TextStyle(color: Colors.black87),
+                              textScaler: const TextScaler.linear(0.8),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        OutlinedButton.icon(
+                          onPressed: () async {
+                            final now = DateTime.now();
+                            final pickedDate = await showDatePicker(
+                              context: context,
+                              initialDate: _dueAt ?? now,
+                              firstDate: DateTime(now.year - 1),
+                              lastDate: DateTime(now.year + 5),
+                            );
+                            if (pickedDate == null) return;
+                            final pickedTime = await showTimePicker(
+                              // ignore: use_build_context_synchronously
+                              context: context,
+                              initialTime: TimeOfDay.fromDateTime(
+                                _dueAt ?? now,
+                              ),
+                            );
+                            final time =
+                                pickedTime ?? TimeOfDay(hour: 9, minute: 0);
+                            final combined = DateTime(
+                              pickedDate.year,
+                              pickedDate.month,
+                              pickedDate.day,
+                              time.hour,
+                              time.minute,
+                            );
+                            setState(() {
+                              _dueAt = combined;
+                            });
+                          },
+                          icon: const Icon(Icons.event),
+                          label: const Text('Pick'),
+                        ),
+                        const SizedBox(width: 8),
+                        if (_dueAt != null)
+                          IconButton(
+                            tooltip: 'Clear',
+                            onPressed: () => setState(() => _dueAt = null),
+                            icon: const Icon(Icons.clear),
+                          ),
+                      ],
                     ),
                   ],
                 ),

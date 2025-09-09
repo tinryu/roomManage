@@ -5,6 +5,7 @@ import 'package:app_project/screens/home/home_screen.dart';
 import 'package:app_project/screens/tenants/tenants_list_screen.dart';
 import 'package:app_project/screens/assets/assets_list_screen.dart';
 import 'package:app_project/screens/rooms/rooms_list_screen.dart';
+import 'package:app_project/screens/combie/room_full_list_screen.dart';
 import 'package:app_project/screens/payment/payment_list_screen.dart';
 import 'package:app_project/screens/settings/settings_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -50,10 +51,8 @@ class _MainScreenState extends State<MainScreen> {
     super.initState();
     _screens.addAll([
       HomeScreen(onLocaleChange: widget.onLocaleChange),
-      TenantListScreen(),
-      AssetsListScreen(),
-      RoomListScreen(),
       PaymentScreen(),
+      RoomFullListScreen(),
     ]);
   }
 
@@ -71,16 +70,11 @@ class _MainScreenState extends State<MainScreen> {
   Widget build(BuildContext context) {
     final local = AppLocalizations.of(context)!;
 
-    final List<String> titles = [
-      local.home,
-      local.tenants,
-      local.assets,
-      local.rooms,
-      local.payment,
-    ];
+    final List<String> titles = [local.home, local.payment, local.rooms];
     return Scaffold(
       key: _drawerKey,
       drawer: Drawer(
+        backgroundColor: Colors.lightBlue,
         width: 250,
         child: ListView(
           padding: EdgeInsets.zero,
@@ -94,8 +88,77 @@ class _MainScreenState extends State<MainScreen> {
               ),
               child: const Text(''),
             ),
+
             ListTile(
-              title: const Text('Setting', textScaler: TextScaler.linear(0.9)),
+              title: const Text(
+                'Tasks',
+                textScaler: TextScaler.linear(0.9),
+                style: TextStyle(color: Colors.white),
+              ),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const TaskListScreen(),
+                  ),
+                );
+                _drawerKey.currentState?.closeDrawer();
+              },
+            ),
+            ListTile(
+              title: const Text(
+                'Tenant',
+                textScaler: TextScaler.linear(0.9),
+                style: TextStyle(color: Colors.white),
+              ),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const TenantListScreen(),
+                  ),
+                );
+                _drawerKey.currentState?.closeDrawer();
+              },
+            ),
+            ListTile(
+              title: const Text(
+                'Asset',
+                textScaler: TextScaler.linear(0.9),
+                style: TextStyle(color: Colors.white),
+              ),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const AssetsListScreen(),
+                  ),
+                );
+                _drawerKey.currentState?.closeDrawer();
+              },
+            ),
+            ListTile(
+              title: const Text(
+                'Room',
+                textScaler: TextScaler.linear(0.9),
+                style: TextStyle(color: Colors.white),
+              ),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const RoomListScreen(),
+                  ),
+                );
+                _drawerKey.currentState?.closeDrawer();
+              },
+            ),
+            ListTile(
+              title: const Text(
+                'Setting',
+                textScaler: TextScaler.linear(0.9),
+                style: TextStyle(color: Colors.white),
+              ),
               onTap: () {
                 Navigator.push(
                   context,
@@ -111,19 +174,11 @@ class _MainScreenState extends State<MainScreen> {
               },
             ),
             ListTile(
-              title: const Text('Tasks', textScaler: TextScaler.linear(0.9)),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const TaskListScreen(),
-                  ),
-                );
-                _drawerKey.currentState?.closeDrawer();
-              },
-            ),
-            ListTile(
-              title: const Text('Logout', textScaler: TextScaler.linear(0.9)),
+              title: const Text(
+                'Logout',
+                textScaler: TextScaler.linear(0.9),
+                style: TextStyle(color: Colors.white),
+              ),
               onTap: () {
                 _signOut(context);
               },
@@ -197,17 +252,12 @@ class _MainScreenState extends State<MainScreen> {
               label: local.home,
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.account_circle),
-              label: local.tenants,
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.shelves),
-              label: local.assets,
-            ),
-            BottomNavigationBarItem(icon: Icon(Icons.home), label: local.rooms),
-            BottomNavigationBarItem(
               icon: Icon(Icons.currency_exchange),
               label: local.payment,
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.meeting_room),
+              label: local.rooms,
             ),
           ],
         ),

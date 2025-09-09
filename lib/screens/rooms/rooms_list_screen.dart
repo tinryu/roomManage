@@ -2,6 +2,7 @@ import 'package:app_project/screens/rooms/rooms_add_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_project/providers/room_provider.dart';
+import 'package:app_project/widgets/shared/base_list_screen.dart';
 
 // Holds selected room IDs
 final selectedRoomIdsProvider = StateProvider<Set<int>>((ref) => <int>{});
@@ -10,223 +11,272 @@ class RoomListScreen extends ConsumerWidget {
   const RoomListScreen({super.key});
   // Tạo ID ngẫu nhiên cho phòng mới;
 
+  // Method to handle room deletion confirmation
+  Future<void> _confirmDelete(
+    BuildContext context,
+    WidgetRef ref,
+    List<int> roomIds,
+    RoomNotifier notifier,
+  ) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete Rooms'),
+        content: Text('Delete ${roomIds.length} selected room(s)?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      try {
+        await notifier.deleteRooms(roomIds);
+        if (context.mounted) {
+          ref.read(selectedRoomIdsProvider.notifier).state = {};
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Rooms deleted successfully')),
+          );
+        }
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Failed to delete rooms: $e')));
+        }
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final roomState = ref.watch(roomProvider);
     final notifier = ref.read(roomProvider.notifier);
+    final selectedRoomIds = ref.watch(selectedRoomIdsProvider);
 
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: Padding(
-          padding: EdgeInsets.only(left: 16),
-          child: IconButton(
-            tooltip: 'Select All',
-            icon: const Icon(Icons.select_all, color: Colors.black45),
-            onPressed: () {
-              final selected = ref.read(selectedRoomIdsProvider.notifier);
-              final current = ref.read(selectedRoomIdsProvider);
-              final data = roomState.asData?.value ?? [];
-              if (data.isEmpty) return;
-              final pageIds = data
-                  .where((r) => r.id != null)
-                  .map((r) => r.id!)
-                  .toSet();
-              final allSelected =
-                  pageIds.isNotEmpty && pageIds.difference(current).isEmpty;
-              selected.state = allSelected
-                  ? (current.difference(pageIds))
-                  : ({...current, ...pageIds});
-            },
-          ),
-        ),
-        actions: [
-          Padding(
-            padding: EdgeInsets.only(right: 16),
-            child: Row(
-              children: [
-                // Edit
-                IconButton(
-                  tooltip: 'Edit',
-                  icon: const Icon(Icons.edit, color: Colors.black45),
-                  onPressed: () async {
-                    final selectedIds = ref.read(selectedRoomIdsProvider);
-                    if (selectedIds.length != 1) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Select exactly one room to edit'),
-                        ),
-                      );
-                      return;
-                    }
-                    final rooms = ref.read(roomProvider).asData?.value ?? [];
-                    final id = selectedIds.first;
-                    final room = rooms.firstWhere(
-                      (r) => r.id == id,
-                      orElse: () => rooms.first,
-                    );
-                    await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => AddRoomScreen(initialRoom: room),
-                      ),
-                    );
-                  },
-                ),
-                // Delete
-                IconButton(
-                  tooltip: 'Delete',
-                  icon: const Icon(Icons.delete, color: Colors.black45),
-                  onPressed: () async {
-                    final selectedIds = ref.read(selectedRoomIdsProvider);
-                    if (selectedIds.isEmpty) return;
-                    final confirm = await showDialog<bool>(
-                      context: context,
-                      builder: (ctx) => AlertDialog(
-                        title: const Text('Delete rooms'),
-                        content: Text(
-                          'Delete ${selectedIds.length} selected room(s)?',
-                        ),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(ctx, false),
-                            child: const Text('Cancel'),
-                          ),
-                          ElevatedButton(
-                            onPressed: () => Navigator.pop(ctx, true),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.red,
-                            ),
-                            child: const Text('Delete'),
-                          ),
-                        ],
-                      ),
-                    );
-                    if (confirm != true) return;
-                    try {
-                      await notifier.deleteRooms(selectedIds.toList());
-                      ref.read(selectedRoomIdsProvider.notifier).state = {};
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Deleted selected rooms'),
-                          ),
-                        );
-                      }
-                    } catch (e) {
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Delete failed: $e')),
-                        );
-                      }
-                    }
-                  },
-                ),
-              ],
-            ),
-          ),
-        ],
+    return BaseListScreen(
+      title: 'Rooms',
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: Colors.lightBlue,
+        child: const Icon(Icons.add, color: Colors.white),
+        onPressed: () async {
+          await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const AddRoomScreen()),
+          );
+          ref.invalidate(roomProvider);
+        },
       ),
       body: roomState.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Lỗi: $e')),
+        error: (e, _) => Center(child: Text('Error: $e')),
         data: (rooms) => Column(
           children: [
-            Expanded(
-              child: ListView.builder(
-                itemCount: rooms.length,
-                itemBuilder: (context, index) {
-                  final room = rooms[index];
-                  final selectedIds = ref.watch(selectedRoomIdsProvider);
-                  final isChecked =
-                      room.id != null && selectedIds.contains(room.id!);
-                  return ListTile(
-                    onTap: room.id == null
-                        ? null
-                        : () {
-                            final sel = ref.read(
-                              selectedRoomIdsProvider.notifier,
-                            );
-                            final next = {...selectedIds};
-                            if (isChecked) {
-                              next.remove(room.id!);
-                            } else {
-                              next.add(room.id!);
-                            }
-                            sel.state = next;
-                          },
-                    leading: Checkbox(
-                      value: isChecked,
-                      onChanged: room.id == null
-                          ? null
-                          : (v) {
-                              final sel = ref.read(
-                                selectedRoomIdsProvider.notifier,
-                              );
-                              final next = {...selectedIds};
-                              if (v == true) {
-                                next.add(room.id!);
-                              } else {
-                                next.remove(room.id!);
-                              }
-                              sel.state = next;
-                            },
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.transparent,
+                shape: BoxShape.rectangle,
+              ),
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    IconButton(
+                      tooltip: 'Select All',
+                      icon: const Icon(Icons.select_all, color: Colors.grey),
+                      onPressed: () {
+                        final selected = ref.read(
+                          selectedRoomIdsProvider.notifier,
+                        );
+                        final current = ref.read(selectedRoomIdsProvider);
+                        final data = roomState.asData?.value ?? [];
+                        if (data.isEmpty) return;
+                        final pageIds = data
+                            .where((r) => r.id != null)
+                            .map((r) => r.id!)
+                            .toSet();
+                        final allSelected =
+                            pageIds.isNotEmpty &&
+                            pageIds.difference(current).isEmpty;
+                        selected.state = allSelected
+                            ? (current.difference(pageIds))
+                            : ({...current, ...pageIds});
+                      },
                     ),
-                    subtitle: Row(
-                      spacing: 8.0,
-                      mainAxisAlignment: MainAxisAlignment.start,
+                    Row(
                       children: [
-                        room.imageUrl != null && room.imageUrl!.isNotEmpty
-                            ? ClipRRect(
-                                borderRadius: BorderRadius.circular(6),
-                                child: Image.network(
-                                  room.imageUrl!,
-                                  width: 50,
-                                  height: 50,
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (context, error, stackTrace) =>
-                                      const Icon(Icons.broken_image, size: 40),
-                                ),
-                              )
-                            : Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: const BoxDecoration(
-                                  color: Colors.lightBlue,
-                                  shape: BoxShape.rectangle,
-                                  borderRadius: BorderRadius.all(
-                                    Radius.circular(12),
+                        // Edit
+                        IconButton(
+                          tooltip: 'Edit',
+                          icon: const Icon(Icons.edit, color: Colors.grey),
+                          onPressed: () async {
+                            final selectedIds = ref.read(
+                              selectedRoomIdsProvider,
+                            );
+                            if (selectedIds.length != 1) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                    'Select exactly one room to edit',
                                   ),
                                 ),
-                                child: Icon(
-                                  Icons.inventory_2,
-                                  color: Colors.white,
-                                  size: 24,
+                              );
+                              return;
+                            }
+                            final rooms =
+                                ref.read(roomProvider).asData?.value ?? [];
+                            final id = selectedIds.first;
+                            final room = rooms.firstWhere(
+                              (r) => r.id == id,
+                              orElse: () => rooms.first,
+                            );
+                            await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    AddRoomScreen(initialRoom: room),
+                              ),
+                            );
+                          },
+                        ),
+                        // Delete
+                        IconButton(
+                          tooltip: 'Delete',
+                          icon: const Icon(Icons.delete, color: Colors.black45),
+                          onPressed: () async {
+                            final selectedIds = ref.read(
+                              selectedRoomIdsProvider,
+                            );
+                            if (selectedIds.isEmpty) return;
+                            final confirm = await showDialog<bool>(
+                              context: context,
+                              builder: (ctx) => AlertDialog(
+                                title: const Text('Delete rooms'),
+                                content: Text(
+                                  'Delete ${selectedIds.length} selected room(s)?',
                                 ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(ctx, false),
+                                    child: const Text('Cancel'),
+                                  ),
+                                  ElevatedButton(
+                                    onPressed: () => Navigator.pop(ctx, true),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.red,
+                                    ),
+                                    child: const Text('Delete'),
+                                  ),
+                                ],
                               ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              room.name,
-                              overflow: TextOverflow.ellipsis,
-                              maxLines: 1,
-                              textScaler: TextScaler.linear(0.8),
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w600,
-                                fontSize: 16,
-                              ),
-                            ),
-                            Text(
-                              room.isOccupied ? 'Đã thuê' : 'Trống',
-                              overflow: TextOverflow.ellipsis,
-                              maxLines: 1,
-                              textScaler: TextScaler.linear(0.8),
-                            ),
-                          ],
+                            );
+                            if (confirm != true) return;
+                            try {
+                              await notifier.deleteRooms(selectedIds.toList());
+                              ref.read(selectedRoomIdsProvider.notifier).state =
+                                  {};
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Deleted selected rooms'),
+                                  ),
+                                );
+                              }
+                            } catch (e) {
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('Delete failed: $e')),
+                                );
+                              }
+                            }
+                          },
                         ),
                       ],
                     ),
+                  ],
+                ),
+              ),
+            ),
+            Expanded(
+              child: ListView.builder(
+                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                itemCount: rooms.length,
+                itemBuilder: (context, index) {
+                  final room = rooms[index];
+                  final isSelected =
+                      room.id != null && selectedRoomIds.contains(room.id!);
+
+                  return BaseListTile(
+                    title: room.name,
+                    subtitle: Text(
+                      room.is_occupied ? 'Occupied' : 'Available',
+                      style: const TextStyle(fontSize: 14),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    leading: room.imageUrl?.isNotEmpty == true
+                        ? ClipRRect(
+                            borderRadius: BorderRadius.circular(6),
+                            child: Image.network(
+                              room.imageUrl!,
+                              width: 50,
+                              height: 50,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) =>
+                                  Container(
+                                    width: 50,
+                                    height: 50,
+                                    decoration: BoxDecoration(
+                                      color: Colors.lightBlue,
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    child: Icon(
+                                      Icons.broken_image,
+                                      size: 24,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                            ),
+                          )
+                        : Container(
+                            width: 50,
+                            height: 50,
+                            decoration: BoxDecoration(
+                              color: Colors.lightBlue,
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Icon(
+                              room.is_occupied
+                                  ? Icons.meeting_room
+                                  : Icons.meeting_room_outlined,
+                              size: 24,
+                              color: Colors.white,
+                            ),
+                          ),
+
+                    selected: isSelected,
+                    onTap: room.id == null
+                        ? null
+                        : () {
+                            final selected = ref.read(
+                              selectedRoomIdsProvider.notifier,
+                            );
+                            final current = ref.read(selectedRoomIdsProvider);
+                            if (isSelected) {
+                              selected.state = current.difference({room.id!});
+                            } else {
+                              selected.state = {...current, room.id!};
+                            }
+                          },
                   );
                 },
               ),
@@ -243,16 +293,6 @@ class RoomListScreen extends ConsumerWidget {
               ),
           ],
         ),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-      floatingActionButton: FloatingActionButton.small(
-        child: const Icon(Icons.add),
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const AddRoomScreen()),
-          );
-        },
       ),
     );
   }

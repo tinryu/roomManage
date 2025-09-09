@@ -1,7 +1,10 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_project/models/tenant.dart';
 import 'package:app_project/providers/tenant_provider.dart';
+import 'package:image_picker/image_picker.dart';
 
 class AddTenantScreen extends ConsumerStatefulWidget {
   final Tenant? initialTenant;
@@ -19,6 +22,8 @@ class _AddTenantScreenState extends ConsumerState<AddTenantScreen> {
   DateTime _checkIn = DateTime.now();
   DateTime? _checkOut;
   bool _isLoading = false;
+  final ImagePicker _picker = ImagePicker();
+  String? _imagePath;
 
   @override
   void initState() {
@@ -30,6 +35,7 @@ class _AddTenantScreenState extends ConsumerState<AddTenantScreen> {
       _emailController.text = t.email ?? '';
       _checkIn = t.checkIn;
       _checkOut = t.checkOut;
+      _imagePath = t.imageUrl;
     }
   }
 
@@ -59,6 +65,29 @@ class _AddTenantScreenState extends ConsumerState<AddTenantScreen> {
     }
   }
 
+  Future<void> _pickImage() async {
+    try {
+      final XFile? image = await _picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 1024,
+        maxHeight: 1024,
+        imageQuality: 80,
+      );
+      if (image != null) {
+        setState(() => _imagePath = image.path);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error picking image: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   Future<void> _saveTenant() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -66,22 +95,37 @@ class _AddTenantScreenState extends ConsumerState<AddTenantScreen> {
 
     try {
       final isEditing = widget.initialTenant != null;
-      final tenant = Tenant(
-        id: isEditing ? widget.initialTenant!.id : null,
-        name: _nameController.text.trim(),
-        phone: _phoneController.text.trim(),
-        email: _emailController.text.trim().isEmpty
-            ? null
-            : _emailController.text.trim(),
-        checkIn: _checkIn,
-        checkOut: _checkOut,
-      );
+      final name = _nameController.text.trim();
+      final phone = _phoneController.text.trim();
+      final email = _emailController.text.trim().isEmpty
+          ? null
+          : _emailController.text.trim();
+      final checkIn = _checkIn;
+      final checkOut = _checkOut;
 
       final notifier = ref.read(tenantProvider.notifier);
       if (isEditing) {
-        await notifier.updateTenant(tenant);
+        await notifier.updateTenant(
+          id: widget.initialTenant!.id,
+          name: name,
+          phone: phone,
+          email: email,
+          checkIn: checkIn,
+          checkOut: checkOut,
+          imageFile:
+              _imagePath != null && _imagePath != widget.initialTenant?.imageUrl
+              ? File(_imagePath!)
+              : null,
+        );
       } else {
-        await notifier.addTenant(tenant);
+        await notifier.addTenant(
+          name: name,
+          phone: phone,
+          email: email,
+          checkIn: checkIn,
+          checkOut: checkOut,
+          imageFile: _imagePath != null ? File(_imagePath!) : null,
+        );
         await ref.refresh(tenantProvider.future);
       }
 
@@ -127,6 +171,7 @@ class _AddTenantScreenState extends ConsumerState<AddTenantScreen> {
         title: Text(
           widget.initialTenant != null ? 'Edit Tenant' : 'Add New Tenant',
         ),
+        centerTitle: true,
         actions: [
           if (_isLoading)
             const Center(
@@ -143,19 +188,7 @@ class _AddTenantScreenState extends ConsumerState<AddTenantScreen> {
               ),
             )
           else
-            TextButton(
-              onPressed: _saveTenant,
-              child: const Text(
-                'Save',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                textScaler: TextScaler.linear(0.7),
-              ),
-            ),
+            IconButton(onPressed: _saveTenant, icon: const Icon(Icons.save)),
         ],
       ),
       body: Form(
@@ -405,8 +438,153 @@ class _AddTenantScreenState extends ConsumerState<AddTenantScreen> {
                 ),
               ],
             ),
+            SizedBox(height: 16),
+            // Image Section
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Tenant Image',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textScaler: TextScaler.linear(0.8),
+                    ),
+                    const SizedBox(height: 8),
+                    if (_imagePath != null) ...[
+                      Container(
+                        width: double.infinity,
+                        height: 200,
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey.shade300),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: widget.initialTenant != null
+                              ? _imagePath != widget.initialTenant?.imageUrl
+                                    ? Image.file(
+                                        File(_imagePath!),
+                                        fit: BoxFit.cover,
+                                        errorBuilder:
+                                            (context, error, stackTrace) =>
+                                                Container(
+                                                  color: Colors.grey.shade200,
+                                                  child: const Center(
+                                                    child: Icon(
+                                                      Icons.broken_image,
+                                                      size: 50,
+                                                      color: Colors.grey,
+                                                    ),
+                                                  ),
+                                                ),
+                                      )
+                                    : Image.network(
+                                        widget.initialTenant!.imageUrl!,
+                                        fit: BoxFit.cover,
+                                        errorBuilder:
+                                            (context, error, stackTrace) =>
+                                                Container(
+                                                  color: Colors.grey.shade200,
+                                                  child: const Center(
+                                                    child: Icon(
+                                                      Icons.broken_image,
+                                                      size: 50,
+                                                      color: Colors.grey,
+                                                    ),
+                                                  ),
+                                                ),
+                                      )
+                              : Image.file(
+                                  File(_imagePath!),
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) =>
+                                      Container(
+                                        color: Colors.grey.shade200,
+                                        child: const Center(
+                                          child: Icon(
+                                            Icons.broken_image,
+                                            size: 50,
+                                            color: Colors.grey,
+                                          ),
+                                        ),
+                                      ),
+                                ),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: [
+                          IconButton(
+                            onPressed: _pickImage,
+                            icon: const Icon(Icons.folder),
+                            style: IconButton.styleFrom(
+                              foregroundColor: Colors.blue,
+                            ),
+                          ),
+                          IconButton(
+                            onPressed: () => setState(() => _imagePath = null),
+                            icon: const Icon(Icons.close),
+                            style: IconButton.styleFrom(
+                              foregroundColor: Colors.grey,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ] else ...[
+                      InkWell(
+                        onTap: _pickImage,
+                        child: Container(
+                          width: double.infinity,
+                          height: 120,
+                          decoration: BoxDecoration(
+                            border: Border.all(
+                              color: Colors.grey.shade300,
+                              style: BorderStyle.solid,
+                            ),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.add_photo_alternate,
+                                size: 40,
+                                color: Colors.grey,
+                              ),
+                              SizedBox(height: 8),
+                              Text(
+                                'Tap to add image',
+                                style: TextStyle(
+                                  color: Colors.grey,
+                                  fontSize: 16,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                textScaler: TextScaler.linear(0.8),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
           ],
         ),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.miniEndFloat,
+      floatingActionButton: FloatingActionButton(
+        onPressed: _saveTenant,
+        child: const Icon(Icons.check),
       ),
     );
   }

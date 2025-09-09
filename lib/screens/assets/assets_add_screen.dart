@@ -19,10 +19,9 @@ class _AddAssetScreenState extends ConsumerState<AddAssetScreen> {
   final _conditionController = TextEditingController();
   final _roomIdController = TextEditingController();
   final _quantityController = TextEditingController();
-
-  String? _imageUrl;
   bool _isLoading = false;
   final ImagePicker _picker = ImagePicker();
+  String? _imagePath;
 
   @override
   void initState() {
@@ -31,9 +30,9 @@ class _AddAssetScreenState extends ConsumerState<AddAssetScreen> {
     if (a != null) {
       _nameController.text = a.name;
       _conditionController.text = a.condition;
-      _roomIdController.text = a.roomid;
+      _roomIdController.text = a.roomId.toString();
       _quantityController.text = a.quantity.toString();
-      _imageUrl = a.imageUrl;
+      _imagePath = a.imageUrl;
     }
   }
 
@@ -56,9 +55,7 @@ class _AddAssetScreenState extends ConsumerState<AddAssetScreen> {
       );
 
       if (image != null) {
-        setState(() {
-          _imageUrl = image.path;
-        });
+        setState(() => _imagePath = image.path);
       }
     } catch (e) {
       if (mounted) {
@@ -75,9 +72,7 @@ class _AddAssetScreenState extends ConsumerState<AddAssetScreen> {
   Future<void> _saveAsset() async {
     if (!_formKey.currentState!.validate()) return;
 
-    setState(() {
-      _isLoading = true;
-    });
+    setState(() => _isLoading = true);
 
     try {
       final isEditing = widget.initialAsset != null;
@@ -86,7 +81,6 @@ class _AddAssetScreenState extends ConsumerState<AddAssetScreen> {
       final condition = _conditionController.text.trim().isEmpty
           ? 'Good'
           : _conditionController.text.trim();
-      final roomId = _roomIdController.text.trim();
       final quantity = int.tryParse(_quantityController.text) ?? 1;
 
       if (isEditing) {
@@ -94,17 +88,20 @@ class _AddAssetScreenState extends ConsumerState<AddAssetScreen> {
           id: widget.initialAsset!.id,
           name: name,
           condition: condition,
-          roomId: roomId,
+          roomId: null,
           quantity: quantity,
-          // Not updating image here to avoid upload flow; keep existing if any
+          imageFile:
+              _imagePath != null && _imagePath != widget.initialAsset?.imageUrl
+              ? File(_imagePath!)
+              : null,
         );
       } else {
         await notifier.addAsset(
           name: name,
           condition: condition,
-          roomId: roomId,
+          roomId: null,
           quantity: quantity,
-          imageFile: _imageUrl != null ? File(_imageUrl!) : null,
+          imageFile: _imagePath != null ? File(_imagePath!) : null,
         );
         // Refresh the asset list to ensure latest data
         await ref.refresh(assetProvider.future);
@@ -147,11 +144,8 @@ class _AddAssetScreenState extends ConsumerState<AddAssetScreen> {
       appBar: AppBar(
         title: Text(
           widget.initialAsset != null ? 'Edit Asset' : 'Add New Asset',
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          textScaler: TextScaler.linear(0.8),
         ),
+        centerTitle: true,
         actions: [
           if (_isLoading)
             const Center(
@@ -176,9 +170,6 @@ class _AddAssetScreenState extends ConsumerState<AddAssetScreen> {
                   color: Colors.white,
                   fontWeight: FontWeight.w600,
                 ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                textScaler: TextScaler.linear(0.8),
               ),
             ),
         ],
@@ -225,51 +216,6 @@ class _AddAssetScreenState extends ConsumerState<AddAssetScreen> {
                         return null;
                       },
                       maxLength: 100,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 16),
-
-            // Room ID Field
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Room ID',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      textScaler: TextScaler.linear(0.8),
-                    ),
-                    const SizedBox(height: 8),
-                    TextFormField(
-                      style: Theme.of(
-                        context,
-                      ).textTheme.bodySmall?.copyWith(fontSize: 12),
-                      controller: _roomIdController,
-                      decoration: const InputDecoration(
-                        hintText: 'Enter room ID...',
-                        border: OutlineInputBorder(),
-                        contentPadding: EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 8,
-                        ),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return 'Please enter a room ID';
-                        }
-                        return null;
-                      },
-                      maxLength: 50,
                     ),
                   ],
                 ),
@@ -389,7 +335,7 @@ class _AddAssetScreenState extends ConsumerState<AddAssetScreen> {
                     ),
                     const SizedBox(height: 8),
 
-                    if (_imageUrl != null) ...[
+                    if (_imagePath != null) ...[
                       Container(
                         width: double.infinity,
                         height: 200,
@@ -400,7 +346,7 @@ class _AddAssetScreenState extends ConsumerState<AddAssetScreen> {
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(8),
                           child: Image.file(
-                            File(_imageUrl!),
+                            File(_imagePath!),
                             fit: BoxFit.cover,
                             errorBuilder: (context, error, stackTrace) {
                               return Container(
@@ -435,7 +381,7 @@ class _AddAssetScreenState extends ConsumerState<AddAssetScreen> {
                           TextButton.icon(
                             onPressed: () {
                               setState(() {
-                                _imageUrl = null;
+                                _imagePath = null;
                               });
                             },
                             icon: const Icon(Icons.delete),

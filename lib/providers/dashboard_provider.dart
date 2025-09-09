@@ -38,7 +38,7 @@ class DashboardProvider extends ChangeNotifier {
             .eq('isPaid', true)
             .gte('datetime', start.toIso8601String())
             .lt('datetime', end.toIso8601String()),
-        _client.from('rooms').select('isOccupied'),
+        _client.from('rooms').select('is_occupied'),
         _client
             .from('tenants')
             .select()
@@ -104,7 +104,7 @@ class DashboardProvider extends ChangeNotifier {
         0,
         (sum, row) => sum + (row['amount'] as int),
       );
-      final occupied = rooms.where((r) => r['isOccupied'] == true).length;
+      final occupied = rooms.where((r) => r['is_occupied'] == true).length;
       final occupancyRate = rooms.isEmpty
           ? 0.0
           : (occupied / rooms.length) * 100;

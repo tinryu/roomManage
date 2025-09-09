@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:app_project/models/payment.dart';
+import 'package:app_project/services/notification_service.dart';
 
 class PaymentNotifier extends AsyncNotifier<List<Payment>> {
   final supabase = Supabase.instance.client;
@@ -28,6 +29,11 @@ class PaymentNotifier extends AsyncNotifier<List<Payment>> {
           .where((p) => !(p.id != null && idSet.contains(p.id)))
           .toList();
       state = AsyncData(updated);
+
+      // Cancel scheduled reminders for deleted payments
+      for (final id in ids) {
+        await NotificationService().cancel(id);
+      }
     } catch (e) {
       rethrow;
     }
@@ -61,6 +67,21 @@ class PaymentNotifier extends AsyncNotifier<List<Payment>> {
         return p;
       }).toList();
       state = AsyncData(updated);
+
+      // Reschedule or cancel reminder based on updated state
+      if (updatedPayment.id != null) {
+        await NotificationService().cancel(updatedPayment.id!);
+        final now = DateTime.now();
+        if (!updatedPayment.isPaid && updatedPayment.datetime.isAfter(now)) {
+          await NotificationService().schedulePaymentReminder(
+            id: updatedPayment.id!,
+            title:
+                'Payment due: ${updatedPayment.type ?? 'Payment'} - ${updatedPayment.amount}',
+            when: updatedPayment.datetime,
+            payload: 'payment:${updatedPayment.id}',
+          );
+        }
+      }
     } catch (e) {
       rethrow;
     }
@@ -89,6 +110,11 @@ class PaymentNotifier extends AsyncNotifier<List<Payment>> {
         return p;
       }).toList();
       state = AsyncData(updated);
+
+      // Cancel scheduled reminders for these payments
+      for (final id in ids) {
+        await NotificationService().cancel(id);
+      }
     } catch (e) {
       // keep current state, just rethrow so UI can handle
       rethrow;
@@ -184,6 +210,20 @@ class PaymentNotifier extends AsyncNotifier<List<Payment>> {
       final newPayment = Payment.fromMap(res);
       final current = state.value ?? [];
       state = AsyncData([newPayment, ...current]);
+
+      // Schedule reminder if unpaid and in the future
+      if (newPayment.id != null) {
+        final now = DateTime.now();
+        if (!newPayment.isPaid && newPayment.datetime.isAfter(now)) {
+          await NotificationService().schedulePaymentReminder(
+            id: newPayment.id!,
+            title:
+                'Payment due: ${newPayment.type ?? 'Payment'} - ${newPayment.amount}',
+            when: newPayment.datetime,
+            payload: 'payment:${newPayment.id}',
+          );
+        }
+      }
     } catch (e) {
       state = AsyncError(e, StackTrace.current);
       rethrow;

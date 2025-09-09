@@ -4,6 +4,7 @@ class Task {
   final String title;
   final String? context;
   final String? imageUrl;
+  final DateTime? dueAt;
 
   Task({
     this.id,
@@ -11,6 +12,7 @@ class Task {
     required this.title,
     this.context,
     this.imageUrl,
+    this.dueAt,
   });
 
   factory Task.fromMap(Map<String, dynamic> map) => Task(
@@ -21,6 +23,11 @@ class Task {
     title: map['title'] ?? '',
     context: map['context'],
     imageUrl: map['image_url'],
+    dueAt: map['due_at'] == null
+        ? null
+        : (map['due_at'] is String
+            ? DateTime.parse(map['due_at'])
+            : map['due_at'] as DateTime),
   );
 
   Map<String, dynamic> toMap() => {
@@ -29,6 +36,7 @@ class Task {
     'title': title,
     'context': context,
     'image_url': imageUrl,
+    'due_at': dueAt?.toIso8601String(),
   };
 
   Task copyWith({
@@ -37,6 +45,7 @@ class Task {
     String? title,
     String? context,
     String? imageUrl,
+    DateTime? dueAt,
   }) {
     return Task(
       id: id ?? this.id,
@@ -44,11 +53,12 @@ class Task {
       title: title ?? this.title,
       context: context ?? this.context,
       imageUrl: imageUrl ?? this.imageUrl,
+      dueAt: dueAt ?? this.dueAt,
     );
   }
 
   @override
   String toString() {
-    return 'Task(id: $id, createdAt: $createdAt, title: $title, context: $context, imageUrl: $imageUrl)';
+    return 'Task(id: $id, createdAt: $createdAt, title: $title, context: $context, imageUrl: $imageUrl, dueAt: $dueAt)';
   }
 }

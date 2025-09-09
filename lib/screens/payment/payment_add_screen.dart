@@ -130,10 +130,8 @@ class _AddPaymentScreenState extends ConsumerState<AddPaymentScreen> {
       appBar: AppBar(
         title: Text(
           widget.initialPayment != null ? 'Edit Payment' : 'Add New Payment',
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          textScaler: TextScaler.linear(0.7),
         ),
+        centerTitle: true,
         actions: [
           if (_isLoading)
             const Center(
@@ -158,9 +156,6 @@ class _AddPaymentScreenState extends ConsumerState<AddPaymentScreen> {
                   color: Colors.white,
                   fontWeight: FontWeight.w600,
                 ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                textScaler: TextScaler.linear(0.7),
               ),
             ),
         ],
