@@ -143,7 +143,7 @@ class RoomListScreen extends ConsumerWidget {
                               context,
                               MaterialPageRoute(
                                 builder: (context) =>
-                                    AddRoomScreen(initialRoom: room),
+                                    AddRoomScreen(initialItem: room),
                               ),
                             );
                           },

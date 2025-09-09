@@ -124,13 +124,14 @@ class RoomNotifier extends AsyncNotifier<List<Room>> {
     required bool isOccupied,
     List<int>? assetIds,
     File? imageFile,
+    String? imageUrl,
     int? tenantId,
   }) async {
     try {
       // Handle image upload if needed
-      String? imageUrl;
+      String? imageUpload;
       if (imageFile != null) {
-        imageUrl = await _uploadImage(imageFile);
+        imageUpload = await _uploadImage(imageFile);
       }
 
       // Pass assetIds directly as a list, Supabase will handle the JSON serialization
@@ -141,7 +142,7 @@ class RoomNotifier extends AsyncNotifier<List<Room>> {
           'p_name': name,
           'p_is_occupied': isOccupied,
           'p_asset_ids': assetIds, // Pass the list directly
-          'p_image_url': imageUrl,
+          'p_image_url': imageUpload ?? imageUrl,
           'p_tenant_id': tenantId,
         },
       );

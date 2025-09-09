@@ -1,38 +1,36 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:app_project/providers/asset_provider.dart';
 import 'package:app_project/models/asset.dart';
+import 'package:app_project/providers/asset_provider.dart';
+import 'package:app_project/widgets/shared/base_add_screen.dart';
 
-class AddAssetScreen extends ConsumerStatefulWidget {
-  final Asset? initialAsset;
-  const AddAssetScreen({super.key, this.initialAsset});
-
+class AddAssetScreen extends BaseAddScreen<Asset> {
+  const AddAssetScreen({super.key, super.initialItem})
+    : super(
+        title: initialItem == null ? 'Add Asset' : 'Edit Asset',
+        submitButtonText: initialItem == null ? 'Add Asset' : 'Update Asset',
+      );
   @override
-  ConsumerState<AddAssetScreen> createState() => _AddAssetScreenState();
+  BaseAddScreenState<Asset, AddAssetScreen> createState() =>
+      _AssetsAddScreenState();
 }
 
-class _AddAssetScreenState extends ConsumerState<AddAssetScreen> {
-  final _formKey = GlobalKey<FormState>();
+class _AssetsAddScreenState extends BaseAddScreenState<Asset, AddAssetScreen> {
   final _nameController = TextEditingController();
   final _conditionController = TextEditingController();
   final _roomIdController = TextEditingController();
   final _quantityController = TextEditingController();
-  bool _isLoading = false;
-  final ImagePicker _picker = ImagePicker();
-  String? _imagePath;
 
   @override
   void initState() {
     super.initState();
-    final a = widget.initialAsset;
+    final a = widget.initialItem;
     if (a != null) {
       _nameController.text = a.name;
       _conditionController.text = a.condition;
       _roomIdController.text = a.roomId.toString();
       _quantityController.text = a.quantity.toString();
-      _imagePath = a.imageUrl;
+      setImagePath(a.imageUrl);
     }
   }
 
@@ -45,396 +43,84 @@ class _AddAssetScreenState extends ConsumerState<AddAssetScreen> {
     super.dispose();
   }
 
-  Future<void> _pickImage() async {
-    try {
-      final XFile? image = await _picker.pickImage(
-        source: ImageSource.gallery,
-        maxWidth: 1024,
-        maxHeight: 1024,
-        imageQuality: 80,
+  @override
+  void onInit() {}
+
+  @override
+  void onDispose() {}
+
+  @override
+  Future<void> onSubmit() async {
+    final name = _nameController.text.trim();
+    final condition = _conditionController.text.trim();
+    final quantity = int.parse(_quantityController.text.trim());
+    final isEditing = widget.initialItem != null;
+
+    final provider = ref.read(assetProvider.notifier);
+    if (isEditing) {
+      await provider.updateAsset(
+        id: widget.initialItem!.id,
+        name: name,
+        condition: condition,
+        roomId: null,
+        quantity: quantity,
+        imageFile:
+            imagePath != null && imagePath != widget.initialItem?.imageUrl
+            ? File(imagePath!)
+            : null,
+        imageUrl: widget.initialItem?.imageUrl,
       );
-
-      if (image != null) {
-        setState(() => _imagePath = image.path);
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error picking image: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
-  }
-
-  Future<void> _saveAsset() async {
-    if (!_formKey.currentState!.validate()) return;
-
-    setState(() => _isLoading = true);
-
-    try {
-      final isEditing = widget.initialAsset != null;
-      final notifier = ref.read(assetProvider.notifier);
-      final name = _nameController.text.trim();
-      final condition = _conditionController.text.trim().isEmpty
-          ? 'Good'
-          : _conditionController.text.trim();
-      final quantity = int.tryParse(_quantityController.text) ?? 1;
-
-      if (isEditing) {
-        await notifier.updateAsset(
-          id: widget.initialAsset!.id,
-          name: name,
-          condition: condition,
-          roomId: null,
-          quantity: quantity,
-          imageFile:
-              _imagePath != null && _imagePath != widget.initialAsset?.imageUrl
-              ? File(_imagePath!)
-              : null,
-        );
-      } else {
-        await notifier.addAsset(
-          name: name,
-          condition: condition,
-          roomId: null,
-          quantity: quantity,
-          imageFile: _imagePath != null ? File(_imagePath!) : null,
-        );
-        // Refresh the asset list to ensure latest data
-        await ref.refresh(assetProvider.future);
-      }
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              isEditing
-                  ? 'Asset updated successfully!'
-                  : 'Asset created successfully!',
-            ),
-            backgroundColor: Colors.green,
-          ),
-        );
-        Navigator.of(context).pop(true); // Return true to indicate success
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error saving asset: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+    } else {
+      await provider.addAsset(
+        name: name,
+        condition: condition,
+        roomId: null,
+        quantity: quantity,
+        imageFile: imagePath != null ? File(imagePath!) : null,
+      );
     }
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          widget.initialAsset != null ? 'Edit Asset' : 'Add New Asset',
-        ),
-        centerTitle: true,
-        actions: [
-          if (_isLoading)
-            const Center(
-              child: Padding(
-                padding: EdgeInsets.all(16.0),
-                child: SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                  ),
-                ),
-              ),
-            )
-          else
-            TextButton(
-              onPressed: _saveAsset,
-              child: const Text(
-                'Save',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-        ],
-      ),
-      body: Form(
-        key: _formKey,
-        child: ListView(
-          padding: const EdgeInsets.all(16.0),
+  List<Widget> buildFormFields() {
+    return [
+      _buildImagePicker(),
+      const SizedBox(height: 20),
+      ..._buildFormFields(),
+    ];
+  }
+
+  Widget _buildImagePicker() {
+    return GestureDetector(
+      onTap: pickImage,
+      child: Center(
+        child: Stack(
           children: [
-            // Asset Name Field
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Asset Name',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      textScaler: TextScaler.linear(0.8),
-                    ),
-                    const SizedBox(height: 8),
-                    TextFormField(
-                      style: Theme.of(
-                        context,
-                      ).textTheme.bodySmall?.copyWith(fontSize: 12),
-                      controller: _nameController,
-                      decoration: const InputDecoration(
-                        hintText: 'Enter asset name...',
-                        border: OutlineInputBorder(),
-                        contentPadding: EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 8,
-                        ),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return 'Please enter an asset name';
-                        }
-                        return null;
-                      },
-                      maxLength: 100,
-                    ),
-                  ],
-                ),
-              ),
+            CircleAvatar(
+              radius: 60,
+              backgroundColor: Colors.grey[200],
+              backgroundImage: imagePath != null
+                  ? imagePath!.startsWith('http')
+                        ? NetworkImage(imagePath!)
+                        : FileImage(File(imagePath!)) as ImageProvider
+                  : null,
+              child: imagePath == null
+                  ? const Icon(Icons.person, size: 60, color: Colors.grey)
+                  : null,
             ),
-
-            const SizedBox(height: 16),
-
-            // Condition and Quantity Row
-            Row(
-              children: [
-                // Condition Field
-                Expanded(
-                  child: Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Condition',
-                            style: Theme.of(context).textTheme.titleMedium
-                                ?.copyWith(fontWeight: FontWeight.w600),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            textScaler: TextScaler.linear(0.8),
-                          ),
-                          const SizedBox(height: 8),
-                          TextFormField(
-                            style: Theme.of(
-                              context,
-                            ).textTheme.bodySmall?.copyWith(fontSize: 12),
-                            controller: _conditionController,
-                            decoration: const InputDecoration(
-                              hintText: 'Good',
-                              border: OutlineInputBorder(),
-                              contentPadding: EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 8,
-                              ),
-                            ),
-                            maxLength: 50,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
+            Positioned(
+              bottom: 0,
+              right: 0,
+              child: Container(
+                padding: const EdgeInsets.all(4),
+                decoration: const BoxDecoration(
+                  color: Colors.blue,
+                  shape: BoxShape.circle,
                 ),
-                const SizedBox(width: 8),
-                // Quantity Field
-                Expanded(
-                  child: Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Quantity',
-                            style: Theme.of(context).textTheme.titleMedium
-                                ?.copyWith(fontWeight: FontWeight.w600),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            textScaler: TextScaler.linear(0.8),
-                          ),
-                          const SizedBox(height: 8),
-                          TextFormField(
-                            style: Theme.of(
-                              context,
-                            ).textTheme.bodySmall?.copyWith(fontSize: 12),
-                            controller: _quantityController,
-                            decoration: const InputDecoration(
-                              hintText: '1',
-                              border: OutlineInputBorder(),
-                              contentPadding: EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 8,
-                              ),
-                            ),
-                            keyboardType: TextInputType.number,
-                            validator: (value) {
-                              if (value != null && value.isNotEmpty) {
-                                final quantity = int.tryParse(value);
-                                if (quantity == null || quantity < 1) {
-                                  return 'Enter valid quantity';
-                                }
-                              }
-                              return null;
-                            },
-                            maxLength: 10,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 16),
-
-            // Image Section
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Asset Image',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      textScaler: TextScaler.linear(0.8),
-                    ),
-                    const SizedBox(height: 8),
-
-                    if (_imagePath != null) ...[
-                      Container(
-                        width: double.infinity,
-                        height: 200,
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.grey.shade300),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
-                          child: Image.file(
-                            File(_imagePath!),
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
-                              return Container(
-                                color: Colors.grey.shade200,
-                                child: const Center(
-                                  child: Icon(
-                                    Icons.broken_image,
-                                    size: 50,
-                                    color: Colors.grey,
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                        children: [
-                          TextButton.icon(
-                            onPressed: _pickImage,
-                            icon: const Icon(Icons.edit),
-                            label: const Text(
-                              'Change Image',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              textScaler: TextScaler.linear(0.7),
-                            ),
-                          ),
-                          TextButton.icon(
-                            onPressed: () {
-                              setState(() {
-                                _imagePath = null;
-                              });
-                            },
-                            icon: const Icon(Icons.delete),
-                            label: const Text(
-                              'Remove Image',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              textScaler: TextScaler.linear(0.7),
-                            ),
-                            style: TextButton.styleFrom(
-                              foregroundColor: Colors.red,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ] else ...[
-                      InkWell(
-                        onTap: _pickImage,
-                        child: Container(
-                          width: double.infinity,
-                          height: 120,
-                          decoration: BoxDecoration(
-                            border: Border.all(
-                              color: Colors.grey.shade300,
-                              style: BorderStyle.solid,
-                            ),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: const Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.add_photo_alternate,
-                                size: 40,
-                                color: Colors.grey,
-                              ),
-                              SizedBox(height: 8),
-                              Text(
-                                'Tap to add image',
-                                style: TextStyle(
-                                  color: Colors.grey,
-                                  fontSize: 16,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                textScaler: TextScaler.linear(0.8),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ],
+                child: const Icon(
+                  Icons.camera_alt,
+                  color: Colors.white,
+                  size: 20,
                 ),
               ),
             ),
@@ -442,5 +128,96 @@ class _AddAssetScreenState extends ConsumerState<AddAssetScreen> {
         ),
       ),
     );
+  }
+
+  List<Widget> _buildFormFields() {
+    return [
+      // Asset Name Field
+      Card(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              TextFormField(
+                controller: _nameController,
+                keyboardType: TextInputType.text,
+                decoration: const InputDecoration(
+                  labelText: 'Asset Name',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return 'Please enter an asset name';
+                  }
+                  return null;
+                },
+                maxLength: 100,
+              ),
+            ],
+          ),
+        ),
+      ),
+      const SizedBox(height: 16),
+      // Condition and Quantity Row
+      Row(
+        children: [
+          // Condition Field
+          Expanded(
+            child: Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    TextFormField(
+                      controller: _conditionController,
+                      keyboardType: TextInputType.text,
+                      decoration: const InputDecoration(
+                        labelText: 'Condition',
+                        border: OutlineInputBorder(),
+                      ),
+                      maxLength: 50,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          // Quantity Field
+          Expanded(
+            child: Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    TextFormField(
+                      controller: _quantityController,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(
+                        labelText: 'Quantity',
+                        border: OutlineInputBorder(),
+                      ),
+                      validator: (value) {
+                        if (value != null && value.isNotEmpty) {
+                          final quantity = int.tryParse(value);
+                          if (quantity == null || quantity < 1) {
+                            return 'Enter valid quantity';
+                          }
+                        }
+                        return null;
+                      },
+                      maxLength: 10,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    ];
   }
 }

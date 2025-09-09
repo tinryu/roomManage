@@ -120,12 +120,13 @@ class TenantNotifier extends AsyncNotifier<List<Tenant>> {
     required DateTime checkIn,
     DateTime? checkOut,
     File? imageFile,
+    String? imageUrl,
   }) async {
     if (id == null) return;
     try {
-      String? imageUrl;
+      String? imageUpload;
       if (imageFile != null) {
-        imageUrl = await _uploadImage(imageFile);
+        imageUpload = await _uploadImage(imageFile);
       }
       final data = {
         'room_id': null,
@@ -134,7 +135,7 @@ class TenantNotifier extends AsyncNotifier<List<Tenant>> {
         'email': email,
         'checkin': checkIn.toIso8601String(),
         'checkout': checkOut?.toIso8601String(),
-        'image_url': imageUrl,
+        'image_url': imageUpload ?? imageUrl,
       };
       final res = await supabase
           .from(_table)

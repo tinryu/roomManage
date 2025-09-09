@@ -144,18 +144,19 @@ class AssetNotifier extends AsyncNotifier<List<Asset>> {
     int? roomId,
     required int quantity,
     File? imageFile,
+    String? imageUrl,
   }) async {
     try {
-      String? imageUrl;
+      String? imageUpload;
       if (imageFile != null) {
-        imageUrl = await _uploadImage(imageFile);
+        imageUpload = await _uploadImage(imageFile);
       }
       final data = {
         'name': name,
         'condition': condition,
         'room_id': roomId,
         'quantity': quantity,
-        'image_url': imageUrl,
+        'image_url': imageUpload ?? imageUrl,
       };
       final res = await supabase
           .from(_table)

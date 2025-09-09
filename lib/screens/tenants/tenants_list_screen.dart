@@ -106,7 +106,7 @@ class TenantListScreen extends ConsumerWidget {
                               context,
                               MaterialPageRoute(
                                 builder: (context) =>
-                                    AddTenantScreen(initialTenant: tenant),
+                                    AddTenantScreen(initialItem: tenant),
                               ),
                             );
                           },

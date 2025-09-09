@@ -96,7 +96,7 @@ class AssetsListScreen extends ConsumerWidget {
                               context,
                               MaterialPageRoute(
                                 builder: (context) =>
-                                    AddAssetScreen(initialAsset: asset),
+                                    AddAssetScreen(initialItem: asset),
                               ),
                             );
                           },

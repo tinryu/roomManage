@@ -240,7 +240,7 @@ class _RoomFullListScreenState extends ConsumerState<RoomFullListScreen> {
                                 context,
                                 MaterialPageRoute(
                                   builder: (context) =>
-                                      AddRoomScreen(initialRoom: roomEdit),
+                                      AddRoomScreen(initialItem: roomEdit),
                                 ),
                               );
                             },

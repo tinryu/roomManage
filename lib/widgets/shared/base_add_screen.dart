@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
@@ -82,52 +81,52 @@ abstract class BaseAddScreenState<T, W extends BaseAddScreen<T>>
     }
   }
 
-  Widget buildImagePicker() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Image',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 8),
-        GestureDetector(
-          onTap: pickImage,
-          child: Container(
-            width: double.infinity,
-            height: 200,
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey[300]!),
-              borderRadius: BorderRadius.circular(8),
-              color: Colors.grey[100],
-            ),
-            child: _imagePath != null
-                ? ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: Image.file(
-                      File(_imagePath!),
-                      fit: BoxFit.cover,
-                      width: double.infinity,
-                      height: double.infinity,
-                    ),
-                  )
-                : Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: const [
-                      Icon(
-                        Icons.add_photo_alternate,
-                        size: 50,
-                        color: Colors.grey,
-                      ),
-                      SizedBox(height: 8),
-                      Text('Tap to add an image'),
-                    ],
-                  ),
-          ),
-        ),
-      ],
-    );
-  }
+  // Widget buildImagePicker() {
+  //   return Column(
+  //     crossAxisAlignment: CrossAxisAlignment.start,
+  //     children: [
+  //       const Text(
+  //         'Image',
+  //         style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+  //       ),
+  //       const SizedBox(height: 8),
+  //       GestureDetector(
+  //         onTap: pickImage,
+  //         child: Container(
+  //           width: double.infinity,
+  //           height: 200,
+  //           decoration: BoxDecoration(
+  //             border: Border.all(color: Colors.grey[300]!),
+  //             borderRadius: BorderRadius.circular(8),
+  //             color: Colors.grey[100],
+  //           ),
+  //           child: _imagePath != null
+  //               ? ClipRRect(
+  //                   borderRadius: BorderRadius.circular(8),
+  //                   child: Image.file(
+  //                     File(_imagePath!),
+  //                     fit: BoxFit.cover,
+  //                     width: double.infinity,
+  //                     height: double.infinity,
+  //                   ),
+  //                 )
+  //               : Column(
+  //                   mainAxisAlignment: MainAxisAlignment.center,
+  //                   children: const [
+  //                     Icon(
+  //                       Icons.add_photo_alternate,
+  //                       size: 50,
+  //                       color: Colors.grey,
+  //                     ),
+  //                     SizedBox(height: 8),
+  //                     Text('Tap to add an image'),
+  //                   ],
+  //                 ),
+  //         ),
+  //       ),
+  //     ],
+  //   );
+  // }
 
   Widget buildSubmitButton() {
     return SizedBox(
@@ -166,6 +165,15 @@ abstract class BaseAddScreenState<T, W extends BaseAddScreen<T>>
     try {
       await onSubmit();
       if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              widget.initialItem != null
+                  ? 'Item updated successfully!'
+                  : 'Item added successfully!',
+            ),
+          ),
+        );
         Navigator.of(context).pop(true);
       }
     } catch (e) {
@@ -199,7 +207,7 @@ abstract class BaseAddScreenState<T, W extends BaseAddScreen<T>>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    buildImagePicker(),
+                    // buildImagePicker(),
                     const SizedBox(height: 24),
                     ...buildFormFields(),
                     const SizedBox(height: 24),
