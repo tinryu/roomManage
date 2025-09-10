@@ -1,15 +1,20 @@
 import 'dart:io';
 
+import 'package:app_project/utils/localization_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:app_project/models/tenant.dart';
 import 'package:app_project/providers/tenant_provider.dart';
 import 'package:app_project/widgets/shared/base_add_screen.dart';
 
 class AddTenantScreen extends BaseAddScreen<Tenant> {
-  const AddTenantScreen({super.key, super.initialItem})
+  AddTenantScreen({super.key, super.initialItem})
     : super(
-        title: initialItem == null ? 'Add Tenant' : 'Edit Tenant',
-        submitButtonText: initialItem == null ? 'Add Tenant' : 'Update Tenant',
+        title: initialItem == null
+            ? LocalizationManager.local.addTenant
+            : LocalizationManager.local.editTenant,
+        submitButtonText: initialItem == null
+            ? LocalizationManager.local.addTenant
+            : LocalizationManager.local.editTenant,
       );
 
   @override
@@ -164,8 +169,8 @@ class _AddTenantScreenState
     return [
       TextFormField(
         controller: _nameController,
-        decoration: const InputDecoration(
-          labelText: 'Full Name',
+        decoration: InputDecoration(
+          labelText: LocalizationManager.local.fullName,
           prefixIcon: Icon(Icons.person),
           border: OutlineInputBorder(),
         ),
@@ -180,8 +185,8 @@ class _AddTenantScreenState
       TextFormField(
         controller: _phoneController,
         keyboardType: TextInputType.phone,
-        decoration: const InputDecoration(
-          labelText: 'Phone Number',
+        decoration: InputDecoration(
+          labelText: LocalizationManager.local.phoneNumber,
           prefixIcon: Icon(Icons.phone),
           border: OutlineInputBorder(),
         ),
@@ -192,25 +197,25 @@ class _AddTenantScreenState
           return null;
         },
       ),
-      const SizedBox(height: 16),
+      SizedBox(height: 16),
       TextFormField(
         controller: _emailController,
         keyboardType: TextInputType.emailAddress,
-        decoration: const InputDecoration(
-          labelText: 'Email (Optional)',
+        decoration: InputDecoration(
+          labelText: LocalizationManager.local.email,
           prefixIcon: Icon(Icons.email),
           border: OutlineInputBorder(),
         ),
       ),
-      const SizedBox(height: 16),
+      SizedBox(height: 16),
       _buildDateField(
-        label: 'Check-in Date',
+        label: LocalizationManager.local.tenantCheckInDate,
         date: _checkIn,
         onTap: () => _pickDate(isCheckIn: true),
       ),
-      const SizedBox(height: 16),
+      SizedBox(height: 16),
       _buildDateField(
-        label: 'Check-out Date (Optional)',
+        label: LocalizationManager.local.tenantCheckOutDate,
         date: _checkOut,
         onTap: () => _pickDate(isCheckIn: false),
         isOptional: true,

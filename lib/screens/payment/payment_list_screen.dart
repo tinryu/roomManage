@@ -1,4 +1,5 @@
 import 'package:app_project/screens/payment/payment_add_screen.dart';
+import 'package:app_project/utils/localization_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_project/providers/payment_provider.dart';
@@ -24,7 +25,7 @@ class PaymentScreen extends ConsumerWidget {
         leading: Padding(
           padding: EdgeInsets.only(left: 16),
           child: IconButton(
-            tooltip: 'Select All',
+            tooltip: LocalizationManager.local.selectAll,
             icon: const Icon(Icons.select_all, color: Colors.black45),
             onPressed: () {
               final payments = paymentState.asData?.value ?? [];
@@ -51,7 +52,7 @@ class PaymentScreen extends ConsumerWidget {
             child: Row(
               children: [
                 IconButton(
-                  tooltip: 'Mark Selected as Paid',
+                  tooltip: LocalizationManager.local.markAsPaid,
                   icon: const Icon(Icons.done_all, color: Colors.black45),
                   onPressed: selectedIds.isEmpty
                       ? null
@@ -67,7 +68,11 @@ class PaymentScreen extends ConsumerWidget {
                                 {};
                             if (context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Marked as paid')),
+                                SnackBar(
+                                  content: Text(
+                                    LocalizationManager.local.markAsPaid,
+                                  ),
+                                ),
                               );
                             }
                           } catch (e) {
@@ -80,13 +85,15 @@ class PaymentScreen extends ConsumerWidget {
                         },
                 ),
                 IconButton(
-                  tooltip: 'Edit',
+                  tooltip: LocalizationManager.local.edit,
                   icon: const Icon(Icons.edit, color: Colors.black45),
                   onPressed: () async {
                     if (selectedIds.length != 1) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Select exactly one payment to edit'),
+                        SnackBar(
+                          content: Text(
+                            LocalizationManager.local.selectExactlyOne,
+                          ),
                         ),
                       );
                       return;
@@ -108,7 +115,7 @@ class PaymentScreen extends ConsumerWidget {
                   },
                 ),
                 IconButton(
-                  tooltip: 'Delete',
+                  tooltip: LocalizationManager.local.delete,
                   icon: const Icon(Icons.delete, color: Colors.black45),
                   onPressed: selectedIds.isEmpty
                       ? null
@@ -116,21 +123,23 @@ class PaymentScreen extends ConsumerWidget {
                           final confirm = await showDialog<bool>(
                             context: context,
                             builder: (ctx) => AlertDialog(
-                              title: const Text('Delete payments'),
+                              title: Text(
+                                LocalizationManager.local.deletePayment,
+                              ),
                               content: Text(
                                 'Delete ${selectedIds.length} selected payment(s)?',
                               ),
                               actions: [
                                 TextButton(
                                   onPressed: () => Navigator.pop(ctx, false),
-                                  child: const Text('Cancel'),
+                                  child: Text(LocalizationManager.local.cancel),
                                 ),
                                 ElevatedButton(
                                   onPressed: () => Navigator.pop(ctx, true),
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: Colors.red,
                                   ),
-                                  child: const Text('Delete'),
+                                  child: Text(LocalizationManager.local.delete),
                                 ),
                               ],
                             ),
@@ -144,15 +153,23 @@ class PaymentScreen extends ConsumerWidget {
                                 {};
                             if (context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Deleted selected payments'),
+                                SnackBar(
+                                  content: Text(
+                                    LocalizationManager
+                                        .local
+                                        .paymentDeleteSuccess,
+                                  ),
                                 ),
                               );
                             }
                           } catch (e) {
                             if (context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('Delete failed: $e')),
+                                SnackBar(
+                                  content: Text(
+                                    '${LocalizationManager.local.deleteFailed}: $e',
+                                  ),
+                                ),
                               );
                             }
                           }
@@ -165,7 +182,8 @@ class PaymentScreen extends ConsumerWidget {
       ),
       body: paymentState.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error: $e')),
+        error: (e, _) =>
+            Center(child: Text('${LocalizationManager.local.error}: $e')),
         data: (payments) => Column(
           children: [
             Expanded(
@@ -238,7 +256,9 @@ class PaymentScreen extends ConsumerWidget {
                                 borderRadius: BorderRadius.circular(6),
                               ),
                               child: Text(
-                                pay.isPaid ? 'Done' : 'Nope',
+                                pay.isPaid
+                                    ? LocalizationManager.local.done
+                                    : LocalizationManager.local.nope,
                                 style: TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.w600,
@@ -250,13 +270,13 @@ class PaymentScreen extends ConsumerWidget {
                           ],
                         ),
                         Text(
-                          'Amount: ${appFormatCurrencyCompact(context, pay.amount)}',
+                          '${LocalizationManager.local.amount}: ${appFormatCurrencyCompact(context, pay.amount)}',
                           overflow: TextOverflow.ellipsis,
                           maxLines: 1,
                           textScaler: TextScaler.linear(0.8),
                         ),
                         Text(
-                          'Date transfer: ${appFormatDate(context, pay.datetime)} - ${DateFormat('HH:mm').format(pay.datetime)}',
+                          '${LocalizationManager.local.dateTransfer}: ${appFormatDate(context, pay.datetime)} - ${DateFormat('HH:mm').format(pay.datetime)}',
                           overflow: TextOverflow.ellipsis,
                           maxLines: 1,
                           textScaler: TextScaler.linear(0.8),
@@ -274,7 +294,7 @@ class PaymentScreen extends ConsumerWidget {
                     ? CircularProgressIndicator()
                     : ElevatedButton(
                         onPressed: notifier.fetchNextPage,
-                        child: Text('Load More'),
+                        child: Text(LocalizationManager.local.loadMore),
                       ),
               ),
           ],

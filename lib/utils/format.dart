@@ -2,6 +2,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:app_project/providers/settings_provider.dart';
+import 'package:app_project/utils/localization_manager.dart';
 
 String compactKMBSuffix(num n, String codeRegion) {
   double v = n.toDouble();
@@ -46,11 +47,16 @@ String appFormatDate(BuildContext context, DateTime dt, {String? pattern}) {
   try {
     final container = ProviderScope.containerOf(context, listen: false);
     final settings = container.read(settingsProvider).valueOrNull;
-    final pat = pattern ?? settings?.dateFormatPattern ?? 'yyyy-MM-dd';
-    return DateFormat(pat).format(dt);
+    final locale = Localizations.localeOf(context);
+    final pat =
+        pattern ??
+        settings?.dateFormatPattern ??
+        LocalizationManager.local.defaultDateFormat;
+
+    return DateFormat(pat, locale.languageCode).format(dt);
   } catch (_) {
     // Fallback when container/provider not available
-    return DateFormat(pattern ?? 'yyyy-MM-dd').format(dt);
+    return DateFormat(pattern ?? 'yyyy-MM-dd', 'en').format(dt);
   }
 }
 

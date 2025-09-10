@@ -1,4 +1,5 @@
 import 'package:app_project/screens/tenants/tenant_add_screen.dart';
+import 'package:app_project/utils/localization_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_project/providers/tenant_provider.dart';
@@ -34,7 +35,7 @@ class TenantListScreen extends ConsumerWidget {
         onPressed: () {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => const AddTenantScreen()),
+            MaterialPageRoute(builder: (context) => AddTenantScreen()),
           );
         },
       ),
@@ -55,7 +56,7 @@ class TenantListScreen extends ConsumerWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     IconButton(
-                      tooltip: 'Select All',
+                      tooltip: LocalizationManager.local.selectAll,
                       icon: const Icon(Icons.select_all, color: Colors.grey),
                       onPressed: () {
                         final selected = ref.read(
@@ -79,7 +80,7 @@ class TenantListScreen extends ConsumerWidget {
                     Row(
                       children: [
                         IconButton(
-                          tooltip: 'Edit',
+                          tooltip: LocalizationManager.local.edit,
                           icon: const Icon(Icons.edit, color: Colors.grey),
                           onPressed: () async {
                             final selectedIds = ref.read(
@@ -112,7 +113,7 @@ class TenantListScreen extends ConsumerWidget {
                           },
                         ),
                         IconButton(
-                          tooltip: 'Delete',
+                          tooltip: LocalizationManager.local.delete,
                           icon: const Icon(Icons.delete, color: Colors.grey),
                           onPressed: () async {
                             final selectedIds = ref.read(
@@ -287,7 +288,7 @@ class TenantListScreen extends ConsumerWidget {
                     ? CircularProgressIndicator()
                     : ElevatedButton(
                         onPressed: notifier.fetchNextPage,
-                        child: Text('Load More'),
+                        child: Text(LocalizationManager.local.loadMore),
                       ),
               ),
           ],

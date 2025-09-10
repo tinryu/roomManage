@@ -70,7 +70,7 @@ class RoomListScreen extends ConsumerWidget {
         onPressed: () async {
           await Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => const AddRoomScreen()),
+            MaterialPageRoute(builder: (context) => AddRoomScreen()),
           );
           ref.invalidate(roomProvider);
         },

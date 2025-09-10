@@ -2,6 +2,7 @@
 
 import 'package:app_project/models/room.dart';
 import 'package:app_project/utils/format.dart';
+import 'package:app_project/utils/localization_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 // Room model is used through provider
@@ -85,10 +86,10 @@ class _RoomFullListScreenState extends ConsumerState<RoomFullListScreen> {
         return asyncAssets.when(
           data: (assets) {
             if (assets.isEmpty) {
-              return const Padding(
+              return Padding(
                 padding: EdgeInsets.all(8.0),
                 child: Text(
-                  'No assets found',
+                  LocalizationManager.local.noAssetsFound,
                   style: TextStyle(
                     color: Colors.grey,
                     fontStyle: FontStyle.italic,
@@ -155,7 +156,7 @@ class _RoomFullListScreenState extends ConsumerState<RoomFullListScreen> {
         onPressed: () {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => const AddRoomScreen()),
+            MaterialPageRoute(builder: (context) => AddRoomScreen()),
           );
         },
       ),
@@ -164,7 +165,7 @@ class _RoomFullListScreenState extends ConsumerState<RoomFullListScreen> {
         error: (error, stack) => Center(child: Text('Error: $error')),
         data: (rooms) {
           if (rooms.isEmpty) {
-            return const Center(child: Text('No room data found.'));
+            return Center(child: Text(LocalizationManager.local.noRoomsFound));
           }
           return Column(
             children: [
@@ -179,7 +180,7 @@ class _RoomFullListScreenState extends ConsumerState<RoomFullListScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       IconButton(
-                        tooltip: 'Select All',
+                        tooltip: LocalizationManager.local.selectAll,
                         icon: const Icon(Icons.select_all, color: Colors.grey),
                         onPressed: () {
                           final selected = ref.read(
@@ -204,7 +205,7 @@ class _RoomFullListScreenState extends ConsumerState<RoomFullListScreen> {
                         children: [
                           // Edit
                           IconButton(
-                            tooltip: 'Edit',
+                            tooltip: LocalizationManager.local.edit,
                             icon: const Icon(Icons.edit, color: Colors.grey),
                             onPressed: () async {
                               final selectedIds = ref.read(
@@ -247,7 +248,7 @@ class _RoomFullListScreenState extends ConsumerState<RoomFullListScreen> {
                           ),
                           // Delete
                           IconButton(
-                            tooltip: 'Delete',
+                            tooltip: LocalizationManager.local.delete,
                             icon: const Icon(
                               Icons.delete,
                               color: Colors.black45,
@@ -260,7 +261,9 @@ class _RoomFullListScreenState extends ConsumerState<RoomFullListScreen> {
                               final confirm = await showDialog<bool>(
                                 context: context,
                                 builder: (ctx) => AlertDialog(
-                                  title: const Text('Delete rooms'),
+                                  title: Text(
+                                    LocalizationManager.local.deleteRoom,
+                                  ),
                                   content: Text(
                                     'Delete ${selectedIds.length} selected room(s)?',
                                   ),
@@ -268,14 +271,18 @@ class _RoomFullListScreenState extends ConsumerState<RoomFullListScreen> {
                                     TextButton(
                                       onPressed: () =>
                                           Navigator.pop(ctx, false),
-                                      child: const Text('Cancel'),
+                                      child: Text(
+                                        LocalizationManager.local.cancel,
+                                      ),
                                     ),
                                     ElevatedButton(
                                       onPressed: () => Navigator.pop(ctx, true),
                                       style: ElevatedButton.styleFrom(
                                         backgroundColor: Colors.red,
                                       ),
-                                      child: const Text('Delete'),
+                                      child: Text(
+                                        LocalizationManager.local.delete,
+                                      ),
                                     ),
                                   ],
                                 ),
@@ -291,7 +298,7 @@ class _RoomFullListScreenState extends ConsumerState<RoomFullListScreen> {
                                     {};
                                 if (context.mounted) {
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
+                                    SnackBar(
                                       content: Text('Deleted selected rooms'),
                                     ),
                                   );
@@ -300,7 +307,9 @@ class _RoomFullListScreenState extends ConsumerState<RoomFullListScreen> {
                                 if (context.mounted) {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
-                                      content: Text('Delete failed: $e'),
+                                      content: Text(
+                                        '${LocalizationManager.local.deleteFailed}: $e',
+                                      ),
                                     ),
                                   );
                                 }
@@ -356,7 +365,7 @@ class _RoomFullListScreenState extends ConsumerState<RoomFullListScreen> {
                             children: [
                               const SizedBox(height: 4),
                               Text(
-                                "Room Info:",
+                                LocalizationManager.local.roomInformation,
                                 style: TextStyle(
                                   fontWeight: FontWeight.w700,
                                   color: Colors.black,
@@ -415,8 +424,12 @@ class _RoomFullListScreenState extends ConsumerState<RoomFullListScreen> {
                                         ),
                                         child: Text(
                                           item.isOccupied
-                                              ? 'Occupied'
-                                              : 'Vacant',
+                                              ? LocalizationManager
+                                                    .local
+                                                    .roomStatusOccupied
+                                              : LocalizationManager
+                                                    .local
+                                                    .roomStatusVacant,
                                           style: TextStyle(
                                             color: Colors.white,
                                             fontWeight: FontWeight.w600,
@@ -500,7 +513,7 @@ class _RoomFullListScreenState extends ConsumerState<RoomFullListScreen> {
                             children: [
                               const SizedBox(height: 4),
                               Text(
-                                "Room Tenant:",
+                                '${LocalizationManager.local.tenant} ${LocalizationManager.local.room}',
                                 style: TextStyle(
                                   fontWeight: FontWeight.w700,
                                   color: Colors.black,
@@ -523,7 +536,10 @@ class _RoomFullListScreenState extends ConsumerState<RoomFullListScreen> {
                                           Icon(Icons.person, size: 14),
                                           const SizedBox(width: 4),
                                           Text(
-                                            item.tenantName ?? 'No Tenant',
+                                            item.tenantName ??
+                                                LocalizationManager
+                                                    .local
+                                                    .noTenantsFound,
                                             textScaler: const TextScaler.linear(
                                               0.8,
                                             ),
@@ -591,7 +607,7 @@ class _RoomFullListScreenState extends ConsumerState<RoomFullListScreen> {
                               Padding(
                                 padding: const EdgeInsets.only(bottom: 8.0),
                                 child: Text(
-                                  "Room Assets:",
+                                  '${LocalizationManager.local.assets} ${LocalizationManager.local.room}',
                                   style: TextStyle(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w600,

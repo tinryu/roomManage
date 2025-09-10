@@ -1,5 +1,5 @@
 // ignore_for_file: unnecessary_null_comparison
-
+import 'package:app_project/utils/localization_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_project/providers/asset_provider.dart';
@@ -26,7 +26,7 @@ class AssetsListScreen extends ConsumerWidget {
         onPressed: () {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => const AddAssetScreen()),
+            MaterialPageRoute(builder: (context) => AddAssetScreen()),
           );
         },
       ),
@@ -47,7 +47,7 @@ class AssetsListScreen extends ConsumerWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     IconButton(
-                      tooltip: 'Select All',
+                      tooltip: LocalizationManager.local.selectAll,
                       icon: const Icon(Icons.select_all, color: Colors.black45),
                       onPressed: () {
                         final selected = ref.read(
@@ -69,7 +69,7 @@ class AssetsListScreen extends ConsumerWidget {
                       children: [
                         // Edit single
                         IconButton(
-                          tooltip: 'Edit',
+                          tooltip: LocalizationManager.local.edit,
                           icon: const Icon(Icons.edit, color: Colors.black45),
                           onPressed: () async {
                             final selectedIds = ref.read(
@@ -103,7 +103,7 @@ class AssetsListScreen extends ConsumerWidget {
                         ),
                         // Delete bulk
                         IconButton(
-                          tooltip: 'Delete',
+                          tooltip: LocalizationManager.local.delete,
                           icon: const Icon(Icons.delete, color: Colors.black45),
                           onPressed: () async {
                             final selectedIds = ref.read(
@@ -227,13 +227,7 @@ class AssetsListScreen extends ConsumerWidget {
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
                         Text(
-                          "Quantity: ${asset.quantity}",
-                          overflow: TextOverflow.ellipsis,
-                          maxLines: 1,
-                          textScaler: TextScaler.linear(0.8),
-                        ),
-                        Text(
-                          "Room ID: ${asset.roomId}",
+                          "${LocalizationManager.local.quantity}: ${asset.quantity}",
                           overflow: TextOverflow.ellipsis,
                           maxLines: 1,
                           textScaler: TextScaler.linear(0.8),
@@ -255,7 +249,7 @@ class AssetsListScreen extends ConsumerWidget {
                     ? CircularProgressIndicator()
                     : ElevatedButton(
                         onPressed: notifier.fetchNextPage,
-                        child: Text('Load More'),
+                        child: Text(LocalizationManager.local.loadMore),
                       ),
               ),
           ],

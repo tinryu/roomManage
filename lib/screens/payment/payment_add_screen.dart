@@ -1,3 +1,4 @@
+import 'package:app_project/utils/localization_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_project/models/payment.dart';
@@ -98,8 +99,8 @@ class _AddPaymentScreenState extends ConsumerState<AddPaymentScreen> {
           SnackBar(
             content: Text(
               widget.initialPayment != null
-                  ? 'Payment updated successfully!'
-                  : 'Payment created successfully!',
+                  ? LocalizationManager.local.paymentUpdateSuccess
+                  : LocalizationManager.local.paymentAddSuccess,
             ),
             backgroundColor: Colors.green,
           ),
@@ -129,7 +130,9 @@ class _AddPaymentScreenState extends ConsumerState<AddPaymentScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          widget.initialPayment != null ? 'Edit Payment' : 'Add New Payment',
+          widget.initialPayment != null
+              ? LocalizationManager.local.editPayment
+              : LocalizationManager.local.addPayment,
         ),
         centerTitle: true,
         actions: [
@@ -150,8 +153,8 @@ class _AddPaymentScreenState extends ConsumerState<AddPaymentScreen> {
           else
             TextButton(
               onPressed: _savePayment,
-              child: const Text(
-                'Save',
+              child: Text(
+                LocalizationManager.local.save,
                 style: TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.w600,
@@ -173,7 +176,7 @@ class _AddPaymentScreenState extends ConsumerState<AddPaymentScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Amount',
+                      LocalizationManager.local.amount,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w600,
                       ),
@@ -187,8 +190,8 @@ class _AddPaymentScreenState extends ConsumerState<AddPaymentScreen> {
                         context,
                       ).textTheme.bodySmall?.copyWith(fontSize: 12),
                       controller: _amountController,
-                      decoration: const InputDecoration(
-                        hintText: 'Enter amount...',
+                      decoration: InputDecoration(
+                        hintText: LocalizationManager.local.enterAmount,
                         border: OutlineInputBorder(),
                         contentPadding: EdgeInsets.symmetric(
                           horizontal: 12,
@@ -199,11 +202,13 @@ class _AddPaymentScreenState extends ConsumerState<AddPaymentScreen> {
                       keyboardType: TextInputType.number,
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
-                          return 'Please enter an amount';
+                          return LocalizationManager.local.pleaseEnterAmount;
                         }
                         final amount = int.tryParse(value.trim());
                         if (amount == null || amount <= 0) {
-                          return 'Please enter a valid amount';
+                          return LocalizationManager
+                              .local
+                              .pleaseEnterValidAmount;
                         }
                         return null;
                       },
@@ -307,7 +312,7 @@ class _AddPaymentScreenState extends ConsumerState<AddPaymentScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Payment Type',
+                      LocalizationManager.local.paymentType,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w600,
                       ),
@@ -350,7 +355,7 @@ class _AddPaymentScreenState extends ConsumerState<AddPaymentScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Payment Date',
+                            LocalizationManager.local.paymentDate,
                             style: Theme.of(context).textTheme.titleMedium
                                 ?.copyWith(fontWeight: FontWeight.w600),
                             maxLines: 1,
@@ -405,7 +410,7 @@ class _AddPaymentScreenState extends ConsumerState<AddPaymentScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Payment Status',
+                            LocalizationManager.local.paymentStatus,
                             style: Theme.of(context).textTheme.titleMedium
                                 ?.copyWith(fontWeight: FontWeight.w600),
                             maxLines: 1,
@@ -415,7 +420,9 @@ class _AddPaymentScreenState extends ConsumerState<AddPaymentScreen> {
                           const SizedBox(height: 8),
                           SwitchListTile(
                             title: Text(
-                              _isPaid ? 'Paid' : 'Unpaid',
+                              _isPaid
+                                  ? LocalizationManager.local.paid
+                                  : LocalizationManager.local.unpaid,
                               maxLines: 1,
                               style: Theme.of(context).textTheme.titleMedium
                                   ?.copyWith(fontWeight: FontWeight.w600),

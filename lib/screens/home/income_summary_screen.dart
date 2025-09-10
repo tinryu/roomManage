@@ -3,6 +3,7 @@ import 'package:provider/provider.dart' as p;
 import 'package:app_project/providers/dashboard_provider.dart';
 import 'package:intl/intl.dart';
 import 'package:app_project/utils/format.dart';
+import 'package:app_project/utils/localization_manager.dart';
 
 class IncomeSummaryScreen extends StatefulWidget {
   const IncomeSummaryScreen({super.key});
@@ -29,7 +30,7 @@ class _IncomeSummaryScreenState extends State<IncomeSummaryScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    "Recent Income",
+                    LocalizationManager.local.recentIncome,
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                   ),
                 ],
@@ -38,8 +39,8 @@ class _IncomeSummaryScreenState extends State<IncomeSummaryScreen> {
               isLoading
                   ? const Center(child: CircularProgressIndicator())
                   : monthlyPayments.isEmpty
-                  ? const Center(
-                      child: Text('Không có dữ liệu thanh toán tháng này'),
+                  ? Center(
+                      child: Text(LocalizationManager.local.noOverduePayments),
                     )
                   : RefreshIndicator(
                       onRefresh: () async {

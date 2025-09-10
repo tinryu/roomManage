@@ -1,4 +1,3 @@
-import 'package:app_project/l10n/app_localizations.dart';
 import 'package:app_project/providers/dashboard_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:app_project/screens/home/recent_activity_screen.dart';
@@ -8,6 +7,7 @@ import 'package:app_project/screens/home/analytics_dashboard.dart';
 import 'package:card_swiper/card_swiper.dart';
 import 'package:app_project/utils/format.dart';
 import 'package:app_project/utils/faded_loader.dart';
+import 'package:app_project/utils/localization_manager.dart';
 import 'package:provider/provider.dart' as p;
 
 class HomeScreen extends StatefulWidget {
@@ -29,10 +29,11 @@ class _HomeScreenState extends State<HomeScreen> {
   void didChangeDependencies() {
     super.didChangeDependencies();
 
+    LocalizationManager.initialize(context);
+
     final newLocale = Localizations.localeOf(context);
     if (_currentLocale != newLocale) {
       _currentLocale = newLocale;
-      // Optionally trigger state update or analytics here
     }
   }
 
@@ -47,9 +48,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Localization available via AppLocalizations if needed
-    final local = AppLocalizations.of(context)!;
-
     final dashboardProvider = p.Provider.of<DashboardProvider>(context);
 
     return Scaffold(
@@ -117,7 +115,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   .dashboard!
                                   .availableRooms
                                   .toString(),
-                              'label': 'Rooms Available',
+                              'label': LocalizationManager.local.availableRooms,
                             },
                             {
                               'icon': Icons.attach_money,
@@ -125,7 +123,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 context,
                                 dashboardProvider.dashboard!.todayRevenue,
                               ),
-                              'label': 'Today Revenue',
+                              'label': LocalizationManager.local.todayRevenue,
                             },
                             {
                               'icon': Icons.login,
@@ -133,19 +131,19 @@ class _HomeScreenState extends State<HomeScreen> {
                                   .dashboard!
                                   .todayCheckins
                                   .toString(),
-                              'label': 'Check-ins Today',
+                              'label': LocalizationManager.local.checkInToday,
                             },
                             {
                               'icon': Icons.bar_chart,
                               'value':
                                   '${dashboardProvider.dashboard!.occupancyRate.toString()}%',
-                              'label': 'Occupancy Rate',
+                              'label': LocalizationManager.local.occupancyRate,
                             },
                             {
                               'icon': Icons.person,
                               'value': dashboardProvider.dashboard!.activeUsers
                                   .toString(),
-                              'label': local.activeUsers,
+                              'label': LocalizationManager.local.activeUsers,
                             },
                             {
                               'icon': Icons.luggage,
@@ -153,7 +151,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   .dashboard!
                                   .damagedAssets
                                   .toString(),
-                              'label': 'Waiting damaged',
+                              'label': LocalizationManager.local.waitingDamaged,
                             },
                           ],
                         ),

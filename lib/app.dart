@@ -3,9 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:app_project/l10n/app_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
-// import 'screens/main_screen.dart';
 import 'widgets/auth_gate.dart';
-// import 'package:app_project/screens/tenants/login_screen.dart' show LoginScreen;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'providers/onboarding_provider.dart';
@@ -23,13 +21,14 @@ class _MyAppState extends ConsumerState<MyApp> {
   Locale _locale = Locale('en');
   final user = Supabase.instance.client.auth.currentUser;
   ThemeMode _themeMode = ThemeMode.light;
-  
+
   @override
   void initState() {
     super.initState();
     // Initialize local notifications (Android runtime permission handled inside)
     NotificationService().init();
   }
+
   void _changeLanguage(Locale locale) {
     setState(() {
       _locale = locale;

@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart' as p;
 import 'package:app_project/providers/dashboard_provider.dart';
-// import 'package:app_project/screens/recentactive/recentlist.dart'
-//     show RecentList;
 import 'package:intl/intl.dart';
 import 'package:app_project/utils/format.dart';
+import 'package:app_project/utils/localization_manager.dart';
 
 class RecentActivityScreen extends StatefulWidget {
   const RecentActivityScreen({super.key});
@@ -31,7 +30,7 @@ class _RecentActivityScreenState extends State<RecentActivityScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    "Recent Activity",
+                    LocalizationManager.local.recentActivities,
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                   ),
                 ],
@@ -40,7 +39,9 @@ class _RecentActivityScreenState extends State<RecentActivityScreen> {
               isLoading
                   ? const Center(child: CircularProgressIndicator())
                   : recentActivities.isEmpty
-                  ? const Center(child: Text('Không có hoạt động gần đây'))
+                  ? Center(
+                      child: Text(LocalizationManager.local.noRecentActivities),
+                    )
                   : RefreshIndicator(
                       onRefresh: () async {
                         await dp.fetchDashboard(homeLimit: 5);

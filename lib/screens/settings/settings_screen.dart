@@ -1,4 +1,5 @@
 import 'package:app_project/screens/tenants/profile_detail_screen.dart';
+import 'package:app_project/utils/localization_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:app_project/screens/tenants/login_screen.dart';
@@ -296,7 +297,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   value: true,
                   onChanged: (val) {}, // placeholder
                   title: Text(
-                    'Payment reminders',
+                    LocalizationManager.local.paymentReminder,
                     textScaler: TextScaler.linear(0.8),
                   ),
                 ),
@@ -305,7 +306,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   value: true,
                   onChanged: (val) {}, // placeholder
                   title: Text(
-                    'Task reminders',
+                    LocalizationManager.local.tasksReminder,
                     textScaler: TextScaler.linear(0.8),
                   ),
                 ),
@@ -323,7 +324,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               children: [
                 ListTile(
                   leading: Icon(Icons.person_outline),
-                  title: Text('Profile', textScaler: TextScaler.linear(0.8)),
+                  title: Text(
+                    LocalizationManager.local.profile,
+                    textScaler: TextScaler.linear(0.8),
+                  ),
                   onTap: () {
                     Navigator.push(
                       context,
@@ -336,8 +340,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 const Divider(height: 1),
                 ListTile(
                   leading: const Icon(Icons.logout, color: Colors.red),
-                  title: const Text(
-                    'Logout',
+                  title: Text(
+                    LocalizationManager.local.logout,
                     style: TextStyle(color: Colors.red),
                     textScaler: TextScaler.linear(0.8),
                   ),

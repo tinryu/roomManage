@@ -1,5 +1,6 @@
 import 'package:app_project/screens/tasks/task_detail_screen.dart';
 import 'package:app_project/screens/tasks/task_list_screen.dart';
+import 'package:app_project/utils/localization_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart' as p;
@@ -32,11 +33,14 @@ class _UpcomingTasksState extends State<UpcomingTasks> {
                 spacing: 8,
                 children: [
                   Text(
-                    "Upcoming Tasks",
+                    LocalizationManager.local.upcomingTask,
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                   ),
                   InkWell(
-                    child: Text("View All", style: TextStyle(fontSize: 12)),
+                    child: Text(
+                      LocalizationManager.local.viewAll,
+                      style: TextStyle(fontSize: 12),
+                    ),
                     onTap: () => {
                       Navigator.push(
                         context,
@@ -52,7 +56,7 @@ class _UpcomingTasksState extends State<UpcomingTasks> {
               isLoading
                   ? Center(child: CircularProgressIndicator())
                   : upcomingTasks.isEmpty
-                  ? Center(child: Text('Không có task'))
+                  ? Center(child: Text(LocalizationManager.local.noTask))
                   : RefreshIndicator(
                       onRefresh: () async {
                         await dp.fetchDashboard(taskLimit: 3);

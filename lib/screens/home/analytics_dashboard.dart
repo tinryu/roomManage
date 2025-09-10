@@ -1,3 +1,4 @@
+import 'package:app_project/utils/localization_manager.dart';
 import 'package:flutter/material.dart';
 
 class AnalyticsDashboard extends StatelessWidget {
@@ -15,8 +16,8 @@ class AnalyticsDashboard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                "Analytics Dashboard",
+              Text(
+                LocalizationManager.local.dashboard,
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 12),

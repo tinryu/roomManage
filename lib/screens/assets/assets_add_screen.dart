@@ -3,12 +3,17 @@ import 'package:flutter/material.dart';
 import 'package:app_project/models/asset.dart';
 import 'package:app_project/providers/asset_provider.dart';
 import 'package:app_project/widgets/shared/base_add_screen.dart';
+import 'package:app_project/utils/localization_manager.dart';
 
 class AddAssetScreen extends BaseAddScreen<Asset> {
-  const AddAssetScreen({super.key, super.initialItem})
+  AddAssetScreen({super.key, super.initialItem})
     : super(
-        title: initialItem == null ? 'Add Asset' : 'Edit Asset',
-        submitButtonText: initialItem == null ? 'Add Asset' : 'Update Asset',
+        title: initialItem == null
+            ? LocalizationManager.local.addAsset
+            : LocalizationManager.local.editAsset,
+        submitButtonText: initialItem == null
+            ? LocalizationManager.local.addAsset
+            : LocalizationManager.local.editAsset,
       );
   @override
   BaseAddScreenState<Asset, AddAssetScreen> createState() =>
@@ -142,8 +147,8 @@ class _AssetsAddScreenState extends BaseAddScreenState<Asset, AddAssetScreen> {
               TextFormField(
                 controller: _nameController,
                 keyboardType: TextInputType.text,
-                decoration: const InputDecoration(
-                  labelText: 'Asset Name',
+                decoration: InputDecoration(
+                  labelText: LocalizationManager.local.assetName,
                   border: OutlineInputBorder(),
                 ),
                 validator: (value) {
@@ -173,8 +178,8 @@ class _AssetsAddScreenState extends BaseAddScreenState<Asset, AddAssetScreen> {
                     TextFormField(
                       controller: _conditionController,
                       keyboardType: TextInputType.text,
-                      decoration: const InputDecoration(
-                        labelText: 'Condition',
+                      decoration: InputDecoration(
+                        labelText: LocalizationManager.local.assetCondition,
                         border: OutlineInputBorder(),
                       ),
                       maxLength: 50,
@@ -196,8 +201,8 @@ class _AssetsAddScreenState extends BaseAddScreenState<Asset, AddAssetScreen> {
                     TextFormField(
                       controller: _quantityController,
                       keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(
-                        labelText: 'Quantity',
+                      decoration: InputDecoration(
+                        labelText: LocalizationManager.local.quantity,
                         border: OutlineInputBorder(),
                       ),
                       validator: (value) {
