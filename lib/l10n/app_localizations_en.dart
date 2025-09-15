@@ -105,6 +105,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get defaultDateFormat => 'MM/dd/yyyy';
 
   @override
+  String get settingsSaved => 'Settings saved successfully';
+
+  @override
+  String get errorSavingSettings => 'Error saving settings';
+
+  @override
+  String get saveChanges => 'Save changes';
+
+  @override
   String get home => 'Home';
 
   @override

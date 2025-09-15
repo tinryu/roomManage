@@ -74,27 +74,28 @@ class _MainScreenState extends State<MainScreen> {
     return Scaffold(
       key: _drawerKey,
       drawer: Drawer(
-        backgroundColor: Colors.lightBlue,
+        backgroundColor: Colors.white,
         width: 250,
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
             DrawerHeader(
+              margin: EdgeInsets.zero,
+              padding: EdgeInsets.all(30),
               decoration: BoxDecoration(
                 image: DecorationImage(
                   image: AssetImage('assets/images/room1.png'),
                   fit: BoxFit.cover,
                 ),
               ),
-              child: const Text(''),
+              child: const Text(
+                'Room mangement',
+                style: TextStyle(color: Colors.white, fontSize: 20),
+              ),
             ),
 
             ListTile(
-              title: const Text(
-                'Tasks',
-                textScaler: TextScaler.linear(0.9),
-                style: TextStyle(color: Colors.white),
-              ),
+              title: const Text('Tasks', textScaler: TextScaler.linear(0.9)),
               onTap: () {
                 Navigator.push(
                   context,
@@ -106,11 +107,7 @@ class _MainScreenState extends State<MainScreen> {
               },
             ),
             ListTile(
-              title: const Text(
-                'Tenant',
-                textScaler: TextScaler.linear(0.9),
-                style: TextStyle(color: Colors.white),
-              ),
+              title: const Text('Tenant', textScaler: TextScaler.linear(0.9)),
               onTap: () {
                 Navigator.push(
                   context,
@@ -122,11 +119,7 @@ class _MainScreenState extends State<MainScreen> {
               },
             ),
             ListTile(
-              title: const Text(
-                'Asset',
-                textScaler: TextScaler.linear(0.9),
-                style: TextStyle(color: Colors.white),
-              ),
+              title: const Text('Asset', textScaler: TextScaler.linear(0.9)),
               onTap: () {
                 Navigator.push(
                   context,
@@ -138,11 +131,7 @@ class _MainScreenState extends State<MainScreen> {
               },
             ),
             ListTile(
-              title: const Text(
-                'Room',
-                textScaler: TextScaler.linear(0.9),
-                style: TextStyle(color: Colors.white),
-              ),
+              title: const Text('Room', textScaler: TextScaler.linear(0.9)),
               onTap: () {
                 Navigator.push(
                   context,
@@ -154,11 +143,7 @@ class _MainScreenState extends State<MainScreen> {
               },
             ),
             ListTile(
-              title: const Text(
-                'Setting',
-                textScaler: TextScaler.linear(0.9),
-                style: TextStyle(color: Colors.white),
-              ),
+              title: const Text('Setting', textScaler: TextScaler.linear(0.9)),
               onTap: () {
                 Navigator.push(
                   context,
@@ -174,11 +159,7 @@ class _MainScreenState extends State<MainScreen> {
               },
             ),
             ListTile(
-              title: const Text(
-                'Logout',
-                textScaler: TextScaler.linear(0.9),
-                style: TextStyle(color: Colors.white),
-              ),
+              title: const Text('Logout', textScaler: TextScaler.linear(0.9)),
               onTap: () {
                 _signOut(context);
               },
@@ -187,6 +168,8 @@ class _MainScreenState extends State<MainScreen> {
         ),
       ),
       appBar: AppBar(
+        elevation: 0,
+        backgroundColor: Colors.transparent,
         titleSpacing: 0,
         centerTitle: true,
         leading: (_selectedIndex > 0)
@@ -216,19 +199,7 @@ class _MainScreenState extends State<MainScreen> {
           ),
         ],
       ),
-      backgroundColor: Colors.white,
-      body: SafeArea(
-        child: Column(
-          children: [
-            Expanded(
-              child: Padding(
-                padding: EdgeInsets.zero,
-                child: _screens[_selectedIndex],
-              ),
-            ),
-          ],
-        ),
-      ),
+      body: SafeArea(child: _screens[_selectedIndex]),
       bottomNavigationBar: ClipRRect(
         borderRadius: const BorderRadius.only(
           topLeft: Radius.circular(20.0),

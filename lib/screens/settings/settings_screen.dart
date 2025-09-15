@@ -6,6 +6,8 @@ import 'package:app_project/screens/tenants/login_screen.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_project/providers/settings_provider.dart';
 import 'package:app_project/utils/format.dart';
+import 'package:provider/provider.dart' as p;
+import 'package:app_project/providers/dashboard_provider.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   final void Function(Locale locale) onLocaleChange;
@@ -25,12 +27,63 @@ class SettingsScreen extends ConsumerStatefulWidget {
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   late Locale _currentLocale;
   late ThemeMode _themeMode;
+  late bool _hasUnsavedChanges = false;
+  late String _currentCurrency;
+  late String _currentDateFormat;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    final settings = ref.read(settingsProvider).valueOrNull;
     _currentLocale = Localizations.localeOf(context);
     _themeMode = widget.currentThemeMode ?? ThemeMode.light;
+    _currentCurrency = settings?.currencyCode ?? 'VND';
+    _currentDateFormat = settings?.dateFormatPattern ?? 'yyyy-MM-dd';
+  }
+
+  // Add this method to handle save changes
+  Future<void> _saveChanges() async {
+    final dp = p.Provider.of<DashboardProvider>(context, listen: false);
+    try {
+      // Save locale
+      widget.onLocaleChange(_currentLocale);
+
+      // Save theme
+      widget.onThemeChange?.call(_themeMode);
+
+      // Save currency and date format
+      await ref
+          .read(settingsProvider.notifier)
+          .setCurrencyCode(_currentCurrency);
+      await ref
+          .read(settingsProvider.notifier)
+          .setDateFormatPattern(_currentDateFormat);
+
+      // Refresh dashboard data
+
+      await dp.fetchDashboard();
+
+      // Reset the changes flag
+      setState(() {
+        _hasUnsavedChanges = false;
+      });
+
+      // Show success message
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(LocalizationManager.local.settingsSaved)),
+        );
+      }
+    } catch (e) {
+      // Show error message
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(LocalizationManager.local.errorSavingSettings),
+          ),
+        );
+      }
+    }
   }
 
   Future<void> _pickCurrency() async {
@@ -70,6 +123,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   textScaler: TextScaler.linear(0.8),
                 ),
                 onTap: () async {
+                  setState(() {
+                    _currentCurrency = code;
+                    _hasUnsavedChanges = true;
+                  });
                   await ref
                       .read(settingsProvider.notifier)
                       .setCurrencyCode(code);
@@ -115,7 +172,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       ),
       title: Text(label, textScaler: TextScaler.linear(0.8)),
       onTap: () {
-        setState(() => _themeMode = mode);
+        setState(() {
+          _themeMode = mode;
+          _hasUnsavedChanges = true;
+        });
         widget.onThemeChange?.call(mode);
         Navigator.pop(context);
       },
@@ -141,7 +201,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     : null,
                 onTap: () {
                   widget.onLocaleChange(const Locale('en'));
-                  setState(() => _currentLocale = const Locale('en'));
+                  setState(() {
+                    _currentLocale = const Locale('en');
+                    _hasUnsavedChanges = true;
+                  });
                   Navigator.pop(context);
                 },
               ),
@@ -156,7 +219,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     : null,
                 onTap: () {
                   widget.onLocaleChange(const Locale('vi'));
-                  setState(() => _currentLocale = const Locale('vi'));
+                  setState(() {
+                    _currentLocale = const Locale('vi');
+                    _hasUnsavedChanges = true;
+                  });
                   Navigator.pop(context);
                 },
               ),
@@ -217,6 +283,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 title: Text(pattern, textScaler: TextScaler.linear(0.8)),
                 subtitle: Text(preview, textScaler: TextScaler.linear(0.8)),
                 onTap: () async {
+                  setState(() {
+                    _currentDateFormat = pattern;
+                    _hasUnsavedChanges = true;
+                  });
                   await ref
                       .read(settingsProvider.notifier)
                       .setDateFormatPattern(pattern);
@@ -235,140 +305,181 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Widget build(BuildContext context) {
     final settingsAsync = ref.watch(settingsProvider);
     final settings = settingsAsync.valueOrNull;
-    return Scaffold(
-      appBar: AppBar(title: const Text('Settings'), centerTitle: true),
-      body: ListView(
-        padding: const EdgeInsets.all(8),
-        children: [
-          // General
-          Card(
-            elevation: 0,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Column(
-              children: [
-                ListTile(
-                  leading: const Icon(Icons.language),
-                  title: Text('Language', textScaler: TextScaler.linear(0.8)),
-                  subtitle: Text(_currentLocale.languageCode.toUpperCase()),
-                  onTap: _pickLanguage,
+    // ignore: deprecated_member_use
+    return WillPopScope(
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Settings'),
+          centerTitle: true,
+          actions: [
+            if (_hasUnsavedChanges)
+              TextButton(
+                onPressed: _saveChanges,
+                child: Text(
+                  LocalizationManager.local.save,
+                  style: const TextStyle(color: Colors.white),
                 ),
-                const Divider(height: 1),
-                ListTile(
-                  leading: const Icon(Icons.brightness_6_outlined),
-                  title: Text('Theme', textScaler: TextScaler.linear(0.8)),
-                  subtitle: Text(_themeMode.name),
-                  onTap: _pickTheme,
-                ),
-                const Divider(height: 1),
-                ListTile(
-                  leading: const Icon(Icons.calendar_today_outlined),
-                  title: Text(
-                    'Date format',
-                    textScaler: TextScaler.linear(0.8),
-                  ),
-                  subtitle: Text(appFormatDate(context, DateTime.now())),
-                  onTap: _pickDateFormat,
-                ),
-                const Divider(height: 1),
-                ListTile(
-                  leading: const Icon(Icons.monetization_on_outlined),
-                  title: Text('Currency', textScaler: TextScaler.linear(0.8)),
-                  subtitle: Text(
-                    settings?.currencyCode ?? 'VND',
-                    textScaler: TextScaler.linear(0.8),
-                  ),
-                  onTap: _pickCurrency,
-                ),
-              ],
-            ),
-          ),
-
-          // Notifications
-          Card(
-            elevation: 0,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Column(
-              children: [
-                SwitchListTile(
-                  value: true,
-                  onChanged: (val) {}, // placeholder
-                  title: Text(
-                    LocalizationManager.local.paymentReminder,
-                    textScaler: TextScaler.linear(0.8),
-                  ),
-                ),
-                const Divider(height: 1),
-                SwitchListTile(
-                  value: true,
-                  onChanged: (val) {}, // placeholder
-                  title: Text(
-                    LocalizationManager.local.tasksReminder,
-                    textScaler: TextScaler.linear(0.8),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // Account
-          Card(
-            elevation: 0,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Column(
-              children: [
-                ListTile(
-                  leading: Icon(Icons.person_outline),
-                  title: Text(
-                    LocalizationManager.local.profile,
-                    textScaler: TextScaler.linear(0.8),
-                  ),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const ProfileDetailScreen(),
-                      ),
-                    );
-                  },
-                ),
-                const Divider(height: 1),
-                ListTile(
-                  leading: const Icon(Icons.logout, color: Colors.red),
-                  title: Text(
-                    LocalizationManager.local.logout,
-                    style: TextStyle(color: Colors.red),
-                    textScaler: TextScaler.linear(0.8),
-                  ),
-                  onTap: _signOut,
-                ),
-              ],
-            ),
-          ),
-
-          // About
-          Card(
-            elevation: 0,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: ListTile(
-              leading: const Icon(Icons.info_outline),
-              title: const Text('About', textScaler: TextScaler.linear(0.8)),
-              subtitle: const Text(
-                'Room Manager • v1.0.0',
-                textScaler: TextScaler.linear(0.8),
               ),
-              onTap: () {},
+          ],
+        ),
+        body: ListView(
+          padding: const EdgeInsets.all(8),
+          children: [
+            // General
+            Card(
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                children: [
+                  ListTile(
+                    leading: const Icon(Icons.language),
+                    title: Text('Language', textScaler: TextScaler.linear(0.8)),
+                    subtitle: Text(_currentLocale.languageCode.toUpperCase()),
+                    onTap: _pickLanguage,
+                  ),
+                  const Divider(height: 1),
+                  ListTile(
+                    leading: const Icon(Icons.brightness_6_outlined),
+                    title: Text('Theme', textScaler: TextScaler.linear(0.8)),
+                    subtitle: Text(_themeMode.name),
+                    onTap: _pickTheme,
+                  ),
+                  const Divider(height: 1),
+                  ListTile(
+                    leading: const Icon(Icons.calendar_today_outlined),
+                    title: Text(
+                      'Date format',
+                      textScaler: TextScaler.linear(0.8),
+                    ),
+                    subtitle: Text(appFormatDate(context, DateTime.now())),
+                    onTap: _pickDateFormat,
+                  ),
+                  const Divider(height: 1),
+                  ListTile(
+                    leading: const Icon(Icons.monetization_on_outlined),
+                    title: Text('Currency', textScaler: TextScaler.linear(0.8)),
+                    subtitle: Text(
+                      settings?.currencyCode ?? 'VND',
+                      textScaler: TextScaler.linear(0.8),
+                    ),
+                    onTap: _pickCurrency,
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+
+            // Notifications
+            Card(
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                children: [
+                  SwitchListTile(
+                    value: true,
+                    onChanged: (val) {}, // placeholder
+                    title: Text(
+                      LocalizationManager.local.paymentReminder,
+                      textScaler: TextScaler.linear(0.8),
+                    ),
+                  ),
+                  const Divider(height: 1),
+                  SwitchListTile(
+                    value: true,
+                    onChanged: (val) {}, // placeholder
+                    title: Text(
+                      LocalizationManager.local.tasksReminder,
+                      textScaler: TextScaler.linear(0.8),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Account
+            Card(
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                children: [
+                  ListTile(
+                    leading: Icon(Icons.person_outline),
+                    title: Text(
+                      LocalizationManager.local.profile,
+                      textScaler: TextScaler.linear(0.8),
+                    ),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const ProfileDetailScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                  const Divider(height: 1),
+                  ListTile(
+                    leading: const Icon(Icons.logout, color: Colors.red),
+                    title: Text(
+                      LocalizationManager.local.logout,
+                      style: TextStyle(color: Colors.red),
+                      textScaler: TextScaler.linear(0.8),
+                    ),
+                    onTap: _signOut,
+                  ),
+                ],
+              ),
+            ),
+
+            // About
+            Card(
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: ListTile(
+                leading: const Icon(Icons.info_outline),
+                title: const Text('About', textScaler: TextScaler.linear(0.8)),
+                subtitle: const Text(
+                  'Room Manager • v1.0.0',
+                  textScaler: TextScaler.linear(0.8),
+                ),
+                onTap: () {},
+              ),
+            ),
+          ],
+        ),
       ),
+      onWillPop: () async {
+        if (_hasUnsavedChanges) {
+          final shouldDiscard = await showDialog<bool>(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: Text('Unsaved Changes'),
+              content: Text(
+                'You have unsaved changes. Discard them and leave?',
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  child: Text('cancel'),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.pop(context, true),
+                  child: Text('discard'),
+                ),
+              ],
+            ),
+          );
+          return shouldDiscard ?? false;
+        }
+        return true;
+      },
     );
   }
 }

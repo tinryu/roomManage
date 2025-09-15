@@ -105,6 +105,15 @@ class AppLocalizationsVi extends AppLocalizations {
   String get defaultDateFormat => 'dd/MM/yyyy';
 
   @override
+  String get settingsSaved => 'Settings saved successfully';
+
+  @override
+  String get errorSavingSettings => 'Error saving settings';
+
+  @override
+  String get saveChanges => 'Lưu thay đổi';
+
+  @override
   String get home => 'Trang chủ';
 
   @override

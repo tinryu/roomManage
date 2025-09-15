@@ -31,6 +31,9 @@
   "invalidNumber": "Số không hợp lệ",
   "deleteFailed": "Xóa thất bại",
   "defaultDateFormat": "dd/MM/yyyy",
+  "settingsSaved": "Settings saved successfully",
+  "errorSavingSettings": "Error saving settings",
+  "saveChanges": "Save changes",
 
   "home": "Trang chủ",
   "dashboard": "Bảng điều khiển",

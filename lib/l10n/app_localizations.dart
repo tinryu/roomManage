@@ -287,6 +287,24 @@ abstract class AppLocalizations {
   /// **'MM/dd/yyyy'**
   String get defaultDateFormat;
 
+  /// No description provided for @settingsSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings saved successfully'**
+  String get settingsSaved;
+
+  /// No description provided for @errorSavingSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Error saving settings'**
+  String get errorSavingSettings;
+
+  /// No description provided for @saveChanges.
+  ///
+  /// In en, this message translates to:
+  /// **'Save changes'**
+  String get saveChanges;
+
   /// No description provided for @home.
   ///
   /// In en, this message translates to:

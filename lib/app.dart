@@ -76,11 +76,12 @@ class _MyAppState extends ConsumerState<MyApp> {
             ),
       themeMode: _themeMode,
       theme: ThemeData(
+        useMaterial3: true,
         fontFamily: 'Roboto',
         // Primary color scheme using lightblue, white, and black
         primarySwatch: Colors.lightBlue,
         primaryColor: Colors.lightBlue,
-        scaffoldBackgroundColor: Colors.white,
+        // scaffoldBackgroundColor: Color(0xFFF5F5F5),
 
         // Color scheme
         colorScheme: ColorScheme.light(
@@ -114,13 +115,15 @@ class _MyAppState extends ConsumerState<MyApp> {
         ),
 
         // Icon theme
-        iconTheme: IconThemeData(color: Colors.white),
+        iconTheme: IconThemeData(color: Colors.black),
 
         // AppBar theme
         appBarTheme: AppBarTheme(
-          backgroundColor: Colors.lightBlue,
-          foregroundColor: Colors.white,
-          titleTextStyle: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          titleTextStyle: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: Colors.black,
+          ),
           elevation: 0,
         ),
 
@@ -275,7 +278,7 @@ class _MyAppState extends ConsumerState<MyApp> {
         brightness: Brightness.dark,
         primarySwatch: Colors.lightBlue,
         primaryColor: Colors.lightBlue,
-        scaffoldBackgroundColor: Colors.black,
+        // scaffoldBackgroundColor: Colors.black,
         colorScheme: ColorScheme.dark(
           primary: Colors.lightBlue,
           secondary: Colors.lightBlue[300]!,

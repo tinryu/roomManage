@@ -31,6 +31,9 @@
   "invalidNumber": "Invalid number",
   "deleteFailed": "Delete failed",
   "defaultDateFormat": "MM/dd/yyyy",
+  "settingsSaved": "Settings saved successfully",
+  "errorSavingSettings": "Error saving settings",
+  "saveChanges": "Save changes",
 
   "home": "Home",
   "dashboard": "Dashboard",

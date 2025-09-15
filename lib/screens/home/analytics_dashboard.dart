@@ -32,7 +32,7 @@ class AnalyticsDashboard extends StatelessWidget {
                       crossAxisCount: isLarge ? 6 : (isWide ? 3 : 2),
                       crossAxisSpacing: 16,
                       mainAxisSpacing: 16,
-                      childAspectRatio: 1.5,
+                      // childAspectRatio: 1.5,
                     ),
                     itemCount: stats.length,
                     itemBuilder: (context, index) {
@@ -44,7 +44,7 @@ class AnalyticsDashboard extends StatelessWidget {
                         ),
                         child: Padding(
                           padding: EdgeInsets.all(16),
-                          child: Row(
+                          child: Column(
                             crossAxisAlignment: CrossAxisAlignment.center,
                             mainAxisAlignment: MainAxisAlignment.spaceAround,
                             children: [
@@ -64,7 +64,6 @@ class AnalyticsDashboard extends StatelessWidget {
                                 ),
                               ),
                               Expanded(
-                                flex: 2,
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.center,
                                   mainAxisAlignment: MainAxisAlignment.center,

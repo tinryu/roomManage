@@ -1,6 +1,6 @@
 import 'package:app_project/providers/dashboard_provider.dart';
 import 'package:flutter/material.dart';
-import 'package:app_project/screens/home/recent_activity_screen.dart';
+// import 'package:app_project/screens/home/recent_activity_screen.dart';
 import 'package:app_project/screens/home/income_summary_screen.dart';
 import 'package:app_project/screens/home/upcoming_tasks.dart';
 import 'package:app_project/screens/home/analytics_dashboard.dart';
@@ -59,7 +59,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 onPressed: () {
                   dashboardProvider.fetchDashboard();
                 },
-                child: Icon(Icons.refresh),
+                child: Icon(Icons.refresh, color: Colors.black),
               ),
             )
           : SingleChildScrollView(
@@ -67,35 +67,21 @@ class _HomeScreenState extends State<HomeScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Stack(
+                    alignment: Alignment.center,
                     children: [
-                      Image.asset(
-                        'assets/images/room1.png',
-                        height: 100,
-                        width: double.infinity,
-                        fit: BoxFit.cover,
-                      ),
-                      Positioned(
-                        top: 16,
-                        left: 16,
-                        right: 16,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(12),
-                            color: Colors.white.withValues(alpha: 0.5),
+                      Container(
+                        height: 250,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.only(
+                            bottomLeft: Radius.circular(50),
+                            bottomRight: Radius.circular(50),
                           ),
-                          child: TextField(
-                            decoration: InputDecoration(
-                              isDense: true,
-                              contentPadding: EdgeInsets.symmetric(
-                                vertical: 12,
-                                horizontal: 16,
-                              ),
-                              border: InputBorder.none,
-                              hintText: 'Search',
-                              hintStyle: TextStyle(
-                                color: Colors.black,
-                                fontSize: 12,
-                              ),
+                          image: DecorationImage(
+                            image: AssetImage('assets/images/grass1.png'),
+                            fit: BoxFit.cover,
+                            colorFilter: ColorFilter.mode(
+                              Colors.black54,
+                              BlendMode.darken,
                             ),
                           ),
                         ),
@@ -160,7 +146,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         IncomeSummaryScreen(),
                         SizedBox(height: 16),
                         // Recent Activity
-                        RecentActivityScreen(),
+                        // RecentActivityScreen(),
                         SizedBox(height: 16),
                         // Upcoming Tasks
                         UpcomingTasks(),
