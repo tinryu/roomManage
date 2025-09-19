@@ -160,19 +160,31 @@ class _TaskListScreenState extends ConsumerState<TaskListScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Container(
-                                width: 48,
-                                height: 48,
+                                alignment: Alignment.center,
+                                height: 50,
+                                width: 80,
                                 decoration: BoxDecoration(
-                                  color: Colors.lightBlue,
-                                  borderRadius: BorderRadius.circular(12),
+                                  color: task.status == 0
+                                      ? Colors.red.shade500
+                                      : task.status == 1
+                                      ? Colors.lightBlue
+                                      : Colors.green.shade500,
+                                  borderRadius: BorderRadius.circular(5),
                                 ),
-                                child: const Icon(
-                                  Icons.task_alt,
-                                  color: Colors.white,
-                                  size: 24,
+                                child: Text(
+                                  task.status == 0
+                                      ? 'To Do'
+                                      : task.status == 1
+                                      ? 'In Progress'
+                                      : 'Done',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
                               ),
-                              const SizedBox(width: 12),
+                              SizedBox(width: 12),
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -180,13 +192,14 @@ class _TaskListScreenState extends ConsumerState<TaskListScreen> {
                                     Text(
                                       task.title,
                                       style: const TextStyle(
-                                        fontSize: 16,
+                                        fontSize: 14,
                                         fontWeight: FontWeight.w600,
                                       ),
                                       maxLines: 2,
                                       overflow: TextOverflow.ellipsis,
                                       textScaler: TextScaler.linear(0.8),
                                     ),
+
                                     if (task.context != null &&
                                         task.context!.isNotEmpty) ...[
                                       const SizedBox(height: 4),
@@ -215,14 +228,6 @@ class _TaskListScreenState extends ConsumerState<TaskListScreen> {
                                           ),
                                           textScaler: TextScaler.linear(0.8),
                                         ),
-                                        if (task.imageUrl != null) ...[
-                                          const SizedBox(width: 12),
-                                          Icon(
-                                            Icons.image,
-                                            size: 16,
-                                            color: Colors.grey[500],
-                                          ),
-                                        ],
                                       ],
                                     ),
                                   ],

@@ -1,315 +1,447 @@
 import 'package:app_project/screens/payment/payment_add_screen.dart';
-import 'package:app_project/utils/localization_manager.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_project/providers/payment_provider.dart';
 import 'package:intl/intl.dart';
 import 'package:app_project/utils/format.dart';
+import 'package:app_project/widgets/shared/base_list_screen.dart';
+import 'package:app_project/utils/localization_manager.dart';
 
 // Holds the set of selected payment IDs for checkbox selection
 final selectedPaymentIdsProvider = StateProvider<Set<int>>((ref) => <int>{});
 
-class PaymentScreen extends ConsumerWidget {
+class PaymentScreen extends ConsumerStatefulWidget {
   const PaymentScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final paymentState = ref.watch(paymentProvider);
-    final notifier = ref.read(paymentProvider.notifier);
-    final selectedIds = ref.watch(selectedPaymentIdsProvider);
+  ConsumerState<PaymentScreen> createState() => _PaymentScreenState();
+}
 
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: Padding(
-          padding: EdgeInsets.only(left: 16),
-          child: IconButton(
-            tooltip: LocalizationManager.local.selectAll,
-            icon: const Icon(Icons.select_all, color: Colors.black45),
-            onPressed: () {
-              final payments = paymentState.asData?.value ?? [];
-              final pageIds = payments
-                  .map((p) => p.id)
-                  .whereType<int>()
-                  .toSet();
-              if (pageIds.isEmpty) return;
-              final selNotifier = ref.read(selectedPaymentIdsProvider.notifier);
-              final current = {...selectedIds};
-              final allSelected = pageIds.every(current.contains);
-              if (allSelected) {
-                current.removeAll(pageIds);
-              } else {
-                current.addAll(pageIds);
-              }
-              selNotifier.state = current;
-            },
-          ),
-        ),
+class _PaymentScreenState extends ConsumerState<PaymentScreen> {
+  final _scrollController = ScrollController();
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    LocalizationManager.initialize(context);
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent * 0.9) {
+      final notifier = ref.read(paymentProvider.notifier);
+      if (notifier.hasMore && !notifier.isLoadingMore) {
+        notifier.fetchNextPage();
+      }
+    }
+  }
+
+  Future<void> _confirmDelete(
+    BuildContext context,
+    WidgetRef ref,
+    List<int> roomIds,
+    PaymentNotifier notifier,
+  ) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete Items'),
+        content: Text('Delete ${roomIds.length} selected?'),
         actions: [
-          Padding(
-            padding: EdgeInsets.only(right: 16),
-            child: Row(
-              children: [
-                IconButton(
-                  tooltip: LocalizationManager.local.markAsPaid,
-                  icon: const Icon(Icons.done_all, color: Colors.black45),
-                  onPressed: selectedIds.isEmpty
-                      ? null
-                      : () async {
-                          try {
-                            await notifier.markPaymentsAsPaid(
-                              selectedIds.toList(),
-                            );
-                            // Optionally clear selection after marking
-                            ref
-                                    .read(selectedPaymentIdsProvider.notifier)
-                                    .state =
-                                {};
-                            if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    LocalizationManager.local.markAsPaid,
-                                  ),
-                                ),
-                              );
-                            }
-                          } catch (e) {
-                            if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('Failed: $e')),
-                              );
-                            }
-                          }
-                        },
-                ),
-                IconButton(
-                  tooltip: LocalizationManager.local.edit,
-                  icon: const Icon(Icons.edit, color: Colors.black45),
-                  onPressed: () async {
-                    if (selectedIds.length != 1) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            LocalizationManager.local.selectExactlyOne,
-                          ),
-                        ),
-                      );
-                      return;
-                    }
-                    final payments =
-                        ref.read(paymentProvider).asData?.value ?? [];
-                    final id = selectedIds.first;
-                    final payment = payments.firstWhere(
-                      (p) => p.id == id,
-                      orElse: () => payments.first,
-                    );
-                    await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            AddPaymentScreen(initialPayment: payment),
-                      ),
-                    );
-                  },
-                ),
-                IconButton(
-                  tooltip: LocalizationManager.local.delete,
-                  icon: const Icon(Icons.delete, color: Colors.black45),
-                  onPressed: selectedIds.isEmpty
-                      ? null
-                      : () async {
-                          final confirm = await showDialog<bool>(
-                            context: context,
-                            builder: (ctx) => AlertDialog(
-                              title: Text(
-                                LocalizationManager.local.deletePayment,
-                              ),
-                              content: Text(
-                                'Delete ${selectedIds.length} selected payment(s)?',
-                              ),
-                              actions: [
-                                TextButton(
-                                  onPressed: () => Navigator.pop(ctx, false),
-                                  child: Text(LocalizationManager.local.cancel),
-                                ),
-                                ElevatedButton(
-                                  onPressed: () => Navigator.pop(ctx, true),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.red,
-                                  ),
-                                  child: Text(LocalizationManager.local.delete),
-                                ),
-                              ],
-                            ),
-                          );
-                          if (confirm != true) return;
-                          try {
-                            await notifier.deletePayments(selectedIds.toList());
-                            ref
-                                    .read(selectedPaymentIdsProvider.notifier)
-                                    .state =
-                                {};
-                            if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    LocalizationManager
-                                        .local
-                                        .paymentDeleteSuccess,
-                                  ),
-                                ),
-                              );
-                            }
-                          } catch (e) {
-                            if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    '${LocalizationManager.local.deleteFailed}: $e',
-                                  ),
-                                ),
-                              );
-                            }
-                          }
-                        },
-                ),
-              ],
-            ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('Delete'),
           ),
         ],
       ),
-      body: paymentState.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) =>
-            Center(child: Text('${LocalizationManager.local.error}: $e')),
-        data: (payments) => Column(
-          children: [
-            Expanded(
-              child: ListView.builder(
-                scrollDirection: Axis.vertical,
-                itemCount: payments.length,
-                itemBuilder: (context, index) {
-                  final pay = payments[index];
-                  final selectedIds = ref.watch(selectedPaymentIdsProvider);
-                  final isChecked =
-                      pay.id != null && selectedIds.contains(pay.id!);
-                  return ListTile(
-                    onTap: pay.id == null
-                        ? null
-                        : () {
-                            final notifierSel = ref.read(
-                              selectedPaymentIdsProvider.notifier,
-                            );
-                            final next = {...selectedIds};
-                            if (isChecked) {
-                              next.remove(pay.id!);
-                            } else {
-                              next.add(pay.id!);
-                            }
-                            notifierSel.state = next;
-                          },
-                    leading: Checkbox(
-                      value: isChecked,
-                      onChanged: pay.id == null
-                          ? null
-                          : (v) {
-                              final notifierSel = ref.read(
-                                selectedPaymentIdsProvider.notifier,
-                              );
-                              final next = {...selectedIds};
-                              if (v == true) {
-                                next.add(pay.id!);
-                              } else {
-                                next.remove(pay.id!);
-                              }
-                              notifierSel.state = next;
-                            },
+    );
+
+    if (confirm == true) {
+      try {
+        await notifier.deletePayments(roomIds);
+        if (context.mounted) {
+          ref.read(selectedPaymentIdsProvider.notifier).state = {};
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Items deleted successfully')),
+          );
+        }
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Failed to delete: $e')));
+        }
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer(
+      builder: (context, ref, child) {
+        final paymentState = ref.watch(paymentProvider);
+        final notifier = ref.read(paymentProvider.notifier);
+        final selectedIds = ref.watch(selectedPaymentIdsProvider);
+
+        return BaseListScreen(
+          showAppBar: false,
+          title: LocalizationManager.local.payments,
+          floatingActionButton: FloatingActionButton.small(
+            child: const Icon(Icons.add),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => AddPaymentScreen()),
+              );
+            },
+          ),
+          body: paymentState.when(
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (error, stack) => Center(child: Text('Error: $error')),
+            data: (payments) {
+              if (payments.isEmpty) {
+                return Center(child: Text(LocalizationManager.local.noData));
+              }
+              return Column(
+                children: [
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.lightBlue,
+                      shape: BoxShape.rectangle,
+                      borderRadius: BorderRadius.only(
+                        bottomLeft: Radius.circular(16),
+                        bottomRight: Radius.circular(16),
+                      ),
                     ),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              '${pay.type}',
-                              overflow: TextOverflow.ellipsis,
-                              maxLines: 1,
-                              textScaler: TextScaler.linear(1),
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w600,
-                                fontSize: 12,
-                              ),
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          // IconButton(
+                          //   icon: const Icon(Icons.home, color: Colors.white),
+                          //   onPressed: () => Navigator.pop(context),
+                          // ),
+                          PopupMenuButton(
+                            tooltip: LocalizationManager.local.action,
+                            icon: const Icon(
+                              Icons.more_vert,
+                              color: Colors.white,
                             ),
-                            SizedBox(width: 10),
-                            Container(
-                              alignment: Alignment.center,
-                              width: 50,
-                              padding: const EdgeInsets.all(2),
-                              decoration: BoxDecoration(
-                                color: pay.isPaid
-                                    ? Colors.lightBlue
-                                    : Colors.black45,
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Text(
-                                pay.isPaid
-                                    ? LocalizationManager.local.done
-                                    : LocalizationManager.local.nope,
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 14,
+                            itemBuilder: (context) => [
+                              PopupMenuItem(
+                                child: Text(
+                                  LocalizationManager.local.selectAll,
                                 ),
+                                onTap: () {
+                                  final selected = ref.read(
+                                    selectedPaymentIdsProvider.notifier,
+                                  );
+                                  final current = ref.read(
+                                    selectedPaymentIdsProvider,
+                                  );
+                                  final data = paymentState.asData?.value ?? [];
+                                  if (data.isEmpty) return;
+                                  final pageIds = data
+                                      .where((r) => r.id != null)
+                                      .map((r) => r.id!)
+                                      .toSet();
+                                  final allSelected =
+                                      pageIds.isNotEmpty &&
+                                      pageIds.difference(current).isEmpty;
+                                  selected.state = allSelected
+                                      ? (current.difference(pageIds))
+                                      : ({...current, ...pageIds});
+                                },
+                              ),
+                              PopupMenuItem(
+                                onTap: selectedIds.isEmpty
+                                    ? null
+                                    : () async {
+                                        try {
+                                          await notifier.markPaymentsAsPaid(
+                                            selectedIds.toList(),
+                                          );
+                                          // Optionally clear selection after marking
+                                          ref
+                                                  .read(
+                                                    selectedPaymentIdsProvider
+                                                        .notifier,
+                                                  )
+                                                  .state =
+                                              {};
+                                          if (context.mounted) {
+                                            ScaffoldMessenger.of(
+                                              context,
+                                            ).showSnackBar(
+                                              SnackBar(
+                                                content: Text(
+                                                  LocalizationManager
+                                                      .local
+                                                      .markAsPaid,
+                                                ),
+                                              ),
+                                            );
+                                          }
+                                        } catch (e) {
+                                          if (context.mounted) {
+                                            ScaffoldMessenger.of(
+                                              context,
+                                            ).showSnackBar(
+                                              SnackBar(
+                                                content: Text('Failed: $e'),
+                                              ),
+                                            );
+                                          }
+                                        }
+                                      },
+                                child: Text(
+                                  LocalizationManager.local.markAsPaid,
+                                ),
+                              ),
+                              PopupMenuItem(
+                                child: Text(LocalizationManager.local.delete),
+                                onTap: () async {
+                                  final selectedIds = ref.read(
+                                    selectedPaymentIdsProvider,
+                                  );
+                                  if (selectedIds.isEmpty) return;
+                                  final confirm = await showDialog<bool>(
+                                    context: context,
+                                    builder: (ctx) => AlertDialog(
+                                      title: Text(
+                                        LocalizationManager.local.deleteRoom,
+                                      ),
+                                      content: Text(
+                                        'Delete ${selectedIds.length} selected?',
+                                      ),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () =>
+                                              Navigator.pop(ctx, false),
+                                          child: Text(
+                                            LocalizationManager.local.cancel,
+                                          ),
+                                        ),
+                                        ElevatedButton(
+                                          onPressed: () =>
+                                              Navigator.pop(ctx, true),
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: Colors.red,
+                                          ),
+                                          child: Text(
+                                            LocalizationManager.local.delete,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                  if (confirm != true) return;
+                                  try {
+                                    await notifier.deletePayments(
+                                      selectedIds.toList(),
+                                    );
+                                    ref
+                                            .read(
+                                              selectedPaymentIdsProvider
+                                                  .notifier,
+                                            )
+                                            .state =
+                                        {};
+                                    if (context.mounted) {
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            'Deleted selected rooms',
+                                          ),
+                                        ),
+                                      );
+                                    }
+                                  } catch (e) {
+                                    if (context.mounted) {
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            '${LocalizationManager.local.deleteFailed}: $e',
+                                          ),
+                                        ),
+                                      );
+                                    }
+                                  }
+                                },
+                              ),
+                              PopupMenuItem(
+                                child: Text(LocalizationManager.local.edit),
+                                onTap: () async {
+                                  final selectedIds = ref.read(
+                                    selectedPaymentIdsProvider,
+                                  );
+                                  if (selectedIds.length != 1) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text(
+                                          'Select exactly one item to edit',
+                                        ),
+                                      ),
+                                    );
+                                    return;
+                                  }
+                                  final payments =
+                                      ref.read(paymentProvider).asData?.value ??
+                                      [];
+                                  final id = selectedIds.first;
+                                  final payment = payments.firstWhere(
+                                    (p) => p.id == id,
+                                    orElse: () => payments.first,
+                                  );
+                                  await Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => AddPaymentScreen(
+                                        initialItem: payment,
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: ListView.builder(
+                      controller: _scrollController,
+                      itemCount: payments.length,
+                      itemBuilder: (context, index) {
+                        final pay = payments[index];
+                        final isChecked =
+                            pay.id != null && selectedIds.contains(pay.id!);
+
+                        return BaseListTile(
+                          showTitle: false,
+                          title: pay.type!,
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    '${pay.type}',
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 1,
+                                    textScaler: TextScaler.linear(1),
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                  SizedBox(width: 10),
+                                  Container(
+                                    alignment: Alignment.center,
+                                    width: 50,
+                                    padding: const EdgeInsets.all(2),
+                                    decoration: BoxDecoration(
+                                      color: pay.isPaid
+                                          ? Colors.lightBlue
+                                          : Colors.black45,
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    child: Text(
+                                      pay.isPaid
+                                          ? LocalizationManager.local.done
+                                          : LocalizationManager.local.nope,
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 14,
+                                      ),
+                                      textScaler: TextScaler.linear(0.8),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              Text(
+                                '${LocalizationManager.local.amount}: ${appFormatCurrencyCompact(context, pay.amount)}',
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 1,
                                 textScaler: TextScaler.linear(0.8),
                               ),
-                            ),
-                          ],
-                        ),
-                        Text(
-                          '${LocalizationManager.local.amount}: ${appFormatCurrencyCompact(context, pay.amount)}',
-                          overflow: TextOverflow.ellipsis,
-                          maxLines: 1,
-                          textScaler: TextScaler.linear(0.8),
-                        ),
-                        Text(
-                          '${LocalizationManager.local.dateTransfer}: ${appFormatDate(context, pay.datetime)} - ${DateFormat('HH:mm').format(pay.datetime)}',
-                          overflow: TextOverflow.ellipsis,
-                          maxLines: 1,
-                          textScaler: TextScaler.linear(0.8),
-                        ),
-                      ],
+                              Text(
+                                '${LocalizationManager.local.dateTransfer}: ${appFormatDate(context, pay.datetime)} - ${DateFormat('HH:mm').format(pay.datetime)}',
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 1,
+                                textScaler: TextScaler.linear(0.8),
+                              ),
+                            ],
+                          ),
+                          selected: isChecked,
+                          onTap: pay.id == null
+                              ? null
+                              : () {
+                                  final selected = ref.read(
+                                    selectedPaymentIdsProvider.notifier,
+                                  );
+                                  final current = ref.read(
+                                    selectedPaymentIdsProvider,
+                                  );
+                                  if (isChecked) {
+                                    selected.state = current.difference({
+                                      pay.id!,
+                                    });
+                                  } else {
+                                    selected.state = {...current, pay.id!};
+                                  }
+                                },
+                        );
+                      },
                     ),
-                  );
-                },
-              ),
-            ),
-            if (notifier.hasMore)
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: notifier.isLoadingMore
-                    ? CircularProgressIndicator()
-                    : ElevatedButton(
-                        onPressed: notifier.fetchNextPage,
-                        child: Text(LocalizationManager.local.loadMore),
-                      ),
-              ),
-          ],
-        ),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-      floatingActionButton: FloatingActionButton.small(
-        child: const Icon(Icons.add),
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const AddPaymentScreen()),
-          );
-        },
-      ),
+                  ),
+                  // if (notifier.hasMore)
+                  //   Padding(
+                  //     padding: const EdgeInsets.all(8.0),
+                  //     child: notifier.isLoadingMore
+                  //         ? const CircularProgressIndicator()
+                  //         : ElevatedButton(
+                  //             onPressed: notifier.fetchNextPage,
+                  //             child: const Text('Load More'),
+                  //           ),
+                  //   ),
+                ],
+              );
+            },
+          ),
+        );
+      },
     );
   }
 }

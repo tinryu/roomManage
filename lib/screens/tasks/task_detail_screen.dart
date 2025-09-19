@@ -16,6 +16,17 @@ class TaskDetailScreen extends ConsumerStatefulWidget {
 
 class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
   bool _isDeleting = false;
+  int _status = 0; // Initialize with default value
+  static const Map<int, String> _optionstatus = {
+    0: "ToDo",
+    1: "In Progress",
+    2: "Done",
+  };
+  @override
+  void initState() {
+    super.initState();
+    _status = widget.task.status ?? 0; // Ensure status is never null
+  }
 
   Future<void> _deleteTask() async {
     final confirmed = await showDialog<bool>(
@@ -77,6 +88,48 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
     }
   }
 
+  Future<void> _saveTask() async {
+    try {
+      final task = Task(
+        id: widget.task.id,
+        createdAt: widget.task.createdAt,
+        title: widget.task.title,
+        context: widget.task.context,
+        status: _status,
+        imageUrl: widget.task.imageUrl,
+        dueAt: widget.task.dueAt,
+      );
+
+      await ref.read(taskProvider.notifier).updateTask(task);
+      // Refresh the asset list to ensure latest data
+      await ref.refresh(taskProvider.future);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Task updated successfully!',
+              textScaler: TextScaler.linear(0.8),
+            ),
+            backgroundColor: Colors.green,
+          ),
+        );
+        // Navigator.of(context).pop(true);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Error creating task: $e',
+              textScaler: TextScaler.linear(0.8),
+            ),
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -97,20 +150,29 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
                 case 'delete':
                   _deleteTask();
                   break;
+                case 'Save':
+                  _saveTask();
+                  break;
               }
             },
             itemBuilder: (context) => [
-              const PopupMenuItem(
+              PopupMenuItem(
                 value: 'delete',
                 child: Row(
                   children: [
-                    Icon(Icons.delete, color: Colors.red),
+                    Icon(Icons.delete),
                     SizedBox(width: 8),
-                    Text(
-                      'Delete Task',
-                      style: TextStyle(color: Colors.red),
-                      textScaler: TextScaler.linear(0.8),
-                    ),
+                    Text('Delete Task', textScaler: TextScaler.linear(0.8)),
+                  ],
+                ),
+              ),
+              PopupMenuItem(
+                value: 'Save',
+                child: Row(
+                  children: [
+                    Icon(Icons.save),
+                    SizedBox(width: 8),
+                    Text('Save Task', textScaler: TextScaler.linear(0.8)),
                   ],
                 ),
               ),
@@ -149,60 +211,36 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          const SizedBox(width: 16),
+                          Text(
+                            widget.task.title,
+                            style: const TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 2,
+                            textScaler: TextScaler.linear(0.8),
+                          ),
+                          const SizedBox(height: 4),
                           Row(
                             children: [
-                              Container(
-                                width: 56,
-                                height: 56,
-                                decoration: BoxDecoration(
-                                  color: Colors.lightBlue,
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                                child: const Icon(
-                                  Icons.task_alt,
-                                  color: Colors.white,
-                                  size: 28,
-                                ),
+                              Icon(
+                                Icons.access_time,
+                                size: 16,
+                                color: Colors.grey[600],
                               ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      widget.task.title,
-                                      style: const TextStyle(
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.black,
-                                      ),
-                                      overflow: TextOverflow.ellipsis,
-                                      maxLines: 2,
-                                      textScaler: TextScaler.linear(0.8),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Row(
-                                      children: [
-                                        Icon(
-                                          Icons.access_time,
-                                          size: 16,
-                                          color: Colors.grey[600],
-                                        ),
-                                        const SizedBox(width: 4),
-                                        Text(
-                                          'Created ${appFormatDate(context, widget.task.createdAt)} - ${DateFormat('HH:mm').format(widget.task.createdAt)}',
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            color: Colors.grey[600],
-                                          ),
-                                          overflow: TextOverflow.ellipsis,
-                                          maxLines: 2,
-                                          textScaler: TextScaler.linear(0.8),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
+                              const SizedBox(width: 4),
+                              Text(
+                                'Created ${appFormatDate(context, widget.task.createdAt)} - ${DateFormat('HH:mm').format(widget.task.createdAt)}',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey[600],
                                 ),
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 2,
+                                textScaler: TextScaler.linear(0.6),
                               ),
                             ],
                           ),
@@ -210,9 +248,54 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
                       ),
                     ),
                   ),
-
                   const SizedBox(height: 16),
-
+                  Card(
+                    elevation: 2,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      side: BorderSide(
+                        color: Colors.lightBlue.withValues(alpha: 0.1),
+                        width: 1,
+                      ),
+                    ),
+                    child: Padding(
+                      padding: EdgeInsets.all(16),
+                      child: DropdownButtonFormField<int>(
+                        padding: EdgeInsets.all(8),
+                        decoration: const InputDecoration(
+                          border: OutlineInputBorder(
+                            borderSide: BorderSide.none,
+                          ),
+                          contentPadding: EdgeInsets.zero,
+                        ),
+                        value: _status,
+                        items: _optionstatus.entries
+                            .map(
+                              (entry) => DropdownMenuItem<int>(
+                                value: entry.key,
+                                child: Text(
+                                  entry.value,
+                                  style: TextStyle(
+                                    color: entry.key == 0
+                                        ? Colors.red
+                                        : entry.key == 1
+                                        ? Colors.lightBlue
+                                        : Colors.green,
+                                  ),
+                                ),
+                              ),
+                            )
+                            .toList(),
+                        onChanged: (int? value) {
+                          if (value == null) return;
+                          setState(() {
+                            _status = value;
+                          });
+                        },
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
                   // Task Description Card
                   if (widget.task.context != null &&
                       widget.task.context!.isNotEmpty)

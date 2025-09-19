@@ -2,7 +2,6 @@ import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:app_project/models/task.dart';
-import 'package:app_project/services/notification_service.dart';
 
 class TaskNotifier extends AsyncNotifier<List<Task>> {
   final supabase = Supabase.instance.client;
@@ -110,6 +109,7 @@ class TaskNotifier extends AsyncNotifier<List<Task>> {
       final data = {
         'title': task.title,
         'context': task.context,
+        'status': task.status,
         'image_url': imageUrl ?? '',
         'created_at': DateTime.now().toIso8601String(),
         'due_at': task.dueAt?.toIso8601String(),
@@ -119,18 +119,6 @@ class TaskNotifier extends AsyncNotifier<List<Task>> {
       final newTask = Task.fromMap(res);
       final current = state.value ?? [];
       state = AsyncData([newTask, ...current]);
-
-      // Schedule notification if dueAt is in the future
-      if (newTask.id != null &&
-          newTask.dueAt != null &&
-          newTask.dueAt!.isAfter(DateTime.now())) {
-        await NotificationService().scheduleTaskReminder(
-          id: _notifIdForTask(newTask.id!),
-          title: newTask.title,
-          when: newTask.dueAt!,
-          payload: 'task:${newTask.id}',
-        );
-      }
     } catch (e) {
       state = AsyncError(e, StackTrace.current);
       rethrow;
@@ -140,27 +128,13 @@ class TaskNotifier extends AsyncNotifier<List<Task>> {
   Future<void> updateTask(Task task) async {
     try {
       // Avoid sending ID in update payload
-      final payload = task.toMap()..remove('id');
-      await supabase.from(_table).update(payload).eq('id', task.id!);
+      await supabase.from(_table).update(task.toMap()).eq('id', task.id!);
 
       final current = state.value ?? [];
       final index = current.indexWhere((t) => t.id == task.id);
       if (index != -1) {
         current[index] = task;
         state = AsyncData([...current]);
-      }
-
-      // Reschedule notification: cancel previous and schedule new if future
-      if (task.id != null) {
-        await NotificationService().cancel(_notifIdForTask(task.id!));
-        if (task.dueAt != null && task.dueAt!.isAfter(DateTime.now())) {
-          await NotificationService().scheduleTaskReminder(
-            id: _notifIdForTask(task.id!),
-            title: task.title,
-            when: task.dueAt!,
-            payload: 'task:${task.id}',
-          );
-        }
       }
     } catch (e) {
       state = AsyncError(e, StackTrace.current);
@@ -229,10 +203,6 @@ class TaskNotifier extends AsyncNotifier<List<Task>> {
       // Update local state
       final updated = current.where((task) => task.id != id).toList();
       state = AsyncData(updated);
-      if (taskToDelete.dueAt != null &&
-          taskToDelete.dueAt!.isAfter(DateTime.now())) {
-        await NotificationService().cancel(_notifIdForTask(id));
-      }
     } catch (e) {
       state = AsyncError(e, StackTrace.current);
       rethrow;

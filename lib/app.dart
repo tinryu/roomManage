@@ -3,12 +3,12 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:app_project/l10n/app_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
+
 import 'widgets/auth_gate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'providers/onboarding_provider.dart';
 import 'screens/onboarding/onboarding_screen.dart';
-import 'services/notification_service.dart';
 
 class MyApp extends ConsumerStatefulWidget {
   const MyApp({super.key});
@@ -25,8 +25,6 @@ class _MyAppState extends ConsumerState<MyApp> {
   @override
   void initState() {
     super.initState();
-    // Initialize local notifications (Android runtime permission handled inside)
-    NotificationService().init();
   }
 
   void _changeLanguage(Locale locale) {
@@ -56,6 +54,7 @@ class _MyAppState extends ConsumerState<MyApp> {
   @override
   Widget build(BuildContext context) {
     final seen = ref.watch(seenOnboardingProvider);
+
     return MaterialApp(
       title: 'Room Service Manager',
       locale: _locale,
@@ -119,12 +118,17 @@ class _MyAppState extends ConsumerState<MyApp> {
 
         // AppBar theme
         appBarTheme: AppBarTheme(
+          backgroundColor: Colors.lightBlue,
+          foregroundColor: Colors.white,
           titleTextStyle: TextStyle(
-            fontSize: 20,
+            fontSize: 16,
             fontWeight: FontWeight.bold,
-            color: Colors.black,
+            color: Colors.white,
           ),
           elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.vertical(bottom: Radius.circular(16)),
+          ),
         ),
 
         // Card theme

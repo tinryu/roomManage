@@ -79,7 +79,7 @@ class BaseListTile extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       elevation: 1,
-      color: tileColor,
+      color: selected ? Colors.white.withAlpha(10) : tileColor,
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         leading: leading,
@@ -103,8 +103,8 @@ class BaseListTile extends StatelessWidget {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(8),
           side: BorderSide(
-            color: selected ? Colors.lightBlue : Colors.grey.shade200,
-            width: selected ? 0.7 : 0.5,
+            color: selected ? Colors.white : Colors.grey.shade300,
+            width: selected ? 1.1 : 1,
           ),
         ),
       ),

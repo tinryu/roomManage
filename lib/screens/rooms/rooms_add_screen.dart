@@ -133,46 +133,6 @@ class _AddRoomScreenState extends BaseAddScreenState<Room, AddRoomScreen> {
     ];
   }
 
-  Widget _buildImagePicker() {
-    return GestureDetector(
-      onTap: pickImage,
-      child: Center(
-        child: Stack(
-          children: [
-            CircleAvatar(
-              radius: 60,
-              backgroundColor: Colors.grey[200],
-              backgroundImage: imagePath != null
-                  ? imagePath!.startsWith('http')
-                        ? NetworkImage(imagePath!)
-                        : FileImage(File(imagePath!)) as ImageProvider
-                  : null,
-              child: imagePath == null
-                  ? const Icon(Icons.person, size: 60, color: Colors.grey)
-                  : null,
-            ),
-            Positioned(
-              bottom: 0,
-              right: 0,
-              child: Container(
-                padding: const EdgeInsets.all(4),
-                decoration: const BoxDecoration(
-                  color: Colors.blue,
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.camera_alt,
-                  color: Colors.white,
-                  size: 20,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   List<Widget> _buildFormFields() {
     return [
       // Room Name
@@ -451,5 +411,45 @@ class _AddRoomScreenState extends BaseAddScreenState<Room, AddRoomScreen> {
         ),
       ),
     ];
+  }
+
+  Widget _buildImagePicker() {
+    return GestureDetector(
+      onTap: pickImage,
+      child: Center(
+        child: Stack(
+          children: [
+            CircleAvatar(
+              radius: 60,
+              backgroundColor: Colors.grey[200],
+              backgroundImage: imagePath != null
+                  ? imagePath!.startsWith('http')
+                        ? NetworkImage(imagePath!)
+                        : FileImage(File(imagePath!)) as ImageProvider
+                  : null,
+              child: imagePath == null
+                  ? const Icon(Icons.person, size: 60, color: Colors.grey)
+                  : null,
+            ),
+            Positioned(
+              bottom: 0,
+              right: 0,
+              child: Container(
+                padding: const EdgeInsets.all(4),
+                decoration: const BoxDecoration(
+                  color: Colors.blue,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.camera_alt,
+                  color: Colors.white,
+                  size: 20,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

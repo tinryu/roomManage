@@ -27,6 +27,12 @@ class _RoomFullListScreenState extends ConsumerState<RoomFullListScreen> {
   final _scrollController = ScrollController();
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    LocalizationManager.initialize(context);
+  }
+
+  @override
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
@@ -145,12 +151,12 @@ class _RoomFullListScreenState extends ConsumerState<RoomFullListScreen> {
   @override
   Widget build(BuildContext context) {
     final roomFullAsync = ref.watch(roomFullProvider);
-    final roomFullNotifier = ref.read(roomFullProvider.notifier);
+    // final roomFullNotifier = ref.read(roomFullProvider.notifier);
     final roomNotifier = ref.read(roomProvider.notifier);
     final selectedIds = ref.watch(selectedRoomIdsProvider);
     return BaseListScreen(
       showAppBar: false,
-      title: 'Rooms',
+      title: LocalizationManager.local.rooms,
       floatingActionButton: FloatingActionButton.small(
         child: const Icon(Icons.add),
         onPressed: () {
@@ -171,89 +177,50 @@ class _RoomFullListScreenState extends ConsumerState<RoomFullListScreen> {
             children: [
               Container(
                 decoration: BoxDecoration(
-                  color: Colors.transparent,
+                  color: Colors.lightBlue,
                   shape: BoxShape.rectangle,
+                  borderRadius: BorderRadius.only(
+                    bottomLeft: Radius.circular(16),
+                    bottomRight: Radius.circular(16),
+                  ),
                 ),
                 child: Padding(
                   padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    mainAxisAlignment: MainAxisAlignment.end,
                     children: [
-                      IconButton(
-                        tooltip: LocalizationManager.local.selectAll,
-                        icon: const Icon(Icons.select_all, color: Colors.grey),
-                        onPressed: () {
-                          final selected = ref.read(
-                            selectedRoomIdsProvider.notifier,
-                          );
-                          final current = ref.read(selectedRoomIdsProvider);
-                          final data = rooms;
-                          if (data.isEmpty) return;
-                          final pageIds = data
-                              .where((r) => r.roomId != null)
-                              .map((r) => r.roomId)
-                              .toSet();
-                          final allSelected =
-                              pageIds.isNotEmpty &&
-                              pageIds.difference(current).isEmpty;
-                          selected.state = allSelected
-                              ? (current.difference(pageIds))
-                              : ({...current, ...pageIds});
-                        },
-                      ),
-                      Row(
-                        children: [
-                          // Edit
-                          IconButton(
-                            tooltip: LocalizationManager.local.edit,
-                            icon: const Icon(Icons.edit, color: Colors.grey),
-                            onPressed: () async {
-                              final selectedIds = ref.read(
-                                selectedRoomIdsProvider,
+                      // IconButton(
+                      //   icon: const Icon(Icons.arrow_back, color: Colors.white),
+                      //   onPressed: () => Navigator.pop(context),
+                      // ),
+                      PopupMenuButton(
+                        tooltip: LocalizationManager.local.action,
+                        icon: const Icon(Icons.more_vert, color: Colors.white),
+                        itemBuilder: (context) => [
+                          PopupMenuItem(
+                            child: Text(LocalizationManager.local.selectAll),
+                            onTap: () {
+                              final selected = ref.read(
+                                selectedRoomIdsProvider.notifier,
                               );
-                              if (selectedIds.length != 1) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text(
-                                      'Select exactly one room to edit',
-                                    ),
-                                  ),
-                                );
-                                return;
-                              }
-                              final rooms =
-                                  ref.read(roomFullProvider).asData?.value ??
-                                  [];
-                              final id = selectedIds.first;
-                              final room = rooms.firstWhere(
-                                (r) => r.roomId == id,
-                                orElse: () => rooms.first,
-                              );
-                              final roomEdit = Room(
-                                id: room.roomId,
-                                name: room.roomName,
-                                is_occupied: room.isOccupied,
-                                asset_ids: room.assetIds,
-                                imageUrl: room.roomImage,
-                                tenantId: room.tenantId,
-                              );
-                              await Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      AddRoomScreen(initialItem: roomEdit),
-                                ),
-                              );
+                              final current = ref.read(selectedRoomIdsProvider);
+                              final data = rooms;
+                              if (data.isEmpty) return;
+                              final pageIds = data
+                                  .where((r) => r.roomId != null)
+                                  .map((r) => r.roomId)
+                                  .toSet();
+                              final allSelected =
+                                  pageIds.isNotEmpty &&
+                                  pageIds.difference(current).isEmpty;
+                              selected.state = allSelected
+                                  ? (current.difference(pageIds))
+                                  : ({...current, ...pageIds});
                             },
                           ),
-                          // Delete
-                          IconButton(
-                            tooltip: LocalizationManager.local.delete,
-                            icon: const Icon(
-                              Icons.delete,
-                              color: Colors.black45,
-                            ),
-                            onPressed: () async {
+                          PopupMenuItem(
+                            child: Text(LocalizationManager.local.delete),
+                            onTap: () async {
                               final selectedIds = ref.read(
                                 selectedRoomIdsProvider,
                               );
@@ -314,6 +281,47 @@ class _RoomFullListScreenState extends ConsumerState<RoomFullListScreen> {
                                   );
                                 }
                               }
+                            },
+                          ),
+                          PopupMenuItem(
+                            child: Text(LocalizationManager.local.edit),
+                            onTap: () async {
+                              final selectedIds = ref.read(
+                                selectedRoomIdsProvider,
+                              );
+                              if (selectedIds.length != 1) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      'Select exactly one room to edit',
+                                    ),
+                                  ),
+                                );
+                                return;
+                              }
+                              final rooms =
+                                  ref.read(roomFullProvider).asData?.value ??
+                                  [];
+                              final id = selectedIds.first;
+                              final room = rooms.firstWhere(
+                                (r) => r.roomId == id,
+                                orElse: () => rooms.first,
+                              );
+                              final roomEdit = Room(
+                                id: room.roomId,
+                                name: room.roomName,
+                                is_occupied: room.isOccupied,
+                                asset_ids: room.assetIds,
+                                imageUrl: room.roomImage,
+                                tenantId: room.tenantId,
+                              );
+                              await Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      AddRoomScreen(initialItem: roomEdit),
+                                ),
+                              );
                             },
                           ),
                         ],
@@ -625,16 +633,6 @@ class _RoomFullListScreenState extends ConsumerState<RoomFullListScreen> {
                   },
                 ),
               ),
-              if (roomFullNotifier.hasMore)
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: roomFullNotifier.isLoadingMore
-                      ? CircularProgressIndicator()
-                      : ElevatedButton(
-                          onPressed: roomFullNotifier.fetchNextPage,
-                          child: Text('Load More'),
-                        ),
-                ),
             ],
           );
         },

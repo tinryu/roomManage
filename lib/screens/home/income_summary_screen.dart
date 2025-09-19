@@ -52,7 +52,7 @@ class _IncomeSummaryScreenState extends State<IncomeSummaryScreen> {
                           spacing: 16,
                           children: monthlyPayments.map((pay) {
                             return Container(
-                              width: 200,
+                              width: 180,
                               height: 80,
                               padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(

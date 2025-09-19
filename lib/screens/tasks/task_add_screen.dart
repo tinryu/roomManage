@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
@@ -17,6 +19,12 @@ class _AddTaskScreenState extends ConsumerState<AddTaskScreen> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _contextController = TextEditingController();
+  final Map<int, String> _optionstatus = {
+    0: "ToDo",
+    1: "In Progress",
+    2: "Done",
+  };
+  int? _status;
 
   String? _imageUrl;
   bool _isLoading = false;
@@ -40,20 +48,15 @@ class _AddTaskScreenState extends ConsumerState<AddTaskScreen> {
       );
 
       if (image != null) {
-        // In a real app, you would upload the image to your storage service
-        // For now, we'll just store the local path
         setState(() {
           _imageUrl = image.path;
         });
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error picking image: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error picking image: $e')));
       }
     }
   }
@@ -72,6 +75,7 @@ class _AddTaskScreenState extends ConsumerState<AddTaskScreen> {
         context: _contextController.text.trim().isEmpty
             ? null
             : _contextController.text.trim(),
+        status: _status,
         imageUrl: _imageUrl,
         dueAt: _dueAt,
       );
@@ -191,9 +195,49 @@ class _AddTaskScreenState extends ConsumerState<AddTaskScreen> {
                 ),
               ),
             ),
-
             const SizedBox(height: 16),
-
+            Card(
+              child: Padding(
+                padding: EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Task Status',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                      textScaler: TextScaler.linear(0.8),
+                    ),
+                    const SizedBox(height: 8),
+                    DropdownButtonFormField<int>(
+                      decoration: const InputDecoration(
+                        border: OutlineInputBorder(),
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
+                      ),
+                      value: 0,
+                      items: _optionstatus.entries
+                          .map(
+                            (entry) => DropdownMenuItem<int>(
+                              value: entry.key,
+                              child: Text(entry.value),
+                            ),
+                          )
+                          .toList(),
+                      onChanged: (value) {
+                        setState(() {
+                          _status = value;
+                        });
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
             // Due Date & Time
             Card(
               child: Padding(
@@ -329,7 +373,6 @@ class _AddTaskScreenState extends ConsumerState<AddTaskScreen> {
                       ),
                       textScaler: TextScaler.linear(0.8),
                     ),
-                    const SizedBox(height: 8),
 
                     if (_imageUrl != null) ...[
                       Container(
@@ -341,49 +384,41 @@ class _AddTaskScreenState extends ConsumerState<AddTaskScreen> {
                         ),
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(8),
-                          child: Image.network(
-                            _imageUrl!,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
-                              return Container(
-                                color: Colors.grey.shade200,
-                                child: const Center(
-                                  child: Icon(
-                                    Icons.broken_image,
-                                    size: 50,
-                                    color: Colors.grey,
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
+                          child: _imageUrl!.startsWith('http')
+                              ? Image.network(
+                                  _imageUrl!,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return Container(
+                                      color: Colors.grey.shade200,
+                                      child: const Center(
+                                        child: Icon(
+                                          Icons.broken_image,
+                                          size: 50,
+                                          color: Colors.grey,
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                )
+                              : Image.file(File(_imageUrl!), fit: BoxFit.cover),
                         ),
                       ),
                       const SizedBox(height: 8),
                       Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
                         children: [
-                          TextButton.icon(
+                          IconButton(
                             onPressed: _pickImage,
                             icon: const Icon(Icons.edit),
-                            label: const Text(
-                              'Change Image',
-                              textScaler: TextScaler.linear(0.8),
-                            ),
                           ),
-                          TextButton.icon(
+                          IconButton(
                             onPressed: () {
                               setState(() {
                                 _imageUrl = null;
                               });
                             },
                             icon: const Icon(Icons.delete),
-                            label: const Text(
-                              'Remove Image',
-                              textScaler: TextScaler.linear(0.8),
-                            ),
-                            style: TextButton.styleFrom(
-                              foregroundColor: Colors.red,
-                            ),
                           ),
                         ],
                       ),

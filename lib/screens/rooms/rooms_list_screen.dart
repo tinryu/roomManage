@@ -1,4 +1,5 @@
 import 'package:app_project/screens/rooms/rooms_add_screen.dart';
+import 'package:app_project/utils/localization_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_project/providers/room_provider.dart';
@@ -9,8 +10,6 @@ final selectedRoomIdsProvider = StateProvider<Set<int>>((ref) => <int>{});
 
 class RoomListScreen extends ConsumerWidget {
   const RoomListScreen({super.key});
-  // Tạo ID ngẫu nhiên cho phòng mới;
-
   // Method to handle room deletion confirmation
   Future<void> _confirmDelete(
     BuildContext context,
@@ -63,7 +62,7 @@ class RoomListScreen extends ConsumerWidget {
     final selectedRoomIds = ref.watch(selectedRoomIdsProvider);
 
     return BaseListScreen(
-      title: 'Rooms',
+      title: LocalizationManager.local.rooms,
       floatingActionButton: FloatingActionButton(
         backgroundColor: Colors.lightBlue,
         child: const Icon(Icons.add, color: Colors.white),

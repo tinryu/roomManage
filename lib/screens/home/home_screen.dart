@@ -1,6 +1,6 @@
 import 'package:app_project/providers/dashboard_provider.dart';
+import 'package:app_project/widgets/shared/base_search_screen.dart';
 import 'package:flutter/material.dart';
-// import 'package:app_project/screens/home/recent_activity_screen.dart';
 import 'package:app_project/screens/home/income_summary_screen.dart';
 import 'package:app_project/screens/home/upcoming_tasks.dart';
 import 'package:app_project/screens/home/analytics_dashboard.dart';
@@ -70,19 +70,79 @@ class _HomeScreenState extends State<HomeScreen> {
                     alignment: Alignment.center,
                     children: [
                       Container(
-                        height: 250,
+                        height: 70,
                         decoration: BoxDecoration(
-                          borderRadius: BorderRadius.only(
-                            bottomLeft: Radius.circular(50),
-                            bottomRight: Radius.circular(50),
+                          gradient: LinearGradient(
+                            colors: [Colors.lightBlue, Colors.white],
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
                           ),
-                          image: DecorationImage(
-                            image: AssetImage('assets/images/grass1.png'),
-                            fit: BoxFit.cover,
-                            colorFilter: ColorFilter.mode(
-                              Colors.black54,
-                              BlendMode.darken,
-                            ),
+                        ),
+                      ),
+                      Positioned(
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        child: Expanded(
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Expanded(child: SearchInput()),
+                              PopupMenuButton(
+                                padding: EdgeInsets.zero,
+                                menuPadding: EdgeInsets.all(0),
+                                position: PopupMenuPosition.under,
+                                icon: Icon(
+                                  Icons.notifications,
+                                  color: Colors.white,
+                                ),
+                                itemBuilder: (context) => [
+                                  PopupMenuItem(
+                                    value: '1',
+                                    child: Text(
+                                      'Notification 1',
+                                      style: TextStyle(fontSize: 12),
+                                    ),
+                                  ),
+                                  PopupMenuItem(
+                                    value: '2',
+                                    child: Text(
+                                      'Notification 2',
+                                      style: TextStyle(fontSize: 12),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              PopupMenuButton(
+                                padding: EdgeInsets.zero,
+                                menuPadding: EdgeInsets.all(0),
+                                position: PopupMenuPosition.under,
+                                icon: Icon(
+                                  Icons.more_horiz,
+                                  color: Colors.white,
+                                ),
+                                itemBuilder: (context) => [
+                                  PopupMenuItem(
+                                    child: Text(
+                                      'menu',
+                                      style: TextStyle(fontSize: 12),
+                                    ),
+                                  ),
+                                  PopupMenuItem(
+                                    child: Text(
+                                      'menu1',
+                                      style: TextStyle(fontSize: 12),
+                                    ),
+                                  ),
+                                  PopupMenuItem(
+                                    child: Text(
+                                      'menu2',
+                                      style: TextStyle(fontSize: 12),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
                           ),
                         ),
                       ),
@@ -92,7 +152,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     padding: EdgeInsets.all(16),
                     child: Column(
                       children: [
-                        // Analytics Dashboard
                         AnalyticsDashboard(
                           stats: [
                             {
