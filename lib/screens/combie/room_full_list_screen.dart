@@ -185,15 +185,40 @@ class _RoomFullListScreenState extends ConsumerState<RoomFullListScreen> {
                   ),
                 ),
                 child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding: EdgeInsets.symmetric(horizontal: 0, vertical: 8),
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      // IconButton(
-                      //   icon: const Icon(Icons.arrow_back, color: Colors.white),
-                      //   onPressed: () => Navigator.pop(context),
-                      // ),
+                      Row(
+                        children: [
+                          IconButton(
+                            icon: const Icon(
+                              Icons.arrow_back_ios_new,
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                            onPressed: () {
+                              if (Navigator.of(context).canPop()) {
+                                Navigator.of(context).pop();
+                              } else {
+                                Navigator.of(context).popAndPushNamed('/');
+                              }
+                            },
+                          ),
+                          Text(
+                            LocalizationManager.local.room,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
+                      ),
                       PopupMenuButton(
+                        menuPadding: EdgeInsets.zero,
+                        position: PopupMenuPosition.under,
+                        padding: EdgeInsets.zero,
                         tooltip: LocalizationManager.local.action,
                         icon: const Icon(Icons.more_vert, color: Colors.white),
                         itemBuilder: (context) => [
@@ -330,6 +355,7 @@ class _RoomFullListScreenState extends ConsumerState<RoomFullListScreen> {
                   ),
                 ),
               ),
+              SizedBox(height: 16),
               Expanded(
                 child: ListView.builder(
                   controller: _scrollController,

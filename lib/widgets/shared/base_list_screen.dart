@@ -35,7 +35,6 @@ class BaseListScreen extends StatelessWidget {
                   color: Colors.white,
                 ),
               ),
-              centerTitle: true,
               leading: showBackButton
                   ? IconButton(
                       icon: const Icon(Icons.arrow_back, color: Colors.white),
@@ -46,7 +45,7 @@ class BaseListScreen extends StatelessWidget {
               actions: actions,
             )
           : null,
-      body: body,
+      body: SafeArea(child: body),
       floatingActionButton: floatingActionButton,
     );
   }

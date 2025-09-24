@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:app_project/screens/home/income_summary_screen.dart';
 import 'package:app_project/screens/home/upcoming_tasks.dart';
 import 'package:app_project/screens/home/analytics_dashboard.dart';
+import 'package:app_project/screens/assets/assets_list_screen.dart';
+import 'package:app_project/screens/tenants/tenants_list_screen.dart';
 import 'package:card_swiper/card_swiper.dart';
 import 'package:app_project/utils/format.dart';
 import 'package:app_project/utils/faded_loader.dart';
@@ -124,21 +126,33 @@ class _HomeScreenState extends State<HomeScreen> {
                                 itemBuilder: (context) => [
                                   PopupMenuItem(
                                     child: Text(
-                                      'menu',
+                                      'assets',
                                       style: TextStyle(fontSize: 12),
                                     ),
+                                    onTap: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              AssetsListScreen(),
+                                        ),
+                                      );
+                                    },
                                   ),
                                   PopupMenuItem(
                                     child: Text(
-                                      'menu1',
+                                      'tenants',
                                       style: TextStyle(fontSize: 12),
                                     ),
-                                  ),
-                                  PopupMenuItem(
-                                    child: Text(
-                                      'menu2',
-                                      style: TextStyle(fontSize: 12),
-                                    ),
+                                    onTap: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              TenantListScreen(),
+                                        ),
+                                      );
+                                    },
                                   ),
                                 ],
                               ),

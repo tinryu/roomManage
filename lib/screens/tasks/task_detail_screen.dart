@@ -1,3 +1,4 @@
+import 'package:app_project/utils/localization_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -249,50 +250,47 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  Card(
-                    elevation: 2,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      side: BorderSide(
-                        color: Colors.lightBlue.withValues(alpha: 0.1),
-                        width: 1,
-                      ),
-                    ),
-                    child: Padding(
+                  SizedBox(
+                    width: double.infinity,
+                    child: DropdownButtonFormField<int>(
                       padding: EdgeInsets.all(16),
-                      child: DropdownButtonFormField<int>(
-                        padding: EdgeInsets.all(8),
-                        decoration: const InputDecoration(
-                          border: OutlineInputBorder(
-                            borderSide: BorderSide.none,
+                      decoration: InputDecoration(
+                        labelStyle: TextStyle(color: Colors.grey[800]),
+                        label: Text(LocalizationManager.local.status),
+                        fillColor: Colors.white,
+                        filled: true,
+                        isDense: true,
+                        enabledBorder: OutlineInputBorder(
+                          borderSide: BorderSide(
+                            color: Colors.lightBlue.withValues(alpha: 0.2),
+                            width: 1,
                           ),
-                          contentPadding: EdgeInsets.zero,
                         ),
-                        value: _status,
-                        items: _optionstatus.entries
-                            .map(
-                              (entry) => DropdownMenuItem<int>(
-                                value: entry.key,
+                      ),
+                      value: _status,
+                      items: _optionstatus.entries
+                          .map(
+                            (entry) => DropdownMenuItem<int>(
+                              value: entry.key,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
                                 child: Text(
                                   entry.value,
-                                  style: TextStyle(
-                                    color: entry.key == 0
-                                        ? Colors.red
-                                        : entry.key == 1
-                                        ? Colors.lightBlue
-                                        : Colors.green,
-                                  ),
+                                  style: TextStyle(fontWeight: FontWeight.w500),
                                 ),
                               ),
-                            )
-                            .toList(),
-                        onChanged: (int? value) {
-                          if (value == null) return;
-                          setState(() {
-                            _status = value;
-                          });
-                        },
-                      ),
+                            ),
+                          )
+                          .toList(),
+                      onChanged: (int? value) {
+                        if (value == null) return;
+                        setState(() {
+                          _status = value;
+                        });
+                      },
                     ),
                   ),
                   const SizedBox(height: 16),

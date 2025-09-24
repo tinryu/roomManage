@@ -3,6 +3,8 @@ import 'package:app_project/l10n/app_localizations.dart';
 import 'package:app_project/screens/home/home_screen.dart';
 import 'package:app_project/screens/combie/room_full_list_screen.dart';
 import 'package:app_project/screens/payment/payment_list_screen.dart';
+import 'package:app_project/screens/assets/assets_list_screen.dart';
+import 'package:app_project/screens/tenants/tenants_list_screen.dart';
 import 'package:app_project/screens/settings/settings_screen.dart';
 
 class MainScreen extends StatefulWidget {
@@ -38,6 +40,55 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   final List<Widget> _screens = [];
+
+  void _showQuickActionsMenu(BuildContext context) {
+    final RenderBox button = context.findRenderObject() as RenderBox;
+    final RenderBox overlay =
+        Navigator.of(context).overlay!.context.findRenderObject() as RenderBox;
+    final RelativeRect position = RelativeRect.fromRect(
+      Rect.fromPoints(
+        button.localToGlobal(Offset.zero, ancestor: overlay),
+        button.localToGlobal(
+          button.size.bottomRight(Offset.zero),
+          ancestor: overlay,
+        ),
+      ),
+      Offset.zero & overlay.size,
+    );
+
+    showMenu(
+      context: context,
+      position: position,
+      items: [
+        PopupMenuItem(
+          child: ListTile(
+            leading: Icon(Icons.inventory_2, color: Colors.lightBlue),
+            title: Text('Asset'),
+            contentPadding: EdgeInsets.zero,
+          ),
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => AssetsListScreen()),
+            );
+          },
+        ),
+        PopupMenuItem(
+          child: ListTile(
+            leading: Icon(Icons.person_add, color: Colors.lightBlue),
+            title: Text('Tenant'),
+            contentPadding: EdgeInsets.zero,
+          ),
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => TenantListScreen()),
+            );
+          },
+        ),
+      ],
+    );
+  }
 
   @override
   void initState() {

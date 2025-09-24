@@ -309,15 +309,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     return WillPopScope(
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Settings'),
-          centerTitle: true,
+          title: Text('Settings'),
           actions: [
             if (_hasUnsavedChanges)
               TextButton(
                 onPressed: _saveChanges,
                 child: Text(
                   LocalizationManager.local.save,
-                  style: const TextStyle(color: Colors.white),
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
                 ),
               ),
           ],
@@ -424,10 +427,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   ),
                   const Divider(height: 1),
                   ListTile(
-                    leading: const Icon(Icons.logout, color: Colors.red),
+                    leading: const Icon(Icons.logout),
                     title: Text(
                       LocalizationManager.local.logout,
-                      style: TextStyle(color: Colors.red),
                       textScaler: TextScaler.linear(0.8),
                     ),
                     onTap: _signOut,

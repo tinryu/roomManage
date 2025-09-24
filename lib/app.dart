@@ -1,3 +1,4 @@
+import 'package:app_project/providers/onboarding_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -7,8 +8,53 @@ import 'package:google_fonts/google_fonts.dart';
 import 'widgets/auth_gate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'providers/onboarding_provider.dart';
 import 'screens/onboarding/onboarding_screen.dart';
+
+class AppNavigatorObserver extends NavigatorObserver {
+  @override
+  void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    debugPrint('[NAV] Pushed: ${route.settings.name ?? 'Unnamed Route'}');
+    debugPrint('     Previous: ${previousRoute?.settings.name ?? 'None'}');
+    debugPrint('     Type: ${route.runtimeType}');
+  }
+
+  @override
+  void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    debugPrint('[NAV] Popped: ${route.settings.name ?? 'Unnamed Route'}');
+    debugPrint('     Back to: ${previousRoute?.settings.name ?? 'None'}');
+    debugPrint('     Type: ${route.runtimeType}');
+  }
+
+  @override
+  void didReplace({Route<dynamic>? newRoute, Route<dynamic>? oldRoute}) {
+    debugPrint('[NAV] Replaced: ${oldRoute?.settings.name ?? 'Unnamed Route'}');
+    debugPrint('     With: ${newRoute?.settings.name ?? 'Unnamed Route'}');
+  }
+
+  @override
+  void didRemove(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    debugPrint('[NAV] Removed: ${route.settings.name ?? 'Unnamed Route'}');
+    debugPrint('     Previous: ${previousRoute?.settings.name ?? 'None'}');
+  }
+}
+
+// Helper extension to print navigation stack
+extension NavigatorHelper on BuildContext {
+  void printNavigationStack() {
+    debugPrint('[NAV] === Current Navigation Stack ===');
+    Navigator.of(this).popUntil((route) {
+      final name = route.settings.name ?? 'Unnamed Route';
+      final type = route.runtimeType;
+      final pageName = route.settings is Page
+          ? (route.settings as Page).name
+          : 'No Page';
+      debugPrint('  - $name ($type)');
+      debugPrint('    Page: $pageName');
+      return false;
+    });
+    debugPrint('[NAV] ===============================');
+  }
+}
 
 class MyApp extends ConsumerStatefulWidget {
   const MyApp({super.key});
@@ -57,6 +103,7 @@ class _MyAppState extends ConsumerState<MyApp> {
 
     return MaterialApp(
       title: 'Room Service Manager',
+      navigatorObservers: [AppNavigatorObserver()],
       locale: _locale,
       supportedLocales: [const Locale('en', 'US'), const Locale('vi', 'VN')],
       localizationsDelegates: const [
