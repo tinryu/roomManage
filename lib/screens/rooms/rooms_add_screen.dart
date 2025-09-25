@@ -29,6 +29,8 @@ class _AddRoomScreenState extends BaseAddScreenState<Room, AddRoomScreen> {
   final _tenantIdController = TextEditingController();
   final List<Asset?> _selectedAssets = [null]; // For dropdown selection
   bool _isOccupied = false;
+  DateTime _checkIn = DateTime.now();
+  DateTime? _checkOut;
 
   void _addAssetField() {
     setState(() {
@@ -53,6 +55,8 @@ class _AddRoomScreenState extends BaseAddScreenState<Room, AddRoomScreen> {
       _nameController.text = r.name;
       _tenantIdController.text = r.tenantId?.toString() ?? '';
       _isOccupied = r.is_occupied;
+      _checkIn = r.checkIn!;
+      _checkOut = r.checkOut;
       setImagePath(r.imageUrl);
 
       // Initialize asset selections if they exist
@@ -87,6 +91,24 @@ class _AddRoomScreenState extends BaseAddScreenState<Room, AddRoomScreen> {
   @override
   void onDispose() {}
 
+  Future<void> _pickDate({required bool isCheckIn}) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: isCheckIn ? _checkIn : (_checkOut ?? DateTime.now()),
+      firstDate: DateTime(2020),
+      lastDate: DateTime(2030),
+    );
+    if (picked != null) {
+      setState(() {
+        if (isCheckIn) {
+          _checkIn = picked;
+        } else {
+          _checkOut = picked;
+        }
+      });
+    }
+  }
+
   @override
   Future<void> onSubmit() async {
     final name = _nameController.text.trim();
@@ -112,6 +134,8 @@ class _AddRoomScreenState extends BaseAddScreenState<Room, AddRoomScreen> {
             : null,
         tenantId: tenantId,
         imageUrl: widget.initialItem?.imageUrl,
+        checkIn: _checkIn,
+        checkOut: _checkOut,
       );
     } else {
       await provider.addRoom(
@@ -120,6 +144,8 @@ class _AddRoomScreenState extends BaseAddScreenState<Room, AddRoomScreen> {
         assetIds: assetIds,
         imageFile: imagePath != null ? File(imagePath!) : null,
         tenantId: tenantId,
+        checkIn: _checkIn,
+        checkOut: _checkOut,
       );
     }
   }
@@ -410,7 +436,57 @@ class _AddRoomScreenState extends BaseAddScreenState<Room, AddRoomScreen> {
           ),
         ),
       ),
+
+      SizedBox(height: 16),
+      Card(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            children: [
+              _buildDateField(
+                label: 'Check in',
+                date: _checkIn,
+                onTap: () => _pickDate(isCheckIn: true),
+              ),
+              SizedBox(height: 16),
+              _buildDateField(
+                label: 'Check out',
+                date: _checkOut,
+                onTap: () => _pickDate(isCheckIn: false),
+                isOptional: true,
+              ),
+            ],
+          ),
+        ),
+      ),
     ];
+  }
+
+  Widget _buildDateField({
+    required String label,
+    required DateTime? date,
+    required VoidCallback onTap,
+    bool isOptional = false,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      child: InputDecorator(
+        decoration: InputDecoration(
+          labelText: label,
+          border: const OutlineInputBorder(),
+          prefixIcon: const Icon(Icons.calendar_today),
+          suffixIcon: isOptional ? null : const Icon(Icons.arrow_drop_down),
+        ),
+        child: Text(
+          date != null
+              ? '${date.day}/${date.month}/${date.year}'
+              : isOptional
+              ? 'Select date (optional)'
+              : 'Select date',
+          style: Theme.of(context).textTheme.bodyLarge,
+        ),
+      ),
+    );
   }
 
   Widget _buildImagePicker() {

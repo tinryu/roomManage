@@ -339,6 +339,8 @@ class _RoomFullListScreenState extends ConsumerState<RoomFullListScreen> {
                                 asset_ids: room.assetIds,
                                 imageUrl: room.roomImage,
                                 tenantId: room.tenantId,
+                                checkIn: room.check_in,
+                                checkOut: room.check_out,
                               );
                               await Navigator.push(
                                 context,
@@ -604,10 +606,10 @@ class _RoomFullListScreenState extends ConsumerState<RoomFullListScreen> {
                                           Icon(Icons.event_available, size: 14),
                                           const SizedBox(width: 4),
                                           Text(
-                                            item.checkin != null
+                                            item.check_in != null
                                                 ? appFormatDate(
                                                     context,
-                                                    item.checkin!,
+                                                    item.check_in!,
                                                   )
                                                 : 'N/A',
                                             textScaler: const TextScaler.linear(
@@ -621,10 +623,10 @@ class _RoomFullListScreenState extends ConsumerState<RoomFullListScreen> {
                                           Icon(Icons.event_busy, size: 14),
                                           const SizedBox(width: 4),
                                           Text(
-                                            item.checkout != null
+                                            item.check_out != null
                                                 ? appFormatDate(
                                                     context,
-                                                    item.checkout!,
+                                                    item.check_out!,
                                                   )
                                                 : 'N/A',
                                             textScaler: const TextScaler.linear(

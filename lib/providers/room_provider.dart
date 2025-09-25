@@ -84,6 +84,8 @@ class RoomNotifier extends AsyncNotifier<List<Room>> {
     List<int>? assetIds,
     File? imageFile,
     int? tenantId,
+    DateTime? checkIn,
+    DateTime? checkOut,
   }) async {
     try {
       String? imageUrl;
@@ -100,6 +102,8 @@ class RoomNotifier extends AsyncNotifier<List<Room>> {
           'p_asset_ids': assetIds, // Pass the list directly
           'p_image_url': imageUrl,
           'p_tenant_id': tenantId,
+          'p_check_in': checkIn?.toIso8601String(),
+          'p_check_out': checkOut?.toIso8601String(),
         },
       );
 
@@ -126,6 +130,8 @@ class RoomNotifier extends AsyncNotifier<List<Room>> {
     File? imageFile,
     String? imageUrl,
     int? tenantId,
+    DateTime? checkIn,
+    DateTime? checkOut,
   }) async {
     try {
       // Handle image upload if needed
@@ -144,6 +150,8 @@ class RoomNotifier extends AsyncNotifier<List<Room>> {
           'p_asset_ids': assetIds, // Pass the list directly
           'p_image_url': imageUpload ?? imageUrl,
           'p_tenant_id': tenantId,
+          'p_check_in': checkIn?.toIso8601String(),
+          'p_check_out': checkOut?.toIso8601String(),
         },
       );
 

@@ -7,7 +7,9 @@ CREATE OR REPLACE FUNCTION public.add_room_with_tenant(
   p_is_occupied boolean,
   p_asset_ids jsonb DEFAULT NULL,
   p_image_url text DEFAULT NULL,
-  p_tenant_id bigint DEFAULT NULL
+  p_tenant_id bigint DEFAULT NULL,
+  p_check_in timestamp DEFAULT NULL,
+  p_check_out timestamp DEFAULT NULL
 )
 RETURNS jsonb
 LANGUAGE plpgsql
@@ -25,14 +27,18 @@ BEGIN
       is_occupied, 
       asset_ids, 
       image_url, 
-      tenant_id
+      tenant_id,
+      check_in,
+      check_out
     )
     VALUES (
       p_name, 
       p_is_occupied, 
       CASE WHEN p_asset_ids IS NULL THEN NULL ELSE p_asset_ids::jsonb END,
       p_image_url, 
-      p_tenant_id
+      p_tenant_id,
+      p_check_in,
+      p_check_out
     )
     RETURNING id INTO new_room_id;
 

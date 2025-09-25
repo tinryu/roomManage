@@ -12,8 +12,8 @@ class RoomFull {
   final String? tenantName;
   final String? phone;
   final String? email;
-  final DateTime? checkin;
-  final DateTime? checkout;
+  final DateTime? check_in;
+  final DateTime? check_out;
 
   RoomFull({
     required this.roomId,
@@ -25,8 +25,8 @@ class RoomFull {
     this.tenantName,
     this.phone,
     this.email,
-    this.checkin,
-    this.checkout,
+    this.check_in,
+    this.check_out,
   });
 
   factory RoomFull.fromMap(Map<String, dynamic> map) {
@@ -72,14 +72,16 @@ class RoomFull {
       roomName: map['room_name'],
       isOccupied: map['is_occupied'],
       roomImage: map['room_image'],
-      assetIds: parseAssetIds(map['room_asset_ids']),
+      assetIds: parseAssetIds(map['asset_ids']),
       tenantId: map['tenant_id'],
       tenantName: map['tenant_name'],
       phone: map['phone'],
       email: map['email'],
-      checkin: map['checkin'] != null ? DateTime.parse(map['checkin']) : null,
-      checkout: map['checkout'] != null
-          ? DateTime.parse(map['checkout'])
+      check_in: map['check_in'] != null
+          ? DateTime.parse(map['check_in'])
+          : null,
+      check_out: map['check_out'] != null
+          ? DateTime.parse(map['check_out'])
           : null,
     );
   }
@@ -90,15 +92,13 @@ class RoomFull {
       'room_name': roomName,
       'is_occupied': isOccupied,
       'room_image': roomImage,
-      'room_asset_ids': assetIds?.isNotEmpty == true
-          ? jsonEncode(assetIds)
-          : null,
+      'asset_ids': assetIds?.isNotEmpty == true ? jsonEncode(assetIds) : null,
       'tenant_id': tenantId,
       'tenant_name': tenantName,
       'phone': phone,
       'email': email,
-      'checkin': checkin?.toIso8601String(),
-      'checkout': checkout?.toIso8601String(),
+      'check_in': check_in?.toIso8601String(),
+      'check_out': check_out?.toIso8601String(),
     };
   }
 
@@ -112,8 +112,8 @@ class RoomFull {
     String? tenantName,
     String? phone,
     String? email,
-    DateTime? checkin,
-    DateTime? checkout,
+    DateTime? check_in,
+    DateTime? check_out,
   }) {
     return RoomFull(
       roomId: roomId ?? this.roomId,
@@ -125,13 +125,13 @@ class RoomFull {
       tenantName: tenantName ?? this.tenantName,
       phone: phone ?? this.phone,
       email: email ?? this.email,
-      checkin: checkin ?? this.checkin,
-      checkout: checkout ?? this.checkout,
+      check_in: check_in ?? this.check_in,
+      check_out: check_out ?? this.check_out,
     );
   }
 
   @override
   String toString() {
-    return 'RoomFull(roomId: $roomId, roomName: $roomName, isOccupied: $isOccupied, roomImage: $roomImage, assetIds: $assetIds, tenantId: $tenantId, tenantName: $tenantName, phone: $phone, email: $email, checkin: $checkin, checkout: $checkout)';
+    return 'RoomFull(roomId: $roomId, roomName: $roomName, isOccupied: $isOccupied, roomImage: $roomImage, assetIds: $assetIds, tenantId: $tenantId, tenantName: $tenantName, phone: $phone, email: $email, check_in: $check_in, check_out: $check_out)';
   }
 }

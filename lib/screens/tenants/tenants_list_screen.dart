@@ -3,8 +3,9 @@ import 'package:app_project/utils/localization_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_project/providers/tenant_provider.dart';
-import 'package:app_project/utils/format.dart';
+import 'package:app_project/models/tenant.dart';
 import 'package:app_project/widgets/shared/base_list_screen.dart';
+import 'package:app_project/utils/format.dart';
 
 // Holds selected tenant IDs
 final selectedTenantIdsProvider = StateProvider<Set<int>>((ref) => <int>{});
@@ -18,6 +19,7 @@ class TenantListScreen extends ConsumerStatefulWidget {
 
 class _TenantListScreenState extends ConsumerState<TenantListScreen> {
   final _scrollController = ScrollController();
+  bool _isGridView = false; // Track view mode
 
   @override
   void didChangeDependencies() {
@@ -123,130 +125,166 @@ class _TenantListScreenState extends ConsumerState<TenantListScreen> {
                           ],
                         ),
 
-                        PopupMenuButton(
-                          menuPadding: EdgeInsets.zero,
-                          padding: EdgeInsets.zero,
-                          position: PopupMenuPosition.under,
-                          tooltip: LocalizationManager.local.action,
-                          icon: const Icon(
-                            Icons.more_vert,
-                            color: Colors.white,
-                          ),
-                          itemBuilder: (context) => [
-                            PopupMenuItem(
-                              child: Text(LocalizationManager.local.selectAll),
-                              onTap: () {
-                                final selected = ref.read(
-                                  selectedTenantIdsProvider.notifier,
-                                );
-                                final current = ref.read(
-                                  selectedTenantIdsProvider,
-                                );
-                                final data = tenantState.asData?.value ?? [];
-                                if (data.isEmpty) return;
-                                final pageIds = data.map((a) => a.id!).toSet();
-                                final allSelected =
-                                    pageIds.isNotEmpty &&
-                                    pageIds.difference(current).isEmpty;
-                                selected.state = allSelected
-                                    ? (current.difference(pageIds))
-                                    : ({...current, ...pageIds});
+                        Row(
+                          children: [
+                            // Toggle view button
+                            IconButton(
+                              icon: Icon(
+                                _isGridView ? Icons.view_list : Icons.grid_view,
+                                color: Colors.white,
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  _isGridView = !_isGridView;
+                                });
                               },
+                              tooltip: _isGridView
+                                  ? 'Switch to List View'
+                                  : 'Switch to Grid View',
                             ),
-                            PopupMenuItem(
-                              child: Text(LocalizationManager.local.delete),
-                              onTap: () async {
-                                final selectedIds = ref.read(
-                                  selectedTenantIdsProvider,
-                                );
-                                if (selectedIds.isEmpty) return;
-                                final confim = await showDialog<bool>(
-                                  context: context,
-                                  builder: (ctx) => AlertDialog(
-                                    title: const Text('Delete Tenants'),
-                                    content: Text(
-                                      'Delete ${selectedIds.length} selected tenant(s)?',
-                                    ),
-                                    actions: [
-                                      TextButton(
-                                        onPressed: () =>
-                                            Navigator.pop(ctx, false),
-                                        child: const Text('Cancel'),
-                                      ),
-                                      ElevatedButton(
-                                        onPressed: () =>
-                                            Navigator.pop(ctx, true),
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: Colors.red,
-                                        ),
-                                        child: const Text('Delete'),
-                                      ),
-                                    ],
+                            const SizedBox(width: 8),
+                            PopupMenuButton(
+                              menuPadding: EdgeInsets.zero,
+                              padding: EdgeInsets.zero,
+                              position: PopupMenuPosition.under,
+                              tooltip: LocalizationManager.local.action,
+                              icon: const Icon(
+                                Icons.more_vert,
+                                color: Colors.white,
+                              ),
+                              itemBuilder: (context) => [
+                                PopupMenuItem(
+                                  child: Text(
+                                    LocalizationManager.local.selectAll,
                                   ),
-                                );
-                                if (confim != true) return;
-                                try {
-                                  await notifier.deleteTenants(
-                                    selectedIds.toList(),
-                                  );
-                                  ref
-                                          .read(
-                                            selectedTenantIdsProvider.notifier,
-                                          )
-                                          .state =
-                                      {};
-                                  if (context.mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
+                                  onTap: () {
+                                    final selected = ref.read(
+                                      selectedTenantIdsProvider.notifier,
+                                    );
+                                    final current = ref.read(
+                                      selectedTenantIdsProvider,
+                                    );
+                                    final data =
+                                        tenantState.asData?.value ?? [];
+                                    if (data.isEmpty) return;
+                                    final pageIds = data
+                                        .map((a) => a.id!)
+                                        .toSet();
+                                    final allSelected =
+                                        pageIds.isNotEmpty &&
+                                        pageIds.difference(current).isEmpty;
+                                    selected.state = allSelected
+                                        ? (current.difference(pageIds))
+                                        : ({...current, ...pageIds});
+                                  },
+                                ),
+                                PopupMenuItem(
+                                  child: Text(LocalizationManager.local.delete),
+                                  onTap: () async {
+                                    final selectedIds = ref.read(
+                                      selectedTenantIdsProvider,
+                                    );
+                                    if (selectedIds.isEmpty) return;
+                                    final confim = await showDialog<bool>(
+                                      context: context,
+                                      builder: (ctx) => AlertDialog(
+                                        title: const Text('Delete Tenants'),
                                         content: Text(
-                                          'Deleted selected tenants',
+                                          'Delete ${selectedIds.length} selected tenant(s)?',
+                                        ),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () =>
+                                                Navigator.pop(ctx, false),
+                                            child: const Text('Cancel'),
+                                          ),
+                                          ElevatedButton(
+                                            onPressed: () =>
+                                                Navigator.pop(ctx, true),
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor: Colors.red,
+                                            ),
+                                            child: const Text('Delete'),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                    if (confim != true) return;
+                                    try {
+                                      await notifier.deleteTenants(
+                                        selectedIds.toList(),
+                                      );
+                                      ref
+                                              .read(
+                                                selectedTenantIdsProvider
+                                                    .notifier,
+                                              )
+                                              .state =
+                                          {};
+                                      if (context.mounted) {
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
+                                          const SnackBar(
+                                            content: Text(
+                                              'Deleted selected tenants',
+                                            ),
+                                          ),
+                                        );
+                                      }
+                                    } catch (e) {
+                                      if (context.mounted) {
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
+                                          SnackBar(
+                                            content: Text('Delete failed: $e'),
+                                          ),
+                                        );
+                                      }
+                                    }
+                                  },
+                                ),
+                                PopupMenuItem(
+                                  child: Text(LocalizationManager.local.edit),
+                                  onTap: () async {
+                                    final selectedIds = ref.read(
+                                      selectedTenantIdsProvider,
+                                    );
+                                    if (selectedIds.length != 1) {
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        const SnackBar(
+                                          content: Text(
+                                            'Select exactly one tenant to edit',
+                                          ),
+                                        ),
+                                      );
+                                      return;
+                                    }
+                                    final tenants =
+                                        ref
+                                            .read(tenantProvider)
+                                            .asData
+                                            ?.value ??
+                                        [];
+                                    final id = selectedIds.first;
+                                    final tenant = tenants.firstWhere(
+                                      (a) => a.id == id,
+                                      orElse: () => tenants.first,
+                                    );
+                                    await Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => AddTenantScreen(
+                                          initialItem: tenant,
                                         ),
                                       ),
                                     );
-                                  }
-                                } catch (e) {
-                                  if (context.mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text('Delete failed: $e'),
-                                      ),
-                                    );
-                                  }
-                                }
-                              },
-                            ),
-                            PopupMenuItem(
-                              child: Text(LocalizationManager.local.edit),
-                              onTap: () async {
-                                final selectedIds = ref.read(
-                                  selectedTenantIdsProvider,
-                                );
-                                if (selectedIds.length != 1) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text(
-                                        'Select exactly one tenant to edit',
-                                      ),
-                                    ),
-                                  );
-                                  return;
-                                }
-                                final tenants =
-                                    ref.read(tenantProvider).asData?.value ??
-                                    [];
-                                final id = selectedIds.first;
-                                final tenant = tenants.firstWhere(
-                                  (a) => a.id == id,
-                                  orElse: () => tenants.first,
-                                );
-                                await Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) =>
-                                        AddTenantScreen(initialItem: tenant),
-                                  ),
-                                );
-                              },
+                                  },
+                                ),
+                              ],
                             ),
                           ],
                         ),
@@ -256,130 +294,246 @@ class _TenantListScreenState extends ConsumerState<TenantListScreen> {
                 ),
                 SizedBox(height: 16),
                 Expanded(
-                  child: ListView.builder(
-                    itemCount: tenants.length,
-                    itemBuilder: (context, index) {
-                      final t = tenants[index];
-                      final isSelected =
-                          t.id != null && selectedIds.contains(t.id!);
-
-                      return BaseListTile(
-                        title: t.name,
-                        leading: t.imageUrl?.isNotEmpty == true
-                            ? ClipRRect(
-                                borderRadius: BorderRadius.circular(6),
-                                child: Image.network(
-                                  t.imageUrl!,
-                                  width: 50,
-                                  height: 50,
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (context, error, stackTrace) =>
-                                      Container(
-                                        width: 50,
-                                        height: 50,
-                                        decoration: BoxDecoration(
-                                          color: Colors.lightBlue,
-                                          borderRadius: BorderRadius.circular(
-                                            6,
-                                          ),
-                                        ),
-                                        child: Icon(
-                                          Icons.broken_image,
-                                          size: 24,
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                ),
-                              )
-                            : Container(
-                                width: 50,
-                                height: 50,
-                                decoration: BoxDecoration(
-                                  color: Colors.lightBlue,
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                child: Icon(
-                                  Icons.broken_image,
-                                  size: 24,
-                                  color: Colors.white,
-                                ),
-                              ),
-                        subtitle: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Icon(Icons.phone_android_rounded, size: 12),
-                                Text(
-                                  formatPhone(t.phone),
-                                  overflow: TextOverflow.ellipsis,
-                                  maxLines: 1,
-                                  textScaler: TextScaler.linear(0.8),
-                                ),
-                              ],
-                            ),
-                            Row(
-                              children: [
-                                Icon(Icons.house_sharp, size: 12),
-                                Text(
-                                  appFormatDate(context, t.checkIn),
-                                  overflow: TextOverflow.ellipsis,
-                                  maxLines: 1,
-                                  textScaler: TextScaler.linear(0.8),
-                                ),
-                                SizedBox(width: 8),
-                                Icon(
-                                  t.checkOut != null
-                                      ? Icons.arrow_circle_right_rounded
-                                      : null,
-                                  size: 12,
-                                ),
-                                Text(
-                                  t.checkOut != null
-                                      ? appFormatDate(context, t.checkOut!)
-                                      : '',
-                                  overflow: TextOverflow.ellipsis,
-                                  maxLines: 1,
-                                  textScaler: TextScaler.linear(0.8),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                        selected: isSelected,
-                        onTap: t.id == null
-                            ? null
-                            : () {
-                                final sel = ref.read(
-                                  selectedTenantIdsProvider.notifier,
-                                );
-                                final next = {...selectedIds};
-                                if (isSelected) {
-                                  next.remove(t.id!);
-                                } else {
-                                  next.add(t.id!);
-                                }
-                                sel.state = next;
-                              },
-                      );
-                    },
-                  ),
+                  child: _isGridView
+                      ? _buildGridView(tenants, selectedIds, ref)
+                      : _buildListView(tenants, selectedIds, ref),
                 ),
-                // if (notifier.hasMore)
-                //   Padding(
-                //     padding: const EdgeInsets.all(8.0),
-                //     child: notifier.isLoadingMore
-                //         ? CircularProgressIndicator()
-                //         : ElevatedButton(
-                //             onPressed: notifier.fetchNextPage,
-                //             child: Text(LocalizationManager.local.loadMore),
-                //           ),
-                //   ),
               ],
             ),
           ),
         );
       },
+    );
+  }
+
+  Widget _buildListView(
+    List<Tenant> tenants,
+    Set<int> selectedIds,
+    WidgetRef ref,
+  ) {
+    return ListView.builder(
+      itemCount: tenants.length,
+      itemBuilder: (context, index) {
+        final t = tenants[index];
+        final isSelected = t.id != null && selectedIds.contains(t.id!);
+
+        return BaseListTile(
+          title: t.name,
+          leading: _buildTenantLeading(t),
+          subtitle: _buildTenantSubtitle(t),
+          selected: isSelected,
+          onTap: t.id == null
+              ? null
+              : () {
+                  final sel = ref.read(selectedTenantIdsProvider.notifier);
+                  final next = {...selectedIds};
+                  if (isSelected) {
+                    next.remove(t.id!);
+                  } else {
+                    next.add(t.id!);
+                  }
+                  sel.state = next;
+                },
+        );
+      },
+    );
+  }
+
+  Widget _buildGridView(
+    List<Tenant> tenants,
+    Set<int> selectedIds,
+    WidgetRef ref,
+  ) {
+    final width = MediaQuery.of(context).size.width;
+    final int columns = width > 1000
+        ? 6
+        : width > 700
+        ? 4
+        : 2;
+
+    return GridView.builder(
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: columns,
+        childAspectRatio: width > 700 ? 1.2 : 1.0,
+        crossAxisSpacing: 8,
+        mainAxisSpacing: 8,
+      ),
+      itemCount: tenants.length,
+      itemBuilder: (context, index) {
+        final t = tenants[index];
+        final isSelected = t.id != null && selectedIds.contains(t.id!);
+
+        return Card(
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+            side: BorderSide(
+              color: isSelected ? Colors.lightBlue : Colors.grey.shade300,
+              width: isSelected ? 2 : 1,
+            ),
+          ),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(12),
+            onTap: t.id == null
+                ? null
+                : () {
+                    final sel = ref.read(selectedTenantIdsProvider.notifier);
+                    final next = {...selectedIds};
+                    if (isSelected) {
+                      next.remove(t.id!);
+                    } else {
+                      next.add(t.id!);
+                    }
+                    sel.state = next;
+                  },
+            child: Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // Tenant Avatar and Name
+                  Row(
+                    children: [
+                      _buildTenantLeading(t, size: 40),
+                      SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          t.name,
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 12),
+                  // Tenant Details
+                  Expanded(child: _buildTenantDetails(t)),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildTenantLeading(Tenant t, {double size = 50}) {
+    return t.imageUrl?.isNotEmpty == true
+        ? ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: Image.network(
+              t.imageUrl!,
+              width: size,
+              height: size,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) =>
+                  _buildDefaultAvatar(size),
+            ),
+          )
+        : _buildDefaultAvatar(size);
+  }
+
+  Widget _buildDefaultAvatar(double size) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: Colors.lightBlue,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: const Icon(Icons.person, size: 30, color: Colors.white),
+    );
+  }
+
+  Widget _buildTenantSubtitle(Tenant t) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            const Icon(Icons.phone_android_rounded, size: 12),
+            const SizedBox(width: 4),
+            Text(
+              formatPhone(t.phone),
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
+              textScaler: TextScaler.linear(0.8),
+            ),
+          ],
+        ),
+        Row(
+          children: [
+            const Icon(Icons.house_sharp, size: 12),
+            const SizedBox(width: 4),
+            Text(
+              appFormatDate(context, t.checkIn),
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
+              textScaler: TextScaler.linear(0.8),
+            ),
+            if (t.checkOut != null) ...[
+              const SizedBox(width: 4),
+              const Icon(Icons.arrow_forward, size: 12),
+              const SizedBox(width: 4),
+              Text(
+                appFormatDate(context, t.checkOut!),
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+                textScaler: TextScaler.linear(0.8),
+              ),
+            ],
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTenantDetails(Tenant t) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        // Phone
+        _buildDetailRow(Icons.phone_android_rounded, formatPhone(t.phone)),
+        const SizedBox(height: 8),
+        // Check-in Date
+        _buildDetailRow(
+          Icons.calendar_today,
+          'Check-in: ${appFormatDate(context, t.checkIn)}',
+        ),
+        if (t.checkOut != null) ...[
+          const SizedBox(height: 4),
+          _buildDetailRow(
+            Icons.arrow_forward,
+            'Check-out: ${appFormatDate(context, t.checkOut!)}',
+            iconSize: 16,
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildDetailRow(IconData icon, String text, {double iconSize = 14}) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, size: iconSize, color: Colors.grey[600]),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            text,
+            style: TextStyle(fontSize: 12, color: Colors.grey[800]),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            textScaler: TextScaler.linear(0.8),
+          ),
+        ),
+      ],
     );
   }
 }

@@ -5,10 +5,12 @@ import 'package:flutter/foundation.dart';
 class Room {
   final int? id;
   final String name;
-  final bool is_occupied; // Trạng thái phòng: đã thuê hay trống
-  final String? imageUrl; // URL ảnh phòng
-  final int? tenantId; // ID người thuê (nếu có)
-  final List<int>? asset_ids; // Danh sách ID tài sản liên kết với phòng
+  final bool is_occupied;
+  final String? imageUrl;
+  final int? tenantId;
+  final List<int>? asset_ids;
+  final DateTime? checkIn;
+  final DateTime? checkOut;
 
   Room({
     this.id,
@@ -17,6 +19,8 @@ class Room {
     this.asset_ids,
     this.imageUrl,
     this.tenantId,
+    this.checkIn,
+    this.checkOut,
   });
 
   factory Room.fromMap(Map<String, dynamic> map) {
@@ -64,6 +68,10 @@ class Room {
       asset_ids: parseAssetIds(map['asset_ids']),
       imageUrl: map['image_url'] ?? '',
       tenantId: map['tenant_id'] ?? 0,
+      checkIn: map['check_in'] != null ? DateTime.parse(map['check_in']) : null,
+      checkOut: map['check_out'] != null
+          ? DateTime.parse(map['check_out'])
+          : null,
     );
   }
 
@@ -75,6 +83,8 @@ class Room {
       'asset_ids': asset_ids?.isNotEmpty == true ? jsonEncode(asset_ids) : null,
       'image_url': imageUrl,
       'tenant_id': tenantId,
+      'check_in': checkIn,
+      'check_out': checkOut,
     };
   }
 
@@ -85,6 +95,8 @@ class Room {
     List<int>? asset_ids,
     String? imageUrl,
     int? tenantId,
+    DateTime? checkIn,
+    DateTime? checkOut,
   }) {
     return Room(
       id: id ?? this.id,
@@ -93,6 +105,8 @@ class Room {
       asset_ids: asset_ids ?? this.asset_ids,
       imageUrl: imageUrl ?? this.imageUrl,
       tenantId: tenantId ?? this.tenantId,
+      checkIn: checkIn ?? this.checkIn,
+      checkOut: checkOut ?? this.checkOut,
     );
   }
 

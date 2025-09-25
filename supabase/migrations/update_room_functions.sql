@@ -8,7 +8,9 @@ CREATE OR REPLACE FUNCTION public.update_room_with_tenant(
   p_is_occupied boolean,
   p_asset_ids jsonb DEFAULT NULL,
   p_image_url text DEFAULT NULL,
-  p_tenant_id bigint DEFAULT NULL
+  p_tenant_id bigint DEFAULT NULL,
+  p_check_in timestamp DEFAULT NULL,
+  p_check_out timestamp DEFAULT NULL
 )
 RETURNS jsonb
 LANGUAGE plpgsql
